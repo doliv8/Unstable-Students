@@ -1,0 +1,44 @@
+#ifndef ENUMS_H
+#define ENUMS_H
+
+enum TipoCarta {
+	ALL,
+	STUDENTE,
+	MATRICOLA,
+	STUDENTE_SEMPLICE,
+	LAUREANDO,
+	BONUS,
+	MALUS,
+	MAGIA,
+	ISTANTANEA
+};
+
+enum Azione {
+	GIOCA,
+	SCARTA,
+	ELIMINA,
+	RUBA,
+	PESCA,
+	PRENDI,
+	BLOCCA,
+	SCAMBIA,
+	MOSTRA,
+	IMPEDIRE,
+	INGEGNERE
+};
+
+enum Quando {
+	SUBITO,
+	INIZIO,
+	FINE,
+	MAI,
+	SEMPRE
+};
+
+enum TargetGiocatori {
+	IO,
+	TU,
+	VOI,
+	TUTTI
+};
+#endif
