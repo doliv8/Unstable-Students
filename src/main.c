@@ -46,16 +46,21 @@ game_contextT* new_game() {
 	return game_ctx;
 }
 
+// recursive function to clear a giocatoreT* circular linked list
+void clear_players(giocatoreT* head, giocatoreT* p) {
+	// check for base case to recurse or not
+	if (p->next != head)
+		clear_players(head, p->next);
+
+	// clear actual player	
+	// TODO: free carte
+	free(p);
+}
+
 void clear_game(game_contextT* game_ctx) {
 
-/* TODO: free players
-	// dump players into an array to then clear them
-	int n_players;
-	giocatoreT* players[MAX_PLAYERS] = {};
-	for (n_players = 0; game_ctx->next_player; n_players++) {
-
-	}
-*/
+	clear_players(game_ctx->next_player, game_ctx->next_player);
+	// TODO: free carte
 	free(game_ctx);
 }
 
