@@ -2,10 +2,72 @@
 // Matricola: 60/61/66678
 // Tipologia progetto: avanzato
 
-#include <stdio.h>
+#define _GNU_SOURCE
+#include <assert.h>
+#include <string.h>
 #include "types.h"
 #include "structs.h"
+#include "utils.h"
+
+giocatoreT* new_player() {
+	giocatoreT* player = (giocatoreT*)calloc_checked(1, sizeof(giocatoreT));
+
+	do {
+		printf("Inserisci il nome del giocatore: ");
+		scanf("%" TO_STRING(GIOCATORE_NAME_LEN) "s", player->name);
+	} while (!strnlen(player->name, sizeof(player->name)));
+
+	return player;
+}
+
+game_contextT* new_game() {
+	game_contextT* game_ctx = (game_contextT*)calloc_checked(1, sizeof(game_contextT));
+
+	int n_giocatori;
+	do {
+		puts("Quanti giocatori giocheranno?");
+		n_giocatori = get_int();
+	} while (n_giocatori < MIN_PLAYERS || n_giocatori > MAX_PLAYERS);
+
+	// game_ctx->next_player serves as the linked-list head
+	giocatoreT* curr_player;
+	for (int i = 0; i < n_giocatori; i++) {
+		if (game_ctx->next_player == NULL)
+			curr_player = game_ctx->next_player = new_player();
+		else
+			curr_player = curr_player->next = new_player();
+	}
+	curr_player->next = game_ctx->next_player; // make the linked list circular
+
+
+	// ... TODO: load mazzo ...
+
+
+	return game_ctx;
+}
+
+void clear_game(game_contextT* game_ctx) {
+
+/* TODO: free players
+	// dump players into an array to then clear them
+	int n_players;
+	giocatoreT* players[MAX_PLAYERS] = {};
+	for (n_players = 0; game_ctx->next_player; n_players++) {
+
+	}
+*/
+	free(game_ctx);
+}
 
 int main(int argc, char *argv[]) {
+	
+	// check salvataggio
+	assert(argc == 1);
+
+	game_contextT* game_ctx = new_game();
+
+
+
+	clear_game(game_ctx);
 	
 }

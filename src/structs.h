@@ -6,6 +6,7 @@
 #include "types.h"
 #include "enums.h"
 
+// basic game structs
 struct Giocatore {
 	char name[GIOCATORE_NAME_LEN+1];
 	cartaT* carte;
@@ -30,4 +31,12 @@ struct Effetto {
 	target_giocatoriT target_giocatori;
 	tipo_cartaT target_carta;
 };
+// end basic game structs
+
+struct GameContext {
+	giocatoreT* next_player;
+	cartaT *mazzo_pesca, *mazzo_scarti, *aula_studio;
+
+};
+
 #endif

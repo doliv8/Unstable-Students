@@ -1,0 +1,16 @@
+#ifndef UTILS_H
+#define UTILS_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include "debugging.h"
+
+#define STRINGIFY(x) #x
+#define TO_STRING(x) STRINGIFY(x)
+
+int get_int();
+void* malloc_checked(size_t size);
+void* calloc_checked(size_t nmemb, size_t size);
+
+
+#endif
