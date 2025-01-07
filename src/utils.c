@@ -10,6 +10,7 @@ int get_int() {
 void* malloc_checked(size_t size) {
 	void* ptr = malloc(size);
 	if (!ptr) {
+		fprintf(stderr, "Memory allocation failed!\n");
 		exit(EXIT_FAILURE);
 	}
 	return ptr;
@@ -21,6 +22,7 @@ void* calloc_checked(size_t nmemb, size_t size) {
 #endif
 	void* ptr = calloc(nmemb, size);
 	if (!ptr) {
+		fprintf(stderr, "Memory allocation failed!\n");
 		exit(EXIT_FAILURE);
 	}
 	return ptr;

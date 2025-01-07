@@ -9,6 +9,15 @@
 #include "structs.h"
 #include "utils.h"
 
+void load_mazzo() {
+	FILE* fp = fopen(FILE_MAZZO, "r");
+	if (fp == NULL) {
+		
+	}
+
+	fclose(fp);
+}
+
 giocatoreT* new_player() {
 	giocatoreT* player = (giocatoreT*)calloc_checked(1, sizeof(giocatoreT));
 
@@ -52,7 +61,7 @@ void clear_players(giocatoreT* head, giocatoreT* p) {
 	if (p->next != head)
 		clear_players(head, p->next);
 
-	// clear actual player	
+	// clear actual player
 	// TODO: free carte
 	free(p);
 }
