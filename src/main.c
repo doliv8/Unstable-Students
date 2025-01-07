@@ -9,11 +9,91 @@
 #include "structs.h"
 #include "utils.h"
 
+void duplicate_carta(cartaT* card) {
+	cartaT* copy_card = (cartaT*)malloc_checked(sizeof(cartaT));
+	*copy_card = *card; // copy the whole struct
+	if (card->n_effetti != 0) {
+		// create new effects array
+		effettoT* effects = (effettoT*)malloc_checked(card->n_effetti*sizeof(effettoT));
+		// copy effects into the new array
+		for (int i = 0; i < card->n_effetti; i++)
+			effects[i] = card->effetti[i];
+		copy_card->effetti = effects;
+	}
+	card->next = copy_card;
+}
+
+effettoT* read_effetti(FILE* fp, int* n_effects) {
+	int amount = 0;
+	fscanf(fp, "%d", &amount);
+	effettoT* effects = NULL;
+	if (amount != 0)
+		effects = (effettoT*)malloc_checked(amount*sizeof(effettoT));
+	int val; // to hold numbers that get converted into enums
+	for (int i = 0; i < amount; i++) {
+		fscanf(fp, "%d", &val);
+		effects[i].azione = val;
+		fscanf(fp, "%d", &val);
+		effects[i].target_giocatori = val;
+		fscanf(fp, "%d", &val);
+		effects[i].target_carta = val;
+	}
+	*n_effects = amount;
+	return effects;
+}
+
+// returns number of cards of this type present, returns 0 if no more cards are readable from fp
+int read_carta(FILE* fp, cartaT** ptr) {
+	int amount;
+	if (!fscanf(fp, "%d", &amount))
+		return 0;
+
+	cartaT base_card;
+	int val; // to hold int values to later convert to enums
+
+	fscanf(fp, "%" TO_STRING(CARTA_NAME_LEN) "[^\n]s", base_card.name);
+	fscanf(fp, "%" TO_STRING(CARTA_DESCRIPTION_LEN) "[^\n]s", base_card.description);
+
+	fscanf(fp, "%d", &val);
+	base_card.tipo = (tipo_cartaT)val;
+	
+	base_card.effetti = read_effetti(fp, &base_card.n_effetti);
+
+	fscanf(fp, "%d", &val);
+	base_card.quando = (quandoT)val;
+	fscanf(fp, "%d", &val);
+	base_card.opzionale = (bool)val;
+
+	for (int i = 0; i < amount; i++) {
+
+	}
+
+	// card->next = NULL;
+
+	// *ptr = card;
+	return amount;
+}
+
 void load_mazzo() {
 	FILE* fp = fopen(FILE_MAZZO, "r");
 	if (fp == NULL) {
-		
+		fprintf(stderr, "Opening cards file (%s) failed!\n", FILE_MAZZO);
+		exit(EXIT_FAILURE);
 	}
+
+	cartaT* mazzo = NULL, **curr_ptr = &mazzo;
+	int amount;
+	do {
+		amount = read_carta(fp, curr_ptr);
+		if (amount > 1) {
+			for (int i = 1; i < amount; i++) {
+				duplicate_carta(*curr_ptr);
+				curr_ptr = &(*curr_ptr)->next;
+			}
+		}
+	} while (amount != 0);
+
+
 
 	fclose(fp);
 }
@@ -50,6 +130,7 @@ game_contextT* new_game() {
 
 
 	// ... TODO: load mazzo ...
+	load_mazzo();
 
 
 	return game_ctx;
