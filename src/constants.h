@@ -4,3 +4,5 @@
 
 #define MIN_PLAYERS 2
 #define MAX_PLAYERS 4
+
+#define FILE_MAZZO "mazzo.txt"
