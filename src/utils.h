@@ -11,6 +11,10 @@
 int get_int();
 void* malloc_checked(size_t size);
 void* calloc_checked(size_t nmemb, size_t size);
+void free_wrap(void* ptr);
+
+// generates a random integer in the range [min, max]
+int rand_int(int min, int max);
 
 
 #endif
