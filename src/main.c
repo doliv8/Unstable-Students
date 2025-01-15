@@ -176,6 +176,7 @@ game_contextT* new_game() {
 		n_giocatori = get_int();
 	} while (n_giocatori < MIN_PLAYERS || n_giocatori > MAX_PLAYERS);
 
+	// create players
 	// game_ctx->next_player serves as the linked-list head
 	giocatoreT* curr_player;
 	for (int i = 0; i < n_giocatori; i++) {
@@ -186,17 +187,29 @@ game_contextT* new_game() {
 	}
 	curr_player->next = game_ctx->next_player; // make the linked list circular
 
-
+	// load cards
 	int n_cards;
 	cartaT* mazzo = load_mazzo(&n_cards);
 	mazzo = shuffle_cards(mazzo, n_cards);
 
 	game_ctx->aula_studio = split_matricole(&mazzo);
+	game_ctx->mazzo_pesca = mazzo;
 
+	// TODO: distribute cards
 
 	return game_ctx;
 }
 
+void free_cards(cartaT* cards_head) {
+	// check for base case to keep recurse or not (freeing from tail to head)
+	if (cards_head->next)
+		free_cards(cards_head->next);
+
+	// clear actual card
+	if (cards_head->n_effetti != 0)
+		free_wrap(cards_head->effetti);
+	free_wrap(cards_head);
+}
 // recursive function to clear a giocatoreT* circular linked list
 void clear_players(giocatoreT* head, giocatoreT* p) {
 	// check for base case to recurse or not
@@ -204,14 +217,25 @@ void clear_players(giocatoreT* head, giocatoreT* p) {
 		clear_players(head, p->next);
 
 	// clear actual player
-	// TODO: free carte
+	if (p->aula != NULL)
+		free_cards(p->aula);
+	if (p->bonus_malus != NULL)
+		free_cards(p->bonus_malus);
+	if (p->carte != NULL)
+		free_cards(p->carte);
 	free_wrap(p);
 }
 
 void clear_game(game_contextT* game_ctx) {
 
 	clear_players(game_ctx->next_player, game_ctx->next_player);
-	// TODO: free carte
+
+	if (game_ctx->aula_studio != NULL)
+		free_cards(game_ctx->aula_studio);
+	if (game_ctx->mazzo_pesca != NULL)
+		free_cards(game_ctx->mazzo_pesca);
+	if (game_ctx->mazzo_scarti != NULL)
+		free_cards(game_ctx->mazzo_scarti);
 	free_wrap(game_ctx);
 }
 
