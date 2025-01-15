@@ -8,3 +8,9 @@
 #define FILE_MAZZO "mazzo.txt"
 
 #define CARDS_PER_PLAYER 5
+
+#define ACTION_PLAY_HAND 1
+#define ACTION_DRAW 2
+#define ACTION_VIEW_OWN 3
+#define ACTION_VIEW_OTHERS 4
+#define ACTION_QUIT 0
