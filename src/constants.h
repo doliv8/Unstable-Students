@@ -6,3 +6,5 @@
 #define MAX_PLAYERS 4
 
 #define FILE_MAZZO "mazzo.txt"
+
+#define CARDS_PER_PLAYER 5

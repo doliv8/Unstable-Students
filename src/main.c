@@ -25,31 +25,17 @@ cartaT* duplicate_carta(cartaT* card) {
 }
 
 effettoT* read_effetti(FILE* fp, int* n_effects) {
-	int amount = 0;
-	fscanf(fp, "%d", &amount);
+	int amount = read_int(fp);
 	effettoT* effects = NULL;
 	if (amount != 0)
 		effects = (effettoT*)malloc_checked(amount*sizeof(effettoT));
-	int val; // to hold numbers that get converted into enums
 	for (int i = 0; i < amount; i++) {
-		fscanf(fp, "%d", &val);
-		effects[i].azione = val;
-		fscanf(fp, "%d", &val);
-		effects[i].target_giocatori = val;
-		fscanf(fp, "%d", &val);
-		effects[i].target_carta = val;
+		effects[i].azione = (azioneT)read_int(fp);
+		effects[i].target_giocatori = (target_giocatoriT)read_int(fp);
+		effects[i].target_carta = (tipo_cartaT)read_int(fp);
 	}
 	*n_effects = amount;
 	return effects;
-}
-
-int read_int(FILE* fp) {
-	int val;
-	if (fscanf(fp, "%d", &val) != 1) {
-		fprintf(stderr, "Error occurred while reading an integer from file stream!");
-		exit(EXIT_FAILURE);
-	}
-	return val;
 }
 
 // returns the new linked list tail
@@ -138,6 +124,20 @@ cartaT* shuffle_cards(cartaT* cards, int n_cards) {
 	return new_head; // return new head to shuffled linked list
 }
 
+cartaT* pop_card(cartaT** head) {
+	cartaT* card = *head;
+	if (card == NULL)
+		return NULL;
+	*head = card->next;
+	card->next = NULL;
+	return card;
+}
+
+void push_card(cartaT** head, cartaT* card) {
+	card->next = *head;
+	*head = card;
+}
+
 // returns a linked list containing all the Matricola-kind cards found & removed from mazzo
 cartaT* split_matricole(cartaT** mazzo_head) {
 	cartaT* matricole_head = NULL;
@@ -145,10 +145,9 @@ cartaT* split_matricole(cartaT** mazzo_head) {
 		curr = *prev;
 		if (curr->tipo == MATRICOLA) {
 			// remove curr card from the mazzo linked list linking
-			*prev = curr->next;
+			pop_card(prev);
 			// link this matricola card to matricole_head linked_list
-			curr->next = matricole_head;
-			matricole_head = curr;
+			push_card(&matricole_head, curr);
 		} else
 			prev = &curr->next;
 	}
@@ -167,25 +166,40 @@ giocatoreT* new_player() {
 	return player;
 }
 
+void distribute_cards(game_contextT* game_ctx) {
+	cartaT* card;
+
+	// distribute a matricola card for each player, rotating player for each given card
+	for (int i = 0; i < game_ctx->n_players; i++, game_ctx->next_player = game_ctx->next_player->next) {
+		card = pop_card(&game_ctx->aula_studio);
+		push_card(&game_ctx->next_player->aula, card);
+	}
+
+	// distribute a card CARDS_PER_PLAYER times the players count, rotating player for each given card
+	for (int i = 0; i < CARDS_PER_PLAYER * game_ctx->n_players; i++, game_ctx->next_player = game_ctx->next_player->next) {
+		card = pop_card(&game_ctx->mazzo_pesca);
+		push_card(&game_ctx->next_player->carte, card);
+	}
+}
+
 game_contextT* new_game() {
 	game_contextT* game_ctx = (game_contextT*)calloc_checked(1, sizeof(game_contextT));
 
-	int n_giocatori;
 	do {
 		puts("Quanti giocatori giocheranno?");
-		n_giocatori = get_int();
-	} while (n_giocatori < MIN_PLAYERS || n_giocatori > MAX_PLAYERS);
+		game_ctx->n_players = get_int();
+	} while (game_ctx->n_players < MIN_PLAYERS || game_ctx->n_players > MAX_PLAYERS);
 
 	// create players
 	// game_ctx->next_player serves as the linked-list head
 	giocatoreT* curr_player;
-	for (int i = 0; i < n_giocatori; i++) {
+	for (int i = 0; i < game_ctx->n_players; i++) {
 		if (game_ctx->next_player == NULL)
 			curr_player = game_ctx->next_player = new_player();
 		else
 			curr_player = curr_player->next = new_player();
 	}
-	curr_player->next = game_ctx->next_player; // make the linked list circular
+	curr_player->next = game_ctx->next_player; // make the linked list circular linking tail to head
 
 	// load cards
 	int n_cards;
@@ -195,9 +209,14 @@ game_contextT* new_game() {
 	game_ctx->aula_studio = split_matricole(&mazzo);
 	game_ctx->mazzo_pesca = mazzo;
 
-	// TODO: distribute cards
+	distribute_cards(game_ctx);
 
 	return game_ctx;
+}
+
+game_contextT* load_game() {
+	// TODO: implement loading saved games
+	return NULL;
 }
 
 void free_cards(cartaT* cards_head) {
@@ -210,6 +229,7 @@ void free_cards(cartaT* cards_head) {
 		free_wrap(cards_head->effetti);
 	free_wrap(cards_head);
 }
+
 // recursive function to clear a giocatoreT* circular linked list
 void clear_players(giocatoreT* head, giocatoreT* p) {
 	// check for base case to recurse or not
