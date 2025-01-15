@@ -24,6 +24,12 @@ clean:
 run: all
 	$(TARGET)
 
+gdb: all
+	gdb $(TARGET)
+
+valgrind: all
+	valgrind --leak-check=full --tool=memcheck -s $(TARGET)
+
 debug: CFLAGS += -DDEBUG
 
 debug: clean $(TARGET)

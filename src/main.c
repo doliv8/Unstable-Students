@@ -126,12 +126,34 @@ cartaT* shuffle_cards(cartaT* cards, int n_cards) {
 	}
 
 	// reconstruct the links between the nodes (cards) of the linked list following the shuffled order
-	for (int i = 0; i < n_cards-1; i++) {
+	for (int i = 0; i < n_cards-1; i++)
 		linear_cards[i]->next = linear_cards[i+1];
-	}
 	linear_cards[n_cards-1]->next = NULL; // set tail next pointer to NULL
 
-	return linear_cards[0]; // return new head to shuffled linked list
+	cartaT* new_head =  linear_cards[0];
+
+	// free the linear array of cards used during shuffle
+	free(linear_cards);
+
+	return new_head; // return new head to shuffled linked list
+}
+
+// returns a linked list containing all the Matricola-kind cards found & removed from mazzo
+cartaT* split_matricole(cartaT** mazzo_head) {
+	cartaT* matricole_head = NULL;
+	for (cartaT** prev = mazzo_head, *curr; *prev != NULL; ) {
+		curr = *prev;
+		if (curr->tipo == MATRICOLA) {
+			// remove curr card from the mazzo linked list linking
+			*prev = curr->next;
+			// link this matricola card to matricole_head linked_list
+			curr->next = matricole_head;
+			matricole_head = curr;
+		} else
+			prev = &curr->next;
+	}
+
+	return matricole_head;
 }
 
 giocatoreT* new_player() {
@@ -168,6 +190,8 @@ game_contextT* new_game() {
 	int n_cards;
 	cartaT* mazzo = load_mazzo(&n_cards);
 	mazzo = shuffle_cards(mazzo, n_cards);
+
+	game_ctx->aula_studio = split_matricole(&mazzo);
 
 
 	return game_ctx;
