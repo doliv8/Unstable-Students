@@ -211,12 +211,18 @@ game_contextT* new_game() {
 
 	distribute_cards(game_ctx);
 
+	game_ctx->round_num = 1;
+
 	return game_ctx;
 }
 
 game_contextT* load_game() {
 	// TODO: implement loading saved games
 	return NULL;
+}
+
+void save_game(game_contextT* game_ctx) {
+	// TODO: implement saving game
 }
 
 void free_cards(cartaT* cards_head) {
@@ -259,6 +265,95 @@ void clear_game(game_contextT* game_ctx) {
 	free_wrap(game_ctx);
 }
 
+
+void apply_effects(game_contextT* game_ctx, cartaT* card) {
+
+	if (card->opzionale) {
+		printf("Vuoi applicare gli effetti della carta %s? (y/n): ", card->name);
+		// TODO: implement choice
+	}
+
+	for (int i = 0; i < card->n_effetti; i++) {
+		printf("*to implement* APPLYING an effect!\n");
+		// TODO: apply actual effects
+		// apply_effect(game_ctx, card->effetti[i]);
+	}
+}
+
+
+void show_round(game_contextT* game_ctx) {
+	printf("Round numero: %d\n", game_ctx->round_num);
+
+	printf("Ora gioca: %s\n", game_ctx->next_player->name);
+
+
+}
+
+void apply_start_effects(game_contextT* game_ctx) {
+	giocatoreT* player = game_ctx->next_player;
+	// apply bonus malus quando = INIZIO effects
+	for (cartaT* card = player->bonus_malus; card != NULL; card = card->next) {
+		if (card->quando == INIZIO)
+			apply_effects(game_ctx, card);
+	}
+
+	// apply aula quando = INIZIO effects
+	for (cartaT* card = player->aula; card != NULL; card = card->next) {
+		if (card->quando == INIZIO)
+			apply_effects(game_ctx, card);
+	}
+
+}
+
+cartaT* draw_card(game_contextT* game_ctx) {
+	// shuffle and swap mazzo_scarti with mazzo_pesca if mazzo_pesca is empty
+	if (game_ctx->mazzo_pesca == NULL) {
+		// game_ctx->mazzo_pesca = shuffle_cards(game_ctx->mazzo_scarti, );
+		// TODO: actually shuffle cards
+		game_ctx->mazzo_pesca = game_ctx->mazzo_scarti;
+		game_ctx->mazzo_scarti = NULL; // mazzo_scarti has been moved to mazzo_pesca (emptied)
+	}
+
+	return pop_card(&game_ctx->mazzo_pesca);
+}
+
+
+void show_card(cartaT* card) {
+	printf("Nome: %s\n", card->name);
+	printf("Descrizione: %s\n", card->description);
+	printf("Tipo: %d\n", card->tipo); // TODO: add conversion of tipo_cartaT type to string
+	if (card->n_effetti != 0) {
+		printf("Effetti (%d):\n", card->n_effetti);
+		printf("\tOpzionali: %s\n", card->opzionale ? "si" : "no");
+		printf("\tQuando: %d\n", card->quando); // TODO: add conversion of quandoT to string
+		// TODO: add pritning of effetti
+	} else {
+		puts("Nessun effetto!");
+	}
+}
+
+
+void begin_round(game_contextT* game_ctx) {
+	show_round(game_ctx);
+	apply_start_effects(game_ctx);
+
+	cartaT* drawn_card = draw_card(game_ctx);
+	puts("Ecco la carta che hai pescato:");
+	show_card(drawn_card);
+
+}
+
+void end_round(game_contextT* game_ctx) {
+	game_ctx->next_player = game_ctx->next_player->next; // next round its next player's turn
+	game_ctx->round_num++;
+}
+
+void play_round(game_contextT* game_ctx) {
+
+	int action = get_int();
+
+}
+
 int main(int argc, char *argv[]) {
 	// seed libc random generator
 	srand(time(NULL));
@@ -267,6 +362,19 @@ int main(int argc, char *argv[]) {
 	assert(argc == 1);
 
 	game_contextT* game_ctx = new_game();
+
+	// game loop
+	bool game_running = true;
+	while (game_running) {
+		save_game(game_ctx);
+
+		begin_round(game_ctx);
+
+		play_round(game_ctx);
+
+		end_round(game_ctx);
+
+	}
 
 
 
