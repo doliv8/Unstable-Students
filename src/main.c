@@ -319,6 +319,7 @@ cartaT* draw_card(game_contextT* game_ctx) {
 
 
 void show_card(cartaT* card) {
+	puts("____________________________________________");
 	printf("Nome: %s\n", card->name);
 	printf("Descrizione: %s\n", card->description);
 	printf("Tipo: %d\n", card->tipo); // TODO: add conversion of tipo_cartaT type to string
@@ -330,6 +331,7 @@ void show_card(cartaT* card) {
 	} else {
 		puts("Nessun effetto!");
 	}
+	puts("____________________________________________");
 }
 
 
@@ -340,6 +342,7 @@ void begin_round(game_contextT* game_ctx) {
 	cartaT* drawn_card = draw_card(game_ctx);
 	puts("Ecco la carta che hai pescato:");
 	show_card(drawn_card);
+	push_card(&game_ctx->next_player->carte, drawn_card);
 
 }
 
@@ -348,9 +351,51 @@ void end_round(game_contextT* game_ctx) {
 	game_ctx->round_num++;
 }
 
-void play_round(game_contextT* game_ctx) {
+int choice_action_menu() {
+	int action;
+	do {
+		puts("Che azione vuoi eseguire?");
+		puts(" [TASTO " TO_STRING(ACTION_PLAY_HAND) "] Gioca una carta dalla tua mano");
+		puts(" [TASTO " TO_STRING(ACTION_DRAW) "] Pesca un'altra carta");
+		puts(" [TASTO " TO_STRING(ACTION_VIEW_OWN) "] Visualizza le tue carte");
+		puts(" [TASTO " TO_STRING(ACTION_VIEW_OTHERS) "] Visualizza lo stato degli altri giocatori");
+		puts(" [TASTO " TO_STRING(ACTION_QUIT) "] Esci dalla partita");
+		action = get_int();
+	} while (action < ACTION_QUIT || action > ACTION_VIEW_OTHERS);
+	return action;
+}
 
-	int action = get_int();
+void play_round(game_contextT* game_ctx) {
+	bool in_action = true;
+	while (in_action) {
+		switch (choice_action_menu()) {
+			case ACTION_PLAY_HAND: {
+				// TODO: implement playing cards
+				in_action = false;
+				break;
+			}
+			case ACTION_DRAW: {
+				cartaT* drawn_card = draw_card(game_ctx);
+				puts("Ecco la carta che hai pescato:");
+				show_card(drawn_card);
+				push_card(&game_ctx->next_player->carte, drawn_card);
+				in_action = false;
+				break;
+			}
+			case ACTION_VIEW_OWN: {
+				// TODO: implement viewing own cards
+				break;
+			}
+			case ACTION_VIEW_OTHERS: {
+				// TODO: implement viewing others' cards
+				break;
+			}
+			case ACTION_QUIT: {
+				// TODO: implement gracefully quitting method
+				break;
+			}
+		}
+	}
 
 }
 
