@@ -41,3 +41,12 @@ void free_wrap(void* ptr) {
 int rand_int(int min, int max) {
 	return rand() % (max+1) + min;
 }
+
+int read_int(FILE* fp) {
+	int val;
+	if (fscanf(fp, " %d", &val) != 1) {
+		fprintf(stderr, "Error occurred while reading an integer from file stream!");
+		exit(EXIT_FAILURE);
+	}
+	return val;
+}

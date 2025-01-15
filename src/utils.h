@@ -16,5 +16,7 @@ void free_wrap(void* ptr);
 // generates a random integer in the range [min, max]
 int rand_int(int min, int max);
 
+int read_int(FILE* fp);
+
 
 #endif

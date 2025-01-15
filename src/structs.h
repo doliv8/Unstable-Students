@@ -36,7 +36,7 @@ struct Effetto {
 struct GameContext {
 	giocatoreT* next_player;
 	cartaT *mazzo_pesca, *mazzo_scarti, *aula_studio;
-
+	int n_players;
 };
 
 #endif
