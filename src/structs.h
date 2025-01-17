@@ -37,6 +37,7 @@ struct GameContext {
 	giocatoreT* next_player;
 	cartaT *mazzo_pesca, *mazzo_scarti, *aula_studio;
 	int n_players, round_num;
+	bool game_running;
 };
 
 #endif

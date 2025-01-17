@@ -9,6 +9,7 @@
 #include "types.h"
 #include "structs.h"
 #include "utils.h"
+#include "gameplay.h"
 
 cartaT* duplicate_carta(cartaT* card) {
 	cartaT* copy_card = (cartaT*)malloc_checked(sizeof(cartaT));
@@ -253,7 +254,6 @@ void clear_players(giocatoreT* head, giocatoreT* p) {
 }
 
 void clear_game(game_contextT* game_ctx) {
-
 	clear_players(game_ctx->next_player, game_ctx->next_player);
 
 	if (game_ctx->aula_studio != NULL)
@@ -365,6 +365,37 @@ int choice_action_menu() {
 	return action;
 }
 
+void show_player_state(game_contextT* game_ctx, giocatoreT* player) {
+	// TODO: implement this function
+	printf("Ecco lo stato di %s:\n", player->name);
+}
+
+void view_others(game_contextT* game_ctx) {
+	giocatoreT* player;
+	int chosen_idx;
+	do {
+		puts("Scegli il giocatore del quale vuoi vedere lo stato:");
+		player = game_ctx->next_player->next; // start from next player based on turns
+		for (int i = 1; i < game_ctx->n_players; i++, player = player->next)
+			printf(" [TASTO %d] %s\n", i, player->name);
+		printf(" [TASTO %d] Tutti i giocatori\n", game_ctx->n_players);
+		chosen_idx = get_int();
+	} while (chosen_idx < 1 || chosen_idx > game_ctx->n_players);
+
+	player = game_ctx->next_player->next; // start from next player based on turns
+	for (int i = 1; i < game_ctx->n_players; i++, player = player->next) {
+		if (chosen_idx == game_ctx->n_players || i == chosen_idx)
+			show_player_state(game_ctx, player);
+	}
+}
+
+// returns true if user wants to quit, false otherwise
+bool ask_quit() {
+	printf("Are you sure you want to quit this game? (y/N): ");
+	// TODO: implement reading y/N
+	return true;
+}
+
 void play_round(game_contextT* game_ctx) {
 	bool in_action = true;
 	while (in_action) {
@@ -387,16 +418,16 @@ void play_round(game_contextT* game_ctx) {
 				break;
 			}
 			case ACTION_VIEW_OTHERS: {
-				// TODO: implement viewing others' cards
+				view_others(game_ctx);
 				break;
 			}
 			case ACTION_QUIT: {
-				// TODO: implement gracefully quitting method
+				game_ctx->game_running = !ask_quit();
+				in_action = false;
 				break;
 			}
 		}
 	}
-
 }
 
 int main(int argc, char *argv[]) {
@@ -409,8 +440,8 @@ int main(int argc, char *argv[]) {
 	game_contextT* game_ctx = new_game();
 
 	// game loop
-	bool game_running = true;
-	while (game_running) {
+	game_ctx->game_running = true;
+	while (game_ctx->game_running) {
 		save_game(game_ctx);
 
 		begin_round(game_ctx);
