@@ -18,5 +18,4 @@ int rand_int(int min, int max);
 
 int read_int(FILE* fp);
 
-
 #endif
