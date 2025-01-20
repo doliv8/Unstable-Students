@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <string.h>
 #include <time.h>
+#include <ctype.h>
 #include "types.h"
 #include "structs.h"
 #include "utils.h"
@@ -94,6 +95,9 @@ cartaT* load_mazzo(int* n_cards) {
 
 // this function uses Fisher-Yates shuffle algorithm to shuffle the (linearized) dynamic array of cards in linear time
 cartaT* shuffle_cards(cartaT* cards, int n_cards) {
+	if (n_cards == 0)
+		return NULL;
+
 	cartaT** linear_cards = malloc_checked(n_cards*sizeof(cartaT*));
 
 	for (int i = 0; i < n_cards; i++) {
@@ -305,16 +309,27 @@ void apply_start_effects(game_contextT* game_ctx) {
 
 }
 
-cartaT* draw_card(game_contextT* game_ctx) {
+int count_cards(cartaT* head) {
+	int count = 0;
+	while (head != NULL) {
+		count++;
+		head = head->next;
+	}
+	return count;
+}
+
+void draw_card(game_contextT* game_ctx) {
 	// shuffle and swap mazzo_scarti with mazzo_pesca if mazzo_pesca is empty
 	if (game_ctx->mazzo_pesca == NULL) {
-		// game_ctx->mazzo_pesca = shuffle_cards(game_ctx->mazzo_scarti, );
-		// TODO: actually shuffle cards
+		game_ctx->mazzo_pesca = shuffle_cards(game_ctx->mazzo_scarti, count_cards(game_ctx->mazzo_scarti));
 		game_ctx->mazzo_pesca = game_ctx->mazzo_scarti;
 		game_ctx->mazzo_scarti = NULL; // mazzo_scarti has been moved to mazzo_pesca (emptied)
 	}
 
-	return pop_card(&game_ctx->mazzo_pesca);
+	cartaT* drawn_card = pop_card(&game_ctx->mazzo_pesca);
+	puts("Ecco la carta che hai pescato:");
+	show_card(drawn_card);
+	push_card(&game_ctx->next_player->carte, drawn_card);
 }
 
 
@@ -339,16 +354,17 @@ void begin_round(game_contextT* game_ctx) {
 	show_round(game_ctx);
 	apply_start_effects(game_ctx);
 
-	cartaT* drawn_card = draw_card(game_ctx);
-	puts("Ecco la carta che hai pescato:");
-	show_card(drawn_card);
-	push_card(&game_ctx->next_player->carte, drawn_card);
+	draw_card(game_ctx);
 
 }
 
 void end_round(game_contextT* game_ctx) {
 	game_ctx->next_player = game_ctx->next_player->next; // next round its next player's turn
 	game_ctx->round_num++;
+
+	// hands max cards check
+
+	// check win condition
 }
 
 int choice_action_menu() {
@@ -368,6 +384,7 @@ int choice_action_menu() {
 void show_player_state(game_contextT* game_ctx, giocatoreT* player) {
 	// TODO: implement this function
 	printf("Ecco lo stato di %s:\n", player->name);
+	// keep in mind MOSTRA effect
 }
 
 void view_others(game_contextT* game_ctx) {
@@ -391,9 +408,10 @@ void view_others(game_contextT* game_ctx) {
 
 // returns true if user wants to quit, false otherwise
 bool ask_quit() {
+	char choice = 'n';
 	printf("Are you sure you want to quit this game? (y/N): ");
-	// TODO: implement reading y/N
-	return true;
+	scanf(" %c", &choice);
+	return tolower(choice) == 'y';
 }
 
 void play_round(game_contextT* game_ctx) {
@@ -406,10 +424,7 @@ void play_round(game_contextT* game_ctx) {
 				break;
 			}
 			case ACTION_DRAW: {
-				cartaT* drawn_card = draw_card(game_ctx);
-				puts("Ecco la carta che hai pescato:");
-				show_card(drawn_card);
-				push_card(&game_ctx->next_player->carte, drawn_card);
+				draw_card(game_ctx);
 				in_action = false;
 				break;
 			}
@@ -422,8 +437,10 @@ void play_round(game_contextT* game_ctx) {
 				break;
 			}
 			case ACTION_QUIT: {
-				game_ctx->game_running = !ask_quit();
-				in_action = false;
+				if (ask_quit()) {
+					game_ctx->game_running = false;
+					in_action = false;
+				}
 				break;
 			}
 		}
@@ -449,7 +466,6 @@ int main(int argc, char *argv[]) {
 		play_round(game_ctx);
 
 		end_round(game_ctx);
-
 	}
 
 
