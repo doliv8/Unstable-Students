@@ -345,7 +345,11 @@ void show_card(cartaT* card) {
 	puts("AAA");
 	*/
 
-	puts("____________________________________________");
+	printf("%s%c", ANSI_BLUE, CARD_CORNER_UP_LEFT);
+	for (int x = 0; x < CARD_WIDTH; x++)
+		putchar(CARD_BORDER_HORIZONTAL);
+	printf("%c%s\n", CARD_CORNER_UP_RIGHT, ANSI_RESET);
+
 	printf("Nome: %s\n", card->name);
 	// printf("Descrizione: %s\n", card->description);
 
@@ -364,7 +368,11 @@ void show_card(cartaT* card) {
 	} else {
 		puts("Nessun effetto!");
 	}
-	puts("____________________________________________");
+
+	printf("%s%c", ANSI_BLUE, CARD_CORNER_DOWN_LEFT);
+	for (int x = 0; x < CARD_WIDTH; x++)
+		putchar(CARD_BORDER_HORIZONTAL);
+	printf("%c%s\n", CARD_CORNER_DOWN_RIGHT, ANSI_RESET);
 }
 
 
