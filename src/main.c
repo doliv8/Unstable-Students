@@ -12,6 +12,9 @@
 #include "utils.h"
 #include "gameplay.h"
 
+#include <wchar.h>
+#include <locale.h>
+
 cartaT* duplicate_carta(cartaT* card) {
 	cartaT* copy_card = (cartaT*)malloc_checked(sizeof(cartaT));
 	*copy_card = *card; // copy the whole struct
@@ -334,9 +337,24 @@ void draw_card(game_contextT* game_ctx) {
 
 
 void show_card(cartaT* card) {
+	/*
+	puts("AAA");
+	 setlocale(LC_ALL, "");
+	for (int x = 0; x < CARD_WIDTH; x++)
+		putwchar(BOX_DRAWING_HEAVY_HORIZONTAL);
+	puts("AAA");
+	*/
+
 	puts("____________________________________________");
 	printf("Nome: %s\n", card->name);
-	printf("Descrizione: %s\n", card->description);
+	// printf("Descrizione: %s\n", card->description);
+
+	wrapped_textT wrapped_description;
+	init_wrapped(&wrapped_description, card->description, CARD_WIDTH);
+	for (int i = 0; i < wrapped_description.n_lines; i++)
+		printf("line %d: %s\n", i+1, wrapped_description.lines[i]);
+	clear_wrapped(&wrapped_description);
+
 	printf("Tipo: %d\n", card->tipo); // TODO: add conversion of tipo_cartaT type to string
 	if (card->n_effetti != 0) {
 		printf("Effetti (%d):\n", card->n_effetti);
@@ -358,11 +376,20 @@ void begin_round(game_contextT* game_ctx) {
 
 }
 
+void discard_card(game_contextT* game_ctx) {
+	puts("You can have a maxium of " TO_STRING(ENDROUND_MAX_CARDS) " at the end of each round!");
+	puts("Pick a card you want to discard:");
+	cartaT* cards = game_ctx->next_player->carte;
+	// for (int i = 1; < )
+}
+
 void end_round(game_contextT* game_ctx) {
 	game_ctx->next_player = game_ctx->next_player->next; // next round its next player's turn
 	game_ctx->round_num++;
 
-	// hands max cards check
+	// hand max cards check
+	// while (count_cards(game_ctx->next_player->carte) > ENDROUND_MAX_CARDS)
+	// 	discard_card(game_ctx);
 
 	// check win condition
 }
