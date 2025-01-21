@@ -13,5 +13,6 @@ typedef enum TargetGiocatori target_giocatoriT;
 // end base types
 
 typedef struct GameContext game_contextT;
+typedef struct WrappedText wrapped_textT;
 
 #endif

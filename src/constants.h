@@ -8,9 +8,49 @@
 #define FILE_MAZZO "mazzo.txt"
 
 #define CARDS_PER_PLAYER 5
+#define ENDROUND_MAX_CARDS 5
 
 #define ACTION_PLAY_HAND 1
 #define ACTION_DRAW 2
 #define ACTION_VIEW_OWN 3
 #define ACTION_VIEW_OTHERS 4
 #define ACTION_QUIT 0
+
+
+#define CARD_WIDTH 30
+#define CARD_PADDING 2
+
+#define BOX_DRAWING_LIGHT_HORIZONTAL L'─'  // U+2500
+#define BOX_DRAWING_HEAVY_HORIZONTAL L'━'  // U+2501
+#define BOX_DRAWING_LIGHT_VERTICAL L'│'    // U+2502
+#define BOX_DRAWING_HEAVY_VERTICAL L'┃'    // U+2503
+#define BOX_DRAWING_LIGHT_DOWN_AND_RIGHT L'┌' // U+250C
+#define BOX_DRAWING_LIGHT_DOWN_AND_LEFT L'┐'  // U+2510
+#define BOX_DRAWING_LIGHT_UP_AND_RIGHT L'└'    // U+2514
+#define BOX_DRAWING_LIGHT_UP_AND_LEFT L'┘'     // U+2518
+#define BOX_DRAWING_HEAVY_DOWN_AND_RIGHT L'╔'   // U+2554
+#define BOX_DRAWING_HEAVY_DOWN_AND_LEFT L'╗'    // U+2557
+#define BOX_DRAWING_HEAVY_UP_AND_RIGHT L'╚'      // U+255A
+#define BOX_DRAWING_HEAVY_UP_AND_LEFT L'╝'       // U+255D
+#define BOX_DRAWING_LIGHT_HORIZONTAL_VERTICAL L'┼' // U+253C
+#define BOX_DRAWING_HEAVY_HORIZONTAL_VERTICAL L'╬'  // U+256C
+
+#define ANSI_RESET "\033[0m"
+#define ANSI_BOLD "\033[1m"
+#define ANSI_UNDERLINE "\033[4m"
+#define ANSI_RED "\033[31m"
+#define ANSI_GREEN "\033[32m"
+#define ANSI_YELLOW "\033[33m"
+#define ANSI_BLUE "\033[34m"
+#define ANSI_MAGENTA "\033[35m"
+#define ANSI_CYAN "\033[36m"
+#define ANSI_WHITE "\033[37m"
+
+// Background colors
+#define ANSI_BG_RED "\033[41m"
+#define ANSI_BG_GREEN "\033[42m"
+#define ANSI_BG_YELLOW "\033[43m"
+#define ANSI_BG_BLUE "\033[44m"
+#define ANSI_BG_MAGENTA "\033[45m"
+#define ANSI_BG_CYAN "\033[46m"
+#define ANSI_BG_WHITE "\033[47m"
