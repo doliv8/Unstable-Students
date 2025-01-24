@@ -335,44 +335,111 @@ void draw_card(game_contextT* game_ctx) {
 	push_card(&game_ctx->next_player->carte, drawn_card);
 }
 
+void format_effects(freeable_multiline_textT* multiline, cartaT* card) {
+
+	// add upper padding
+	char* line;
+	if (card->n_effetti != 0) {
+		for (int i = 0; i < MAX_EFFECTS-card->n_effetti; i++)
+			multiline_addline(multiline, strdup_checked(""));
+
+		if (asprintf(&line, "Opzionale: %s", card->opzionale ? "Si" : "No") == -1) {
+			// TODO: handle error in allocating memory
+			exit(EXIT_FAILURE);
+		}
+		multiline_addline(multiline, line);
+		if (asprintf(&line, "Quando: %s", quandoT_str(card->quando)) == -1) {
+			// TODO: handle error in allocating memory
+			exit(EXIT_FAILURE);
+		}
+		multiline_addline(multiline, line);
+		if (asprintf(&line, "Effetti (%d):", card->n_effetti) == -1) {
+			// TODO: handle error in allocating memory
+			exit(EXIT_FAILURE);
+		}
+		multiline_addline(multiline, line);
+
+		// add actual effects
+		for (int i = 0; i < card->n_effetti; i++) {
+			if (asprintf(&line, "%s -> %s (%s)", azioneT_str(card->effetti[i].azione), tipo_cartaT_str(card->effetti[i].target_carta), target_giocatoriT_str(card->effetti[i].target_giocatori)) == -1) {
+				// TODO: handle error in allocating memory
+				exit(EXIT_FAILURE);
+			}
+			multiline_addline(multiline, line);
+		}
+	} else {
+		for (int i = 1; i < CARD_EFFECTS_HEIGHT; i++)
+			multiline_addline(multiline, strdup_checked(""));
+		multiline_addline(multiline, strdup_checked("Nessun effetto!"));
+	}
+}
 
 void show_card(cartaT* card) {
-	/*
-	puts("AAA");
-	 setlocale(LC_ALL, "");
-	for (int x = 0; x < CARD_WIDTH; x++)
-		putwchar(BOX_DRAWING_HEAVY_HORIZONTAL);
-	puts("AAA");
-	*/
+	multiline_textT card_info;
+	init_multiline(&card_info);
 
-	printf("%s%c", ANSI_BLUE, CARD_CORNER_UP_LEFT);
-	for (int x = 0; x < CARD_WIDTH; x++)
-		putchar(CARD_BORDER_HORIZONTAL);
-	printf("%c%s\n", CARD_CORNER_UP_RIGHT, ANSI_RESET);
+	char horizontal_bar[CARD_CONTENT_WIDTH+1];
+	for (int x = 0; x < CARD_CONTENT_WIDTH; x++)
+		horizontal_bar[x] = CARD_BORDER_HORIZONTAL;
+	horizontal_bar[CARD_CONTENT_WIDTH] = '\0';
 
-	printf("Nome: %s\n", card->name);
+	char *h_border, *v_border;
+	if (asprintf(&h_border, ANSI_BLUE "%c%s%c" ANSI_RESET, CARD_CORNER_LEFT, horizontal_bar, CARD_CORNER_RIGHT) == -1) {
+		// TODO: handle error in allocating memory
+		exit(EXIT_FAILURE);
+	}
+
+	if (asprintf(&v_border, ANSI_BLUE "%c" ANSI_RESET, CARD_BORDER_VERTICAL) == -1) {
+		// TODO: handle error in allocating memory
+		exit(EXIT_FAILURE);
+	}
+
+	// max card name length is 26 chars.
+	char *name, *type;
+	if (asprintf(&name, ANSI_BOLD "%s" ANSI_RESET, card->name) == -1) {
+		// TODO: handle error in allocating memory
+		exit(EXIT_FAILURE);
+	}
+	if (asprintf(&type, ANSI_BG_GREEN "#%s" ANSI_RESET, tipo_cartaT_str(card->tipo)) == -1) {
+		// TODO: handle error in allocating memory
+		exit(EXIT_FAILURE);
+	}
+	// multiline_addline(&card_info, h_border);
+	multiline_addline_with_len(&card_info, type, snprintf(NULL, 0, "#%s", tipo_cartaT_str(card->tipo)));
+	multiline_addline_with_len(&card_info, name, strlen(card->name));
+	// printf("Nome: %s\n", card->name);
 	// printf("Descrizione: %s\n", card->description);
 
 	wrapped_textT wrapped_description;
-	init_wrapped(&wrapped_description, card->description, CARD_WIDTH);
-	for (int i = 0; i < wrapped_description.n_lines; i++)
-		printf("line %d: %s\n", i+1, wrapped_description.lines[i]);
-	clear_wrapped(&wrapped_description);
-
-	printf("Tipo: %d\n", card->tipo); // TODO: add conversion of tipo_cartaT type to string
-	if (card->n_effetti != 0) {
-		printf("Effetti (%d):\n", card->n_effetti);
-		printf("\tOpzionali: %s\n", card->opzionale ? "si" : "no");
-		printf("\tQuando: %d\n", card->quando); // TODO: add conversion of quandoT to string
-		// TODO: add pritning of effetti
-	} else {
-		puts("Nessun effetto!");
+	init_wrapped(&wrapped_description, card->description, CARD_CONTENT_WIDTH-2*CARD_PADDING);
+	for (int i = 0; i < CARD_DESCRIPTION_HEIGHT; i++) {
+		if (i < wrapped_description.multiline.n_lines)
+			multiline_addline(&card_info, wrapped_description.multiline.lines[i]);
+		else
+			multiline_addline(&card_info, "");
 	}
 
-	printf("%s%c", ANSI_BLUE, CARD_CORNER_DOWN_LEFT);
-	for (int x = 0; x < CARD_WIDTH; x++)
-		putchar(CARD_BORDER_HORIZONTAL);
-	printf("%c%s\n", CARD_CORNER_DOWN_RIGHT, ANSI_RESET);
+	puts(h_border);
+
+	print_centered_boxed_multiline(&card_info, v_border, CARD_CONTENT_WIDTH);
+
+	clear_wrapped(&wrapped_description);
+
+	freeable_multiline_textT effects_lines;
+	init_multiline(&effects_lines);
+
+	format_effects(&effects_lines, card);
+
+	print_centered_boxed_multiline(&effects_lines, v_border, CARD_CONTENT_WIDTH);
+
+	puts(h_border);
+
+	free(name);
+	free(type);
+	free(h_border);
+	free(v_border);
+	clear_multiline(&card_info);
+	clear_freeable_multiline(&effects_lines);
 }
 
 

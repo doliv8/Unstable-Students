@@ -27,12 +27,13 @@ REPOSITORY STRUCTURE
 ·
 │
 │ GAME SAVES
-├── saves                       //cartella contenente i salvataggi
+├── saves                       // directory contenente i salvataggi
 │   ├── savegame.sav
 │   └── ···
 │
 │ SOURCE FILES
-├── main.c                      //relazione e documentazione
+├── src                      	// directory contenente l'intero source code del progetto
+│   ├── main.c                  // relazione e documentazione
 ├── ···.c
 ├── ···.h
 │
