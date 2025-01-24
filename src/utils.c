@@ -63,42 +63,140 @@ int read_int(FILE* fp) {
 	return val;
 }
 
+char* strdup_checked(const char* str) {
+	int len = strlen(str)+1;
+	char* copy = malloc_checked(len);
+	strncpy(copy, str, len);
+	return copy;
+}
+
+void init_multiline(multiline_textT* multiline) {
+	multiline->n_lines = 0;
+	multiline->lines = NULL;
+	multiline->lengths = NULL;
+}
+
+void clear_multiline(multiline_textT* multiline) {
+	free(multiline->lines);
+	free(multiline->lengths);
+}
+
+void clear_freeable_multiline(freeable_multiline_textT* freeable_multiline) {
+	for (int i = 0; i < freeable_multiline->n_lines; i++)
+		free(freeable_multiline->lines[i]);
+	clear_multiline(freeable_multiline);
+}
+
+void multiline_addline(multiline_textT* multiline, const char* line) {
+	// increase arrays sizes
+	multiline->n_lines++;
+	multiline->lines = realloc_checked(multiline->lines, multiline->n_lines*sizeof(char*));
+	multiline->lengths = realloc_checked(multiline->lengths, multiline->n_lines*sizeof(int));
+	// add actual line
+	multiline->lines[multiline->n_lines-1] = line;
+	multiline->lengths[multiline->n_lines-1] = strlen(line);
+}
+
+void multiline_addline_with_len(multiline_textT* multiline, const char* line, int len) {
+	multiline_addline(multiline, line);
+	multiline->lengths[multiline->n_lines-1] = len;
+}
+
 void init_wrapped(wrapped_textT* wrapped, char* text, int max_width) {
 	int text_len = strlen(text);
+	init_multiline(&wrapped->multiline);
 
 	// initialize fields
-	wrapped->text = malloc_checked(text_len+1);
-	strncpy(wrapped->text, text, text_len+1);
-	wrapped->n_lines = 1;
-	wrapped->lines = calloc_checked(1, sizeof(char*));
-	wrapped->lines[0] = wrapped->text;
-	wrapped->lengths = calloc_checked(1, sizeof(int));
-	wrapped->lengths[0] = text_len;
+	wrapped->text = strdup_checked(text);
+	multiline_addline(&wrapped->multiline, wrapped->text);
 
 	char* last_space = wrapped->text;
-	for (size_t pos = 0, line_len = 0; pos < text_len; pos++, line_len++) {
-		if (wrapped->text[pos] != ' ') continue; // only interested in spaces.
-		if (line_len >= max_width) {
-			// split line and add second part to lines array
-			*last_space = '\0'; // terminate this line's string
-			wrapped->lines = realloc_checked(wrapped->lines, (wrapped->n_lines+1)*sizeof(char*));
-			wrapped->lines[wrapped->n_lines] = last_space+1;
+	for (size_t pos = 0, line_len = 0, word_len = 0; pos <= text_len; pos++) {
+		if (wrapped->text[pos] == ' ' || wrapped->text[pos] == '\0') { // only interested in spaces and terminator
+			if (line_len+word_len >= max_width) {
+				// split line and add second part to lines array
+				*last_space = '\0'; // terminate this line's string
 
-			wrapped->lengths = realloc_checked(wrapped->lengths, (wrapped->n_lines+1)*sizeof(int));
-			wrapped->lengths[wrapped->n_lines+1] = wrapped->lengths[wrapped->n_lines] - line_len; // set next line's length
-			wrapped->lengths[wrapped->n_lines] = line_len; // save this line's length
+				wrapped->multiline.lengths[wrapped->multiline.n_lines-1] = line_len-1; // save this line's length (remove added space)
+				multiline_addline(&wrapped->multiline, last_space+1); // add next line to multiline container
 
-			wrapped->n_lines++;
-
-			// starting a new line
-			line_len = 0;
-		}
-		last_space = &wrapped->text[pos];
+				// starting a new line
+				line_len = 0;
+			}
+			last_space = &wrapped->text[pos];
+			line_len += word_len+1;
+			word_len = 0;
+		} else
+			word_len++;
 	}
 }
 
+void print_centered_boxed_string(const char* str, int str_len, const char* border, int width) {
+	int padding = width - str_len;
+	int l_padding = padding / 2;
+	int r_padding = padding - l_padding;
+	printf("%s%*s%s%*s%s\n", border, l_padding, "", str, r_padding, "", border);
+}
+
+void print_centered_boxed_multiline(multiline_textT* multiline, const char* border, int width) {
+	for (int i = 0; i < multiline->n_lines; i++)
+		print_centered_boxed_string(multiline->lines[i], multiline->lengths[i], border, width);
+}
+
 void clear_wrapped(wrapped_textT* wrapped) {
-	free(wrapped->lines);
-	free(wrapped->lengths);
+	clear_multiline(&wrapped->multiline);
 	free(wrapped->text);
+}
+
+const char* quandoT_str(quandoT quando) {
+	static const char *mapping[] = {
+		[SUBITO] = "Subito",
+		[INIZIO] = "Inizio",
+		[FINE] = "Fine",
+		[MAI] = "Mai",
+		[SEMPRE] = "Sempre"
+	};
+	return mapping[quando];
+}
+
+const char* target_giocatoriT_str(target_giocatoriT target) {
+	static const char *mapping[] = {
+		[IO] = "Io",
+		[TU] = "Tu",
+		[VOI] = "Voi",
+		[TUTTI] = "Tutti"
+	};
+	return mapping[target];
+}
+
+const char* tipo_cartaT_str(tipo_cartaT tipo) {
+	static const char *mapping[] = {
+		[ALL] = "All",
+		[STUDENTE] = "Studente",
+		[MATRICOLA] = "Matricola",
+		[STUDENTE_SEMPLICE] = "Studente semplice",
+		[LAUREANDO] = "Laureando",
+		[BONUS] = "Bonus",
+		[MALUS] = "Malus",
+		[MAGIA] = "Magia",
+		[ISTANTANEA] = "Istantanea"
+	};
+	return mapping[tipo];
+}
+
+const char* azioneT_str(azioneT azione) {
+	static const char *mapping[] = {
+		[GIOCA] = "Gioca",
+		[SCARTA] = "Scarta",
+		[ELIMINA] = "Elimina",
+		[RUBA] = "Ruba",
+		[PESCA] = "Pesca",
+		[PRENDI] = "Prendi",
+		[BLOCCA] = "Blocca",
+		[SCAMBIA] = "Scambia",
+		[MOSTRA] = "Mostra",
+		[IMPEDIRE] = "Impedire",
+		[INGEGNERE] = "Ingegnere"
+	};
+	return mapping[azione];
 }

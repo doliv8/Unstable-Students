@@ -40,11 +40,15 @@ struct GameContext {
 	bool game_running;
 };
 
-struct WrappedText {
-	char* text;
+struct MultiLineText {
 	int n_lines;
 	char** lines;
 	int* lengths;
+};
+
+struct WrappedText {
+	char* text;
+	multiline_textT multiline;
 };
 
 #endif
