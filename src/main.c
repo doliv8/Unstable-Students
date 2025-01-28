@@ -3,6 +3,7 @@
 // Tipologia progetto: avanzato
 
 #define _GNU_SOURCE
+#include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 #include <time.h>
@@ -11,9 +12,6 @@
 #include "structs.h"
 #include "utils.h"
 #include "gameplay.h"
-
-#include <wchar.h>
-#include <locale.h>
 
 cartaT* duplicate_carta(cartaT* card) {
 	cartaT* copy_card = (cartaT*)malloc_checked(sizeof(cartaT));
@@ -343,28 +341,20 @@ void format_effects(freeable_multiline_textT* multiline, cartaT* card) {
 		for (int i = 0; i < MAX_EFFECTS-card->n_effetti; i++)
 			multiline_addline(multiline, strdup_checked(""));
 
-		if (asprintf(&line, "Opzionale: %s", card->opzionale ? "Si" : "No") == -1) {
-			// TODO: handle error in allocating memory
-			exit(EXIT_FAILURE);
-		}
+		asprintf_checked(&line, "Opzionale: %s", card->opzionale ? "Si" : "No");
 		multiline_addline(multiline, line);
-		if (asprintf(&line, "Quando: %s", quandoT_str(card->quando)) == -1) {
-			// TODO: handle error in allocating memory
-			exit(EXIT_FAILURE);
-		}
+		asprintf_checked(&line, "Quando: %s", quandoT_str(card->quando));
 		multiline_addline(multiline, line);
-		if (asprintf(&line, "Effetti (%d):", card->n_effetti) == -1) {
-			// TODO: handle error in allocating memory
-			exit(EXIT_FAILURE);
-		}
+		asprintf_checked(&line, "Effetti (%d):", card->n_effetti);
 		multiline_addline(multiline, line);
 
 		// add actual effects
 		for (int i = 0; i < card->n_effetti; i++) {
-			if (asprintf(&line, "%s -> %s (%s)", azioneT_str(card->effetti[i].azione), tipo_cartaT_str(card->effetti[i].target_carta), target_giocatoriT_str(card->effetti[i].target_giocatori)) == -1) {
-				// TODO: handle error in allocating memory
-				exit(EXIT_FAILURE);
-			}
+			asprintf_checked(&line, "%s -> %s (%s)",
+				azioneT_str(card->effetti[i].azione),
+				tipo_cartaT_str(card->effetti[i].target_carta),
+				target_giocatoriT_str(card->effetti[i].target_giocatori)
+			);
 			multiline_addline(multiline, line);
 		}
 	} else {
@@ -384,26 +374,14 @@ void show_card(cartaT* card) {
 	horizontal_bar[CARD_CONTENT_WIDTH] = '\0';
 
 	char *h_border, *v_border;
-	if (asprintf(&h_border, ANSI_BLUE "%c%s%c" ANSI_RESET, CARD_CORNER_LEFT, horizontal_bar, CARD_CORNER_RIGHT) == -1) {
-		// TODO: handle error in allocating memory
-		exit(EXIT_FAILURE);
-	}
-
-	if (asprintf(&v_border, ANSI_BLUE "%c" ANSI_RESET, CARD_BORDER_VERTICAL) == -1) {
-		// TODO: handle error in allocating memory
-		exit(EXIT_FAILURE);
-	}
+	asprintf_checked(&h_border, ANSI_BLUE "%c%s%c" ANSI_RESET, CARD_CORNER_LEFT, horizontal_bar, CARD_CORNER_RIGHT);
+	asprintf_checked(&v_border, ANSI_BLUE "%c" ANSI_RESET, CARD_BORDER_VERTICAL);
 
 	// max card name length is 26 chars.
 	char *name, *type;
-	if (asprintf(&name, ANSI_BOLD "%s" ANSI_RESET, card->name) == -1) {
-		// TODO: handle error in allocating memory
-		exit(EXIT_FAILURE);
-	}
-	if (asprintf(&type, ANSI_BG_GREEN "#%s" ANSI_RESET, tipo_cartaT_str(card->tipo)) == -1) {
-		// TODO: handle error in allocating memory
-		exit(EXIT_FAILURE);
-	}
+	asprintf_checked(&name, ANSI_BOLD "%s" ANSI_RESET, card->name);
+	asprintf_checked(&type, ANSI_BG_GREEN "#%s" ANSI_RESET, tipo_cartaT_str(card->tipo));
+
 	// multiline_addline(&card_info, h_border);
 	multiline_addline_with_len(&card_info, type, snprintf(NULL, 0, "#%s", tipo_cartaT_str(card->tipo)));
 	multiline_addline_with_len(&card_info, name, strlen(card->name));

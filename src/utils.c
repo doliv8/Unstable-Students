@@ -1,3 +1,7 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
 #include "utils.h"
 
 int get_int() {
@@ -13,7 +17,7 @@ void* malloc_checked(size_t size) {
 #endif
 	void* ptr = malloc(size);
 	if (!ptr) {
-		fprintf(stderr, "Memory allocation failed!\n");
+		fputs("Memory allocation failed!", stderr);
 		exit(EXIT_FAILURE);
 	}
 	return ptr;
@@ -25,7 +29,7 @@ void* calloc_checked(size_t nmemb, size_t size) {
 #endif
 	void* ptr = calloc(nmemb, size);
 	if (!ptr) {
-		fprintf(stderr, "Memory allocation failed!\n");
+		fputs("Memory allocation failed!", stderr);
 		exit(EXIT_FAILURE);
 	}
 	return ptr;
@@ -37,7 +41,7 @@ void* realloc_checked(void* ptr, size_t size) {
 #endif
 	void* new_ptr = realloc(ptr, size);
 	if (!new_ptr) {
-		fprintf(stderr, "Memory reallocation failed!\n");
+		fputs("Memory reallocation failed!", stderr);
 		exit(EXIT_FAILURE);
 	}
 	return new_ptr;
@@ -50,6 +54,7 @@ void free_wrap(void* ptr) {
 	free(ptr);
 }
 
+
 int rand_int(int min, int max) {
 	return rand() % (max+1) + min;
 }
@@ -57,7 +62,7 @@ int rand_int(int min, int max) {
 int read_int(FILE* fp) {
 	int val;
 	if (fscanf(fp, " %d", &val) != 1) {
-		fprintf(stderr, "Error occurred while reading an integer from file stream!");
+		fputs("Error occurred while reading an integer from file stream!", stderr);
 		exit(EXIT_FAILURE);
 	}
 	return val;
@@ -68,6 +73,22 @@ char* strdup_checked(const char* str) {
 	char* copy = malloc_checked(len);
 	strncpy(copy, str, len);
 	return copy;
+}
+
+int asprintf_checked(char** strp, const char* fmt, ...) {
+	va_list ap;
+	va_start(ap, fmt);
+	int length = vsnprintf(NULL, 0, fmt, ap);
+	va_end(ap);
+	*strp = malloc_checked(length+1);
+	va_start(ap, fmt);
+	int result = vsnprintf(*strp, length+1, fmt, ap);
+	va_end(ap);
+	if (result < 0) {
+		fputs("Error occurred while formatting a dynamically allocated string!", stderr);
+		exit(EXIT_FAILURE);
+	}
+	return result;
 }
 
 void init_multiline(multiline_textT* multiline) {
