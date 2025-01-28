@@ -1,9 +1,6 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "debugging.h"
 #include "types.h"
 #include "structs.h"
@@ -19,6 +16,7 @@ void* realloc_checked(void* ptr, size_t size);
 void free_wrap(void* ptr);
 
 char* strdup_checked(const char* str);
+int asprintf_checked(char** strp, const char* fmt, ...);
 
 // generates a random integer in the range [min, max]
 int rand_int(int min, int max);
