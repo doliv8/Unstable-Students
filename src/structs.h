@@ -51,4 +51,9 @@ struct WrappedText {
 	multiline_textT multiline;
 };
 
+struct MultiLineContainer {
+	int n_multilines;
+	multiline_textT **multilines;
+};
+
 #endif
