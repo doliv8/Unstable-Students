@@ -8,6 +8,8 @@
 #define STRINGIFY(x) #x
 #define TO_STRING(x) STRINGIFY(x)
 
+#define MIN(a, b) (a < b ? a : b)
+
 int get_int();
 
 void* malloc_checked(size_t size);

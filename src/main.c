@@ -436,14 +436,29 @@ void build_card(freeable_multiline_textT *multiline, cartaT *card) {
 void show_cards(cartaT *head) {
 	multiline_containerT container;
 	init_multiline_container(&container);
+	freeable_multiline_textT *cards_info;
 
 	int count = count_cards(head);
 
-	// TODO: implement containers for printing cards in a horizontal row
+	cards_info = malloc_checked(count*sizeof(freeable_multiline_textT));
+	for (int i = 0; i < count; i++)
+		init_multiline(&cards_info[i]);
 
+	for (int i = 0; i < count; i++, head = head->next)
+		build_card(&cards_info[i], head);
 
+	// actually print the built cards in rows containing CARDS_PER_ROW cards max each
+	for (int row = 0; row < (count + CARDS_PER_ROW-1)/CARDS_PER_ROW; row++) {
+		for (int y = 0; y < CARD_HEIGHT; y++) {
+			for (int i = row*CARDS_PER_ROW; i < MIN((row+1)*CARDS_PER_ROW, count); i++)
+				printf("%s ", cards_info[i].lines[y]);
+			puts("");
+		}
+	}
 
- 
+	for (int i = 0; i < count; i++)
+		clear_freeable_multiline(&cards_info[i]);
+	free(cards_info);
 	clear_multiline_container(&container);
 }
 
@@ -536,6 +551,7 @@ void play_round(game_contextT* game_ctx) {
 			}
 			case ACTION_VIEW_OWN: {
 				// TODO: implement viewing own cards
+				show_cards(game_ctx->next_player->carte); // print hand just to test show_cards
 				break;
 			}
 			case ACTION_VIEW_OTHERS: {
