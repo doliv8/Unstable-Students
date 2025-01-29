@@ -334,10 +334,9 @@ void draw_card(game_contextT* game_ctx) {
 }
 
 void format_effects(freeable_multiline_textT* multiline, cartaT* card) {
-
-	// add upper padding
 	char* line;
 	if (card->n_effetti != 0) {
+		// add upper padding
 		for (int i = 0; i < MAX_EFFECTS-card->n_effetti; i++)
 			multiline_addline(multiline, strdup_checked(""));
 
@@ -364,62 +363,89 @@ void format_effects(freeable_multiline_textT* multiline, cartaT* card) {
 	}
 }
 
-void show_card(cartaT* card) {
-	multiline_textT card_info;
+void show_card(cartaT *card) {
+	freeable_multiline_textT card_info;
 	init_multiline(&card_info);
+	build_card(&card_info, card);
+	for (int i = 0; i < card_info.n_lines; i++)
+		puts(card_info.lines[i]);
+	clear_freeable_multiline(&card_info);
+}
 
-	char horizontal_bar[CARD_CONTENT_WIDTH+1];
-	for (int x = 0; x < CARD_CONTENT_WIDTH; x++)
-		horizontal_bar[x] = CARD_BORDER_HORIZONTAL;
-	horizontal_bar[CARD_CONTENT_WIDTH] = '\0';
-
-	char *h_border, *v_border;
-	asprintf_checked(&h_border, ANSI_BLUE "%c%s%c" ANSI_RESET, CARD_CORNER_LEFT, horizontal_bar, CARD_CORNER_RIGHT);
-	asprintf_checked(&v_border, ANSI_BLUE "%c" ANSI_RESET, CARD_BORDER_VERTICAL);
-
-	// max card name length is 26 chars.
-	char *name, *type;
-	asprintf_checked(&name, ANSI_BOLD "%s" ANSI_RESET, card->name);
-	asprintf_checked(&type, ANSI_BG_GREEN "#%s" ANSI_RESET, tipo_cartaT_str(card->tipo));
-
-	// multiline_addline(&card_info, h_border);
-	multiline_addline_with_len(&card_info, type, snprintf(NULL, 0, "#%s", tipo_cartaT_str(card->tipo)));
-	multiline_addline_with_len(&card_info, name, strlen(card->name));
-	// printf("Nome: %s\n", card->name);
-	// printf("Descrizione: %s\n", card->description);
-
+void build_card(freeable_multiline_textT *multiline, cartaT *card) {
+	char *h_border, *v_border, *fmt_name, *type, *fmt_type;
+	int len_name, len_type;
 	wrapped_textT wrapped_description;
-	init_wrapped(&wrapped_description, card->description, CARD_CONTENT_WIDTH-2*CARD_PADDING);
-	for (int i = 0; i < CARD_DESCRIPTION_HEIGHT; i++) {
-		if (i < wrapped_description.multiline.n_lines)
-			multiline_addline(&card_info, wrapped_description.multiline.lines[i]);
-		else
-			multiline_addline(&card_info, "");
-	}
-
-	puts(h_border);
-
-	print_centered_boxed_multiline(&card_info, v_border, CARD_CONTENT_WIDTH);
-
-	clear_wrapped(&wrapped_description);
-
 	freeable_multiline_textT effects_lines;
 	init_multiline(&effects_lines);
 
+	asprintf_checked(&h_border, ANSI_BLUE "%c%s%c" ANSI_RESET, CARD_CORNER_LEFT, HORIZONTAL_BAR, CARD_CORNER_RIGHT);
+	asprintf_checked(&v_border, ANSI_BLUE "%c" ANSI_RESET, CARD_BORDER_VERTICAL);
+
+	len_name = strlen(card->name);
+	asprintf_checked(&fmt_name, ANSI_BOLD "%s" ANSI_RESET, card->name);
+
+	len_type = asprintf_checked(&type, "#%s", tipo_cartaT_str(card->tipo));
+	asprintf_checked(&fmt_type, ANSI_BG_GREEN "%s" ANSI_RESET, type);
+
+	// compute wrapped description
+	init_wrapped(&wrapped_description, card->description, CARD_CONTENT_WIDTH-CARD_PADDING);
+
+	// compute effects
 	format_effects(&effects_lines, card);
 
-	print_centered_boxed_multiline(&effects_lines, v_border, CARD_CONTENT_WIDTH);
+	// add all lines now
+	// apend upper border
+	multiline_addline(multiline, h_border);
+	// append type
+	multiline_addline(multiline, center_boxed_string(fmt_type, len_type, v_border, CARD_CONTENT_WIDTH));
+	// append name
+	multiline_addline(multiline, center_boxed_string(fmt_name, len_name, v_border, CARD_CONTENT_WIDTH));
+	// now append wrapped description
+	for (int i = 0; i < wrapped_description.multiline.n_lines; i++) {
+		multiline_addline(multiline, center_boxed_string(
+			wrapped_description.multiline.lines[i],
+			wrapped_description.multiline.lengths[i],
+			v_border,
+			CARD_CONTENT_WIDTH
+		)); // add centered boxed line
+	}
+	// append spacing for reserved description height
+	for (int i = 0; i < CARD_DESCRIPTION_HEIGHT-wrapped_description.multiline.n_lines; i++)
+		multiline_addline(multiline, center_boxed_string("", 0, v_border, CARD_CONTENT_WIDTH));
+	// now append effects
+	for (int i = 0; i < effects_lines.n_lines; i++) {
+		multiline_addline(multiline, center_boxed_string(
+			effects_lines.lines[i],
+			effects_lines.lengths[i],
+			v_border,
+			CARD_CONTENT_WIDTH
+		)); // add centered boxed line
+	}
+	// append bottom border
+	multiline_addline(multiline, strdup_checked(h_border)); // duplicate the existing h_border into the heap
 
-	puts(h_border);
-
-	free(name);
-	free(type);
-	free(h_border);
-	free(v_border);
-	clear_multiline(&card_info);
+	free_wrap(v_border);
+	free_wrap(fmt_name);
+	free_wrap(type);
+	free_wrap(fmt_type);
+	clear_wrapped(&wrapped_description);
 	clear_freeable_multiline(&effects_lines);
 }
 
+void show_cards(cartaT *head) {
+	multiline_containerT container;
+	init_multiline_container(&container);
+
+	int count = count_cards(head);
+
+	// TODO: implement containers for printing cards in a horizontal row
+
+
+
+ 
+	clear_multiline_container(&container);
+}
 
 void begin_round(game_contextT* game_ctx) {
 	show_round(game_ctx);

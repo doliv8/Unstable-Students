@@ -75,10 +75,23 @@ char* strdup_checked(const char* str) {
 	return copy;
 }
 
+int vget_formatted_length(const char* fmt, va_list args) {
+	int length = vsnprintf(NULL, 0, fmt, args);
+	return length;
+}
+
+int get_formatted_length(const char* fmt, ...) {
+	va_list ap;
+	va_start(ap, fmt);
+	int length = vget_formatted_length(fmt, ap);
+	va_end(ap);
+	return length;
+}
+
 int asprintf_checked(char** strp, const char* fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
-	int length = vsnprintf(NULL, 0, fmt, ap);
+	int length = vget_formatted_length(fmt, ap);
 	va_end(ap);
 	*strp = malloc_checked(length+1);
 	va_start(ap, fmt);
@@ -152,11 +165,19 @@ void init_wrapped(wrapped_textT* wrapped, char* text, int max_width) {
 	}
 }
 
-void print_centered_boxed_string(const char* str, int str_len, const char* border, int width) {
+char *center_boxed_string(const char* str, int str_len, const char* border, int width) {
 	int padding = width - str_len;
 	int l_padding = padding / 2;
 	int r_padding = padding - l_padding;
-	printf("%s%*s%s%*s%s\n", border, l_padding, "", str, r_padding, "", border);
+	char *formatted;
+	asprintf_checked(&formatted, "%s%*s%s%*s%s", border, l_padding, "", str, r_padding, "", border);
+	return formatted;
+}
+
+void print_centered_boxed_string(const char* str, int str_len, const char* border, int width) {
+	char *formatted = center_boxed_string(str, str_len, border, width);
+	printf("%s\n", formatted);
+	free(formatted);
 }
 
 void print_centered_boxed_multiline(multiline_textT* multiline, const char* border, int width) {
@@ -166,7 +187,22 @@ void print_centered_boxed_multiline(multiline_textT* multiline, const char* bord
 
 void clear_wrapped(wrapped_textT* wrapped) {
 	clear_multiline(&wrapped->multiline);
-	free(wrapped->text);
+	free_wrap(wrapped->text);
+}
+
+void init_multiline_container(multiline_containerT *container) {
+	container->n_multilines = 0;
+	container->multilines = NULL;
+}
+
+void clear_multiline_container(multiline_containerT *container) {
+	free_wrap(container->multilines);
+}
+
+void container_addmultiline(multiline_containerT *container, multiline_textT *multiline) {
+	container->n_multilines++;
+	realloc_checked(container->multilines, container->n_multilines*sizeof(multiline_textT*));
+	container->multilines[container->n_multilines-1] = multiline;
 }
 
 const char* quandoT_str(quandoT quando) {
