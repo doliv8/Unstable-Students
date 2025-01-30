@@ -165,24 +165,28 @@ void init_wrapped(wrapped_textT* wrapped, char* text, int max_width) {
 	}
 }
 
-char *center_boxed_string(const char* str, int str_len, const char* border, int width) {
+char *center_lr_boxed_string(const char* str, int str_len, const char* l_border, const char* r_border, int width) {
 	int padding = width - str_len;
 	int l_padding = padding / 2;
 	int r_padding = padding - l_padding;
 	char *formatted;
-	asprintf_checked(&formatted, "%s%*s%s%*s%s", border, l_padding, "", str, r_padding, "", border);
+	asprintf_checked(&formatted, "%s%*s%s%*s%s", l_border, l_padding, "", str, r_padding, "", r_border);
 	return formatted;
 }
 
-void print_centered_boxed_string(const char* str, int str_len, const char* border, int width) {
-	char *formatted = center_boxed_string(str, str_len, border, width);
+char *center_boxed_string(const char* str, int str_len, const char* border, int width) {
+	return center_lr_boxed_string(str, str_len, border, border, width);
+}
+
+void print_centered_lr_boxed_string(const char* str, int str_len, const char* l_border, const char* r_border, int width) {
+	char *formatted = center_lr_boxed_string(str, str_len, l_border, r_border, width);
 	printf("%s\n", formatted);
 	free(formatted);
 }
 
 void print_centered_boxed_multiline(multiline_textT* multiline, const char* border, int width) {
 	for (int i = 0; i < multiline->n_lines; i++)
-		print_centered_boxed_string(multiline->lines[i], multiline->lengths[i], border, width);
+		print_centered_lr_boxed_string(multiline->lines[i], multiline->lengths[i], border, border, width);
 }
 
 void clear_wrapped(wrapped_textT* wrapped) {

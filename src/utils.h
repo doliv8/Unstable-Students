@@ -32,7 +32,7 @@ void clear_multiline(multiline_textT* multiline);
 void clear_freeable_multiline(freeable_multiline_textT* freeable_multiline);
 void multiline_addline(multiline_textT* multiline, const char* line);
 void multiline_addline_with_len(multiline_textT* multiline, const char* line, int len);
-void print_centered_boxed_string(const char* str, int str_len, const char* border, int width);
+void print_centered_lr_boxed_string(const char* str, int str_len, const char* l_border, const char* r_border, int width);
 void print_centered_boxed_multiline(multiline_textT* multiline, const char* border, int width);
 
 void init_wrapped(wrapped_textT* wrapped, char* text, int max_width);

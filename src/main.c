@@ -433,7 +433,7 @@ void build_card(freeable_multiline_textT *multiline, cartaT *card) {
 	clear_freeable_multiline(&effects_lines);
 }
 
-void show_cards(cartaT *head) {
+bool show_cards(cartaT *head) {
 	multiline_containerT container;
 	init_multiline_container(&container);
 	freeable_multiline_textT *cards_info;
@@ -451,15 +451,17 @@ void show_cards(cartaT *head) {
 	for (int row = 0; row < (count + CARDS_PER_ROW-1)/CARDS_PER_ROW; row++) {
 		for (int y = 0; y < CARD_HEIGHT; y++) {
 			for (int i = row*CARDS_PER_ROW; i < MIN((row+1)*CARDS_PER_ROW, count); i++)
-				printf("%s ", cards_info[i].lines[y]);
-			puts("");
+				printf("%*s%s", CARDS_HORIZONTAL_SPACING, "", cards_info[i].lines[y]);
+			puts(""); // finished printing a line of the current row
 		}
+		puts(""); // add spacing between each row
 	}
 
 	for (int i = 0; i < count; i++)
 		clear_freeable_multiline(&cards_info[i]);
 	free(cards_info);
 	clear_multiline_container(&container);
+	return count > 0;
 }
 
 void begin_round(game_contextT* game_ctx) {
@@ -500,6 +502,49 @@ int choice_action_menu() {
 		action = get_int();
 	} while (action < ACTION_QUIT || action > ACTION_VIEW_OTHERS);
 	return action;
+}
+
+int get_max_row_width(cartaT *head) {
+	int count = count_cards(head);
+	if (!count)
+		return CARD_WIDTH;
+	int max_row_count = count >= CARDS_PER_ROW ? CARDS_PER_ROW : count % CARDS_PER_ROW;
+	return CARDS_HORIZONTAL_SPACING + max_row_count * (CARD_WIDTH + CARDS_HORIZONTAL_SPACING);
+}
+
+void view_own(game_contextT *game_ctx) {
+	char *mano_title = "Mano:", *bonusmalus_title = "Bonus/Malus:", *aula_title = "Aula:";
+	char *fmt_mano_title, *fmt_bonusmalus_title, *fmt_aula_title;
+	char *l_border = "[", *r_border = "]", *vuoto_msg = "\\\\ vuoto //";
+	int borders_width = strlen(l_border)+strlen(r_border);
+	int aula_row_width = get_max_row_width(game_ctx->next_player->aula),
+		bonusmalus_row_width = get_max_row_width(game_ctx->next_player->bonus_malus),
+		mano_row_width = get_max_row_width(game_ctx->next_player->carte);
+
+	asprintf_checked(&fmt_aula_title, ANSI_BOLD ANSI_YELLOW "%s" ANSI_RESET, aula_title);
+	asprintf_checked(&fmt_bonusmalus_title, ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET, bonusmalus_title);
+	asprintf_checked(&fmt_mano_title, ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET, mano_title);
+
+	printf("Ecco le carte in tuo possesso, " ANSI_UNDERLINE "%s" ANSI_RESET ":\n\n", game_ctx->next_player->name);
+
+	// show aula
+	print_centered_lr_boxed_string(fmt_aula_title, strlen(mano_title), l_border, r_border, aula_row_width-borders_width);
+	if (!show_cards(game_ctx->next_player->aula))
+		print_centered_lr_boxed_string(vuoto_msg, strlen(vuoto_msg), "", "\n", aula_row_width);
+
+	// show bonus/malus
+	print_centered_lr_boxed_string(fmt_bonusmalus_title, strlen(bonusmalus_title), l_border, r_border, bonusmalus_row_width-borders_width);
+	if (!show_cards(game_ctx->next_player->bonus_malus))
+		print_centered_lr_boxed_string(vuoto_msg, strlen(vuoto_msg), "", "\n", bonusmalus_row_width);
+
+	// show mano
+	print_centered_lr_boxed_string(fmt_mano_title, strlen(mano_title), l_border, r_border, mano_row_width-borders_width);
+	if (!show_cards(game_ctx->next_player->carte))
+		print_centered_lr_boxed_string(vuoto_msg, strlen(vuoto_msg), "", "\n", mano_row_width);
+
+	free_wrap(fmt_mano_title);
+	free_wrap(fmt_bonusmalus_title);
+	free_wrap(fmt_aula_title);
 }
 
 void show_player_state(game_contextT* game_ctx, giocatoreT* player) {
@@ -550,8 +595,7 @@ void play_round(game_contextT* game_ctx) {
 				break;
 			}
 			case ACTION_VIEW_OWN: {
-				// TODO: implement viewing own cards
-				show_cards(game_ctx->next_player->carte); // print hand just to test show_cards
+				view_own(game_ctx);
 				break;
 			}
 			case ACTION_VIEW_OTHERS: {
