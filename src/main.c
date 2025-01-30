@@ -176,15 +176,15 @@ void distribute_cards(game_contextT* game_ctx) {
 	cartaT* card;
 
 	// distribute a matricola card for each player, rotating player for each given card
-	for (int i = 0; i < game_ctx->n_players; i++, game_ctx->next_player = game_ctx->next_player->next) {
+	for (int i = 0; i < game_ctx->n_players; i++, game_ctx->curr_player = game_ctx->curr_player->next) {
 		card = pop_card(&game_ctx->aula_studio);
-		push_card(&game_ctx->next_player->aula, card);
+		push_card(&game_ctx->curr_player->aula, card);
 	}
 
 	// distribute a card CARDS_PER_PLAYER times the players count, rotating player for each given card
-	for (int i = 0; i < CARDS_PER_PLAYER * game_ctx->n_players; i++, game_ctx->next_player = game_ctx->next_player->next) {
+	for (int i = 0; i < CARDS_PER_PLAYER * game_ctx->n_players; i++, game_ctx->curr_player = game_ctx->curr_player->next) {
 		card = pop_card(&game_ctx->mazzo_pesca);
-		push_card(&game_ctx->next_player->carte, card);
+		push_card(&game_ctx->curr_player->carte, card);
 	}
 }
 
@@ -197,15 +197,15 @@ game_contextT* new_game() {
 	} while (game_ctx->n_players < MIN_PLAYERS || game_ctx->n_players > MAX_PLAYERS);
 
 	// create players
-	// game_ctx->next_player serves as the linked-list head
+	// game_ctx->curr_player serves as the linked-list head
 	giocatoreT* curr_player;
 	for (int i = 0; i < game_ctx->n_players; i++) {
-		if (game_ctx->next_player == NULL)
-			curr_player = game_ctx->next_player = new_player();
+		if (game_ctx->curr_player == NULL)
+			curr_player = game_ctx->curr_player = new_player();
 		else
 			curr_player = curr_player->next = new_player();
 	}
-	curr_player->next = game_ctx->next_player; // make the linked list circular linking tail to head
+	curr_player->next = game_ctx->curr_player; // make the linked list circular linking tail to head
 
 	// load cards
 	int n_cards;
@@ -259,7 +259,7 @@ void clear_players(giocatoreT* head, giocatoreT* p) {
 }
 
 void clear_game(game_contextT* game_ctx) {
-	clear_players(game_ctx->next_player, game_ctx->next_player);
+	clear_players(game_ctx->curr_player, game_ctx->curr_player);
 
 	if (game_ctx->aula_studio != NULL)
 		free_cards(game_ctx->aula_studio);
@@ -289,13 +289,13 @@ void apply_effects(game_contextT* game_ctx, cartaT* card) {
 void show_round(game_contextT* game_ctx) {
 	printf("Round numero: %d\n", game_ctx->round_num);
 
-	printf("Ora gioca: %s\n", game_ctx->next_player->name);
+	printf("Ora gioca: %s\n", game_ctx->curr_player->name);
 
 
 }
 
 void apply_start_effects(game_contextT* game_ctx) {
-	giocatoreT* player = game_ctx->next_player;
+	giocatoreT* player = game_ctx->curr_player;
 	// apply bonus malus quando = INIZIO effects
 	for (cartaT* card = player->bonus_malus; card != NULL; card = card->next) {
 		if (card->quando == INIZIO)
@@ -330,7 +330,7 @@ void draw_card(game_contextT* game_ctx) {
 	cartaT* drawn_card = pop_card(&game_ctx->mazzo_pesca);
 	puts("Ecco la carta che hai pescato:");
 	show_card(drawn_card);
-	push_card(&game_ctx->next_player->carte, drawn_card);
+	push_card(&game_ctx->curr_player->carte, drawn_card);
 }
 
 void format_effects(freeable_multiline_textT* multiline, cartaT* card) {
@@ -475,16 +475,16 @@ void begin_round(game_contextT* game_ctx) {
 void discard_card(game_contextT* game_ctx) {
 	puts("You can have a maxium of " TO_STRING(ENDROUND_MAX_CARDS) " at the end of each round!");
 	puts("Pick a card you want to discard:");
-	cartaT* cards = game_ctx->next_player->carte;
+	cartaT* cards = game_ctx->curr_player->carte;
 	// for (int i = 1; < )
 }
 
 void end_round(game_contextT* game_ctx) {
-	game_ctx->next_player = game_ctx->next_player->next; // next round its next player's turn
+	game_ctx->curr_player = game_ctx->curr_player->next; // next round its next player's turn
 	game_ctx->round_num++;
 
 	// hand max cards check
-	// while (count_cards(game_ctx->next_player->carte) > ENDROUND_MAX_CARDS)
+	// while (count_cards(game_ctx->curr_player->carte) > ENDROUND_MAX_CARDS)
 	// 	discard_card(game_ctx);
 
 	// check win condition
@@ -517,29 +517,29 @@ void view_own(game_contextT *game_ctx) {
 	char *fmt_mano_title, *fmt_bonusmalus_title, *fmt_aula_title;
 	char *l_border = "[", *r_border = "]", *vuoto_msg = "\\\\ vuoto //";
 	int borders_width = strlen(l_border)+strlen(r_border);
-	int aula_row_width = get_max_row_width(game_ctx->next_player->aula),
-		bonusmalus_row_width = get_max_row_width(game_ctx->next_player->bonus_malus),
-		mano_row_width = get_max_row_width(game_ctx->next_player->carte);
+	int aula_row_width = get_max_row_width(game_ctx->curr_player->aula),
+		bonusmalus_row_width = get_max_row_width(game_ctx->curr_player->bonus_malus),
+		mano_row_width = get_max_row_width(game_ctx->curr_player->carte);
 
 	asprintf_checked(&fmt_aula_title, ANSI_BOLD ANSI_YELLOW "%s" ANSI_RESET, aula_title);
 	asprintf_checked(&fmt_bonusmalus_title, ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET, bonusmalus_title);
 	asprintf_checked(&fmt_mano_title, ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET, mano_title);
 
-	printf("Ecco le carte in tuo possesso, " ANSI_UNDERLINE "%s" ANSI_RESET ":\n\n", game_ctx->next_player->name);
+	printf("Ecco le carte in tuo possesso, " ANSI_UNDERLINE "%s" ANSI_RESET ":\n\n", game_ctx->curr_player->name);
 
 	// show aula
 	print_centered_lr_boxed_string(fmt_aula_title, strlen(mano_title), l_border, r_border, aula_row_width-borders_width);
-	if (!show_cards(game_ctx->next_player->aula))
+	if (!show_cards(game_ctx->curr_player->aula))
 		print_centered_lr_boxed_string(vuoto_msg, strlen(vuoto_msg), "", "\n", aula_row_width);
 
 	// show bonus/malus
 	print_centered_lr_boxed_string(fmt_bonusmalus_title, strlen(bonusmalus_title), l_border, r_border, bonusmalus_row_width-borders_width);
-	if (!show_cards(game_ctx->next_player->bonus_malus))
+	if (!show_cards(game_ctx->curr_player->bonus_malus))
 		print_centered_lr_boxed_string(vuoto_msg, strlen(vuoto_msg), "", "\n", bonusmalus_row_width);
 
 	// show mano
 	print_centered_lr_boxed_string(fmt_mano_title, strlen(mano_title), l_border, r_border, mano_row_width-borders_width);
-	if (!show_cards(game_ctx->next_player->carte))
+	if (!show_cards(game_ctx->curr_player->carte))
 		print_centered_lr_boxed_string(vuoto_msg, strlen(vuoto_msg), "", "\n", mano_row_width);
 
 	free_wrap(fmt_mano_title);
@@ -549,7 +549,7 @@ void view_own(game_contextT *game_ctx) {
 
 void show_player_state(game_contextT* game_ctx, giocatoreT* player) {
 	// TODO: implement this function
-	printf("Ecco lo stato di %s:\n", player->name);
+	printf("Ecco lo stato di " ANSI_UNDERLINE "%s" ANSI_RESET ":\n", player->name);
 	// keep in mind MOSTRA effect
 }
 
@@ -558,16 +558,16 @@ void view_others(game_contextT* game_ctx) {
 	int chosen_idx;
 	do {
 		puts("Scegli il giocatore del quale vuoi vedere lo stato:");
-		player = game_ctx->next_player->next; // start from next player based on turns
+		player = game_ctx->curr_player->next; // start from next player based on turns
 		for (int i = 1; i < game_ctx->n_players; i++, player = player->next)
 			printf(" [TASTO %d] %s\n", i, player->name);
 		printf(" [TASTO %d] Tutti i giocatori\n", game_ctx->n_players);
 		chosen_idx = get_int();
 	} while (chosen_idx < 1 || chosen_idx > game_ctx->n_players);
 
-	player = game_ctx->next_player->next; // start from next player based on turns
+	player = game_ctx->curr_player->next; // start from next player based on turns
 	for (int i = 1; i < game_ctx->n_players; i++, player = player->next) {
-		if (chosen_idx == game_ctx->n_players || i == chosen_idx)
+		if (i == chosen_idx || chosen_idx == game_ctx->n_players)
 			show_player_state(game_ctx, player);
 	}
 }
