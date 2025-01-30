@@ -477,6 +477,7 @@ void discard_card(game_contextT* game_ctx) {
 	puts("Pick a card you want to discard:");
 	cartaT* cards = game_ctx->curr_player->carte;
 	// for (int i = 1; < )
+	// TODO: finish implementing this function
 }
 
 void end_round(game_contextT* game_ctx) {
@@ -512,45 +513,48 @@ int get_max_row_width(cartaT *head) {
 	return CARDS_HORIZONTAL_SPACING + max_row_count * (CARD_WIDTH + CARDS_HORIZONTAL_SPACING);
 }
 
-void view_own(game_contextT *game_ctx) {
-	char *mano_title = "Mano:", *bonusmalus_title = "Bonus/Malus:", *aula_title = "Aula:";
-	char *fmt_mano_title, *fmt_bonusmalus_title, *fmt_aula_title;
+void show_card_group(cartaT *group, char *title, const char *title_fmt) {
+	char *fmt_title;
 	char *l_border = "[", *r_border = "]", *vuoto_msg = "\\\\ vuoto //";
 	int borders_width = strlen(l_border)+strlen(r_border);
-	int aula_row_width = get_max_row_width(game_ctx->curr_player->aula),
-		bonusmalus_row_width = get_max_row_width(game_ctx->curr_player->bonus_malus),
-		mano_row_width = get_max_row_width(game_ctx->curr_player->carte);
+	int max_group_row_width = get_max_row_width(group);
 
-	asprintf_checked(&fmt_aula_title, ANSI_BOLD ANSI_YELLOW "%s" ANSI_RESET, aula_title);
-	asprintf_checked(&fmt_bonusmalus_title, ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET, bonusmalus_title);
-	asprintf_checked(&fmt_mano_title, ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET, mano_title);
+	asprintf_checked(&fmt_title, title_fmt, title);
 
+	print_centered_lr_boxed_string(fmt_title, strlen(title), l_border, r_border, max_group_row_width-borders_width);
+	if (!show_cards(group))
+		print_centered_lr_boxed_string(vuoto_msg, strlen(vuoto_msg), "", "\n", max_group_row_width);
+
+	free_wrap(fmt_title);
+}
+
+void view_own(game_contextT *game_ctx) {
 	printf("Ecco le carte in tuo possesso, " ANSI_UNDERLINE "%s" ANSI_RESET ":\n\n", game_ctx->curr_player->name);
 
-	// show aula
-	print_centered_lr_boxed_string(fmt_aula_title, strlen(mano_title), l_border, r_border, aula_row_width-borders_width);
-	if (!show_cards(game_ctx->curr_player->aula))
-		print_centered_lr_boxed_string(vuoto_msg, strlen(vuoto_msg), "", "\n", aula_row_width);
+	show_card_group(game_ctx->curr_player->aula, "Aula:", ANSI_BOLD ANSI_YELLOW "%s" ANSI_RESET); // show aula
+	show_card_group(game_ctx->curr_player->bonus_malus, "Bonus/Malus:", ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET); // show bonus/malus
+	show_card_group(game_ctx->curr_player->carte, "Mano:", ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET); // show mano
+}
 
-	// show bonus/malus
-	print_centered_lr_boxed_string(fmt_bonusmalus_title, strlen(bonusmalus_title), l_border, r_border, bonusmalus_row_width-borders_width);
-	if (!show_cards(game_ctx->curr_player->bonus_malus))
-		print_centered_lr_boxed_string(vuoto_msg, strlen(vuoto_msg), "", "\n", bonusmalus_row_width);
-
-	// show mano
-	print_centered_lr_boxed_string(fmt_mano_title, strlen(mano_title), l_border, r_border, mano_row_width-borders_width);
-	if (!show_cards(game_ctx->curr_player->carte))
-		print_centered_lr_boxed_string(vuoto_msg, strlen(vuoto_msg), "", "\n", mano_row_width);
-
-	free_wrap(fmt_mano_title);
-	free_wrap(fmt_bonusmalus_title);
-	free_wrap(fmt_aula_title);
+bool has_bonusmalus(giocatoreT *player, azioneT effect_action) {
+	bool found = false;
+	for (cartaT *card = player->bonus_malus; card != NULL && !found; card = card->next) {
+		for (int i = 0; i < card->n_effetti && !found; i++) {
+			if (card->effetti[i].azione == effect_action)
+				found = true;
+		}
+	}
+	return found;
 }
 
 void show_player_state(game_contextT* game_ctx, giocatoreT* player) {
-	// TODO: implement this function
 	printf("Ecco lo stato di " ANSI_UNDERLINE "%s" ANSI_RESET ":\n", player->name);
-	// keep in mind MOSTRA effect
+
+	printf("Numero carte nella mano: %d\n\n", count_cards(player->carte));
+	if (has_bonusmalus(player, MOSTRA))
+		show_card_group(player->carte, "Mano:", ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET); // show mano
+	show_card_group(player->aula, "Aula:", ANSI_BOLD ANSI_YELLOW "%s" ANSI_RESET); // show aula
+	show_card_group(player->bonus_malus, "Bonus/Malus:", ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET); // show bonus/malus
 }
 
 void view_others(game_contextT* game_ctx) {
