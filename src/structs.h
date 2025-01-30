@@ -34,7 +34,7 @@ struct Effetto {
 // end basic game structs
 
 struct GameContext {
-	giocatoreT* next_player;
+	giocatoreT* curr_player;
 	cartaT *mazzo_pesca, *mazzo_scarti, *aula_studio;
 	int n_players, round_num;
 	bool game_running;
