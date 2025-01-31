@@ -12,31 +12,31 @@
 
 int get_int();
 
-void* malloc_checked(size_t size);
-void* calloc_checked(size_t nmemb, size_t size);
-void* realloc_checked(void* ptr, size_t size);
-void free_wrap(void* ptr);
+void *malloc_checked(size_t size);
+void *calloc_checked(size_t nmemb, size_t size);
+void *realloc_checked(void *ptr, size_t size);
+void free_wrap(const void *ptr);
 
-char* strdup_checked(const char* str);
-int get_formatted_length(const char* fmt, ...);
-int asprintf_checked(char** strp, const char* fmt, ...);
-char *center_boxed_string(const char* str, int str_len, const char* border, int width);
+char *strdup_checked(const char *str);
+int get_formatted_length(const char *fmt, ...);
+int asprintf_checked(char **strp, const char *fmt, ...);
+char *center_boxed_string(const char *str, int str_len, const char *border, int width);
 
 // generates a random integer in the range [min, max]
 int rand_int(int min, int max);
 
-int read_int(FILE* fp);
+int read_int(FILE *fp);
 
-void init_multiline(multiline_textT* multiline);
-void clear_multiline(multiline_textT* multiline);
-void clear_freeable_multiline(freeable_multiline_textT* freeable_multiline);
-void multiline_addline(multiline_textT* multiline, const char* line);
-void multiline_addline_with_len(multiline_textT* multiline, const char* line, int len);
-void print_centered_lr_boxed_string(const char* str, int str_len, const char* l_border, const char* r_border, int width);
-void print_centered_boxed_multiline(multiline_textT* multiline, const char* border, int width);
+void init_multiline(multiline_textT *multiline);
+void clear_multiline(multiline_textT *multiline);
+void clear_freeable_multiline(freeable_multiline_textT *freeable_multiline);
+void multiline_addline(multiline_textT *multiline, const char *line);
+void multiline_addline_with_len(multiline_textT *multiline, const char *line, int len);
+void print_centered_lr_boxed_string(const char *str, int str_len, const char *l_border, const char *r_border, int width);
+void print_centered_boxed_multiline(multiline_textT *multiline, const char *border, int width);
 
-void init_wrapped(wrapped_textT* wrapped, char* text, int max_width);
-void clear_wrapped(wrapped_textT* wrapped);
+void init_wrapped(wrapped_textT *wrapped, const char *text, int max_width);
+void clear_wrapped(wrapped_textT *wrapped);
 
 void init_multiline_container(multiline_containerT *container);
 void clear_multiline_container(multiline_containerT *container);
@@ -44,9 +44,9 @@ void container_addmultiline(multiline_containerT *container, multiline_textT *mu
 
 
 // TODO: move away in proper file
-const char* quandoT_str(quandoT quando);
-const char* target_giocatoriT_str(target_giocatoriT target);
-const char* tipo_cartaT_str(tipo_cartaT tipo);
-const char* azioneT_str(azioneT azione);
+const char *quandoT_str(quandoT quando);
+const char *target_giocatoriT_str(target_giocatoriT target);
+const char *tipo_cartaT_str(tipo_cartaT tipo);
+const char *azioneT_str(azioneT azione);
 
 #endif

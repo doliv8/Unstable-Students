@@ -41,9 +41,9 @@ struct GameContext {
 };
 
 struct MultiLineText {
-	int n_lines;
-	char** lines;
-	int* lengths;
+	int n_lines ;
+	const char **lines;
+	int *lengths;
 };
 
 struct WrappedText {
