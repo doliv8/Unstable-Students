@@ -319,20 +319,6 @@ int count_cards(cartaT* head) {
 	return count;
 }
 
-void draw_card(game_contextT* game_ctx) {
-	// shuffle and swap mazzo_scarti with mazzo_pesca if mazzo_pesca is empty
-	if (game_ctx->mazzo_pesca == NULL) {
-		game_ctx->mazzo_pesca = shuffle_cards(game_ctx->mazzo_scarti, count_cards(game_ctx->mazzo_scarti));
-		game_ctx->mazzo_pesca = game_ctx->mazzo_scarti;
-		game_ctx->mazzo_scarti = NULL; // mazzo_scarti has been moved to mazzo_pesca (emptied)
-	}
-
-	cartaT* drawn_card = pop_card(&game_ctx->mazzo_pesca);
-	puts("Ecco la carta che hai pescato:");
-	show_card(drawn_card);
-	push_card(&game_ctx->curr_player->carte, drawn_card);
-}
-
 void format_effects(freeable_multiline_textT* multiline, cartaT* card) {
 	char* line;
 	if (card->n_effetti != 0) {
@@ -361,15 +347,6 @@ void format_effects(freeable_multiline_textT* multiline, cartaT* card) {
 			multiline_addline(multiline, strdup_checked(""));
 		multiline_addline(multiline, strdup_checked("Nessun effetto!"));
 	}
-}
-
-void show_card(cartaT *card) {
-	freeable_multiline_textT card_info;
-	init_multiline(&card_info);
-	build_card(&card_info, card);
-	for (int i = 0; i < card_info.n_lines; i++)
-		puts(card_info.lines[i]);
-	clear_freeable_multiline(&card_info);
 }
 
 void build_card(freeable_multiline_textT *multiline, cartaT *card) {
@@ -433,6 +410,15 @@ void build_card(freeable_multiline_textT *multiline, cartaT *card) {
 	clear_freeable_multiline(&effects_lines);
 }
 
+void show_card(cartaT *card) {
+	freeable_multiline_textT card_info;
+	init_multiline(&card_info);
+	build_card(&card_info, card);
+	for (int i = 0; i < card_info.n_lines; i++)
+		puts(card_info.lines[i]);
+	clear_freeable_multiline(&card_info);
+}
+
 bool show_cards(cartaT *head) {
 	multiline_containerT container;
 	init_multiline_container(&container);
@@ -462,6 +448,20 @@ bool show_cards(cartaT *head) {
 	free(cards_info);
 	clear_multiline_container(&container);
 	return count > 0;
+}
+
+void draw_card(game_contextT* game_ctx) {
+	// shuffle and swap mazzo_scarti with mazzo_pesca if mazzo_pesca is empty
+	if (game_ctx->mazzo_pesca == NULL) {
+		game_ctx->mazzo_pesca = shuffle_cards(game_ctx->mazzo_scarti, count_cards(game_ctx->mazzo_scarti));
+		game_ctx->mazzo_pesca = game_ctx->mazzo_scarti;
+		game_ctx->mazzo_scarti = NULL; // mazzo_scarti has been moved to mazzo_pesca (emptied)
+	}
+
+	cartaT* drawn_card = pop_card(&game_ctx->mazzo_pesca);
+	puts("Ecco la carta che hai pescato:");
+	show_card(drawn_card);
+	push_card(&game_ctx->curr_player->carte, drawn_card);
 }
 
 void begin_round(game_contextT* game_ctx) {

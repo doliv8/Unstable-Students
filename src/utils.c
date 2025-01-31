@@ -11,11 +11,11 @@ int get_int() {
 	return val;
 }
 
-void* malloc_checked(size_t size) {
+void *malloc_checked(size_t size) {
 #ifdef DEBUG
 	DBG_INFO("called %s(%lu)", __func__, size);
 #endif
-	void* ptr = malloc(size);
+	void *ptr = malloc(size);
 	if (!ptr) {
 		fputs("Memory allocation failed!", stderr);
 		exit(EXIT_FAILURE);
@@ -23,11 +23,11 @@ void* malloc_checked(size_t size) {
 	return ptr;
 }
 
-void* calloc_checked(size_t nmemb, size_t size) {
+void *calloc_checked(size_t nmemb, size_t size) {
 #ifdef DEBUG
 	DBG_INFO("called %s(%lu, %lu)", __func__, nmemb, size);
 #endif
-	void* ptr = calloc(nmemb, size);
+	void *ptr = calloc(nmemb, size);
 	if (!ptr) {
 		fputs("Memory allocation failed!", stderr);
 		exit(EXIT_FAILURE);
@@ -35,11 +35,11 @@ void* calloc_checked(size_t nmemb, size_t size) {
 	return ptr;
 }
 
-void* realloc_checked(void* ptr, size_t size) {
+void *realloc_checked(void *ptr, size_t size) {
 #ifdef DEBUG
 	DBG_INFO("called %s(%p, %lu)", __func__, ptr, size);
 #endif
-	void* new_ptr = realloc(ptr, size);
+	void *new_ptr = realloc(ptr, size);
 	if (!new_ptr) {
 		fputs("Memory reallocation failed!", stderr);
 		exit(EXIT_FAILURE);
@@ -47,11 +47,11 @@ void* realloc_checked(void* ptr, size_t size) {
 	return new_ptr;
 }
 
-void free_wrap(void* ptr) {
+void free_wrap(const void *ptr) {
 #ifdef DEBUG
 	DBG_INFO("called %s(%p)", __func__, ptr);
 #endif
-	free(ptr);
+	free((void*)ptr);
 }
 
 
@@ -59,7 +59,7 @@ int rand_int(int min, int max) {
 	return rand() % (max+1) + min;
 }
 
-int read_int(FILE* fp) {
+int read_int(FILE *fp) {
 	int val;
 	if (fscanf(fp, " %d", &val) != 1) {
 		fputs("Error occurred while reading an integer from file stream!", stderr);
@@ -68,19 +68,19 @@ int read_int(FILE* fp) {
 	return val;
 }
 
-char* strdup_checked(const char* str) {
+char *strdup_checked(const char *str) {
 	int len = strlen(str)+1;
-	char* copy = malloc_checked(len);
+	char *copy = malloc_checked(len);
 	strncpy(copy, str, len);
 	return copy;
 }
 
-int vget_formatted_length(const char* fmt, va_list args) {
+int vget_formatted_length(const char *fmt, va_list args) {
 	int length = vsnprintf(NULL, 0, fmt, args);
 	return length;
 }
 
-int get_formatted_length(const char* fmt, ...) {
+int get_formatted_length(const char *fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
 	int length = vget_formatted_length(fmt, ap);
@@ -88,7 +88,7 @@ int get_formatted_length(const char* fmt, ...) {
 	return length;
 }
 
-int asprintf_checked(char** strp, const char* fmt, ...) {
+int asprintf_checked(char **strp, const char *fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
 	int length = vget_formatted_length(fmt, ap);
@@ -104,24 +104,24 @@ int asprintf_checked(char** strp, const char* fmt, ...) {
 	return result;
 }
 
-void init_multiline(multiline_textT* multiline) {
+void init_multiline(multiline_textT *multiline) {
 	multiline->n_lines = 0;
 	multiline->lines = NULL;
 	multiline->lengths = NULL;
 }
 
-void clear_multiline(multiline_textT* multiline) {
-	free(multiline->lines);
-	free(multiline->lengths);
+void clear_multiline(multiline_textT *multiline) {
+	free_wrap(multiline->lines);
+	free_wrap(multiline->lengths);
 }
 
-void clear_freeable_multiline(freeable_multiline_textT* freeable_multiline) {
+void clear_freeable_multiline(freeable_multiline_textT *freeable_multiline) {
 	for (int i = 0; i < freeable_multiline->n_lines; i++)
-		free(freeable_multiline->lines[i]);
+		free_wrap(freeable_multiline->lines[i]);
 	clear_multiline(freeable_multiline);
 }
 
-void multiline_addline(multiline_textT* multiline, const char* line) {
+void multiline_addline(multiline_textT *multiline, const char *line) {
 	// increase arrays sizes
 	multiline->n_lines++;
 	multiline->lines = realloc_checked(multiline->lines, multiline->n_lines*sizeof(char*));
@@ -131,12 +131,12 @@ void multiline_addline(multiline_textT* multiline, const char* line) {
 	multiline->lengths[multiline->n_lines-1] = strlen(line);
 }
 
-void multiline_addline_with_len(multiline_textT* multiline, const char* line, int len) {
+void multiline_addline_with_len(multiline_textT *multiline, const char *line, int len) {
 	multiline_addline(multiline, line);
 	multiline->lengths[multiline->n_lines-1] = len;
 }
 
-void init_wrapped(wrapped_textT* wrapped, char* text, int max_width) {
+void init_wrapped(wrapped_textT* wrapped, const char *text, int max_width) {
 	int text_len = strlen(text);
 	init_multiline(&wrapped->multiline);
 
@@ -144,7 +144,7 @@ void init_wrapped(wrapped_textT* wrapped, char* text, int max_width) {
 	wrapped->text = strdup_checked(text);
 	multiline_addline(&wrapped->multiline, wrapped->text);
 
-	char* last_space = wrapped->text;
+	char *last_space = wrapped->text;
 	for (size_t pos = 0, line_len = 0, word_len = 0; pos <= text_len; pos++) {
 		if (wrapped->text[pos] == ' ' || wrapped->text[pos] == '\0') { // only interested in spaces and terminator
 			if (line_len+word_len >= max_width) {
@@ -165,7 +165,7 @@ void init_wrapped(wrapped_textT* wrapped, char* text, int max_width) {
 	}
 }
 
-char *center_lr_boxed_string(const char* str, int str_len, const char* l_border, const char* r_border, int width) {
+char *center_lr_boxed_string(const char *str, int str_len, const char *l_border, const char *r_border, int width) {
 	int padding = width - str_len;
 	int l_padding = padding / 2;
 	int r_padding = padding - l_padding;
@@ -174,22 +174,22 @@ char *center_lr_boxed_string(const char* str, int str_len, const char* l_border,
 	return formatted;
 }
 
-char *center_boxed_string(const char* str, int str_len, const char* border, int width) {
+char *center_boxed_string(const char *str, int str_len, const char *border, int width) {
 	return center_lr_boxed_string(str, str_len, border, border, width);
 }
 
-void print_centered_lr_boxed_string(const char* str, int str_len, const char* l_border, const char* r_border, int width) {
+void print_centered_lr_boxed_string(const char *str, int str_len, const char *l_border, const char *r_border, int width) {
 	char *formatted = center_lr_boxed_string(str, str_len, l_border, r_border, width);
 	printf("%s\n", formatted);
 	free(formatted);
 }
 
-void print_centered_boxed_multiline(multiline_textT* multiline, const char* border, int width) {
+void print_centered_boxed_multiline(multiline_textT *multiline, const char *border, int width) {
 	for (int i = 0; i < multiline->n_lines; i++)
 		print_centered_lr_boxed_string(multiline->lines[i], multiline->lengths[i], border, border, width);
 }
 
-void clear_wrapped(wrapped_textT* wrapped) {
+void clear_wrapped(wrapped_textT *wrapped) {
 	clear_multiline(&wrapped->multiline);
 	free_wrap(wrapped->text);
 }
@@ -209,7 +209,7 @@ void container_addmultiline(multiline_containerT *container, multiline_textT *mu
 	container->multilines[container->n_multilines-1] = multiline;
 }
 
-const char* quandoT_str(quandoT quando) {
+const char *quandoT_str(quandoT quando) {
 	static const char *mapping[] = {
 		[SUBITO] = "Subito",
 		[INIZIO] = "Inizio",
@@ -220,7 +220,7 @@ const char* quandoT_str(quandoT quando) {
 	return mapping[quando];
 }
 
-const char* target_giocatoriT_str(target_giocatoriT target) {
+const char *target_giocatoriT_str(target_giocatoriT target) {
 	static const char *mapping[] = {
 		[IO] = "Io",
 		[TU] = "Tu",
@@ -230,7 +230,7 @@ const char* target_giocatoriT_str(target_giocatoriT target) {
 	return mapping[target];
 }
 
-const char* tipo_cartaT_str(tipo_cartaT tipo) {
+const char *tipo_cartaT_str(tipo_cartaT tipo) {
 	static const char *mapping[] = {
 		[ALL] = "All",
 		[STUDENTE] = "Studente",
@@ -245,7 +245,7 @@ const char* tipo_cartaT_str(tipo_cartaT tipo) {
 	return mapping[tipo];
 }
 
-const char* azioneT_str(azioneT azione) {
+const char *azioneT_str(azioneT azione) {
 	static const char *mapping[] = {
 		[GIOCA] = "Gioca",
 		[SCARTA] = "Scarta",
