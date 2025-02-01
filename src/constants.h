@@ -1,3 +1,6 @@
+#ifndef CONSTANTS_H
+#define CONSTANTS_H
+
 #define GIOCATORE_NAME_LEN 31
 #define CARTA_NAME_LEN 31
 #define CARTA_DESCRIPTION_LEN 255
@@ -54,3 +57,5 @@
 #define ANSI_BG_MAGENTA "\033[45m"
 #define ANSI_BG_CYAN "\033[46m"
 #define ANSI_BG_WHITE "\033[47m"
+
+#endif // CONSTANTS_H
