@@ -26,6 +26,7 @@ char *center_boxed_string(const char *str, int str_len, const char *border, int 
 int rand_int(int min, int max);
 
 int read_int(FILE *fp);
+bool ask_choice();
 
 void init_multiline(multiline_textT *multiline);
 void clear_multiline(multiline_textT *multiline);
@@ -41,7 +42,6 @@ void clear_wrapped(wrapped_textT *wrapped);
 void init_multiline_container(multiline_containerT *container);
 void clear_multiline_container(multiline_containerT *container);
 void container_addmultiline(multiline_containerT *container, multiline_textT *multiline);
-
 
 // TODO: move away in proper file
 const char *quandoT_str(quandoT quando);
