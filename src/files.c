@@ -5,6 +5,16 @@
 #include "card.h"
 #include "utils.h"
 
+game_contextT* load_game() {
+	// TODO: implement loading saved games
+	return NULL;
+}
+
+void save_game(game_contextT* game_ctx) {
+	// TODO: implement saving game
+}
+
+
 effettoT* read_effetti(FILE* fp, int* n_effects) {
 	int amount = read_int(fp);
 	effettoT* effects = NULL;

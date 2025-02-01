@@ -174,13 +174,3 @@ void show_card_group(cartaT *group, const char *title, const char *title_fmt) {
 
 	free_wrap(fmt_title);
 }
-
-void show_player_state(game_contextT *game_ctx, giocatoreT *player) {
-	printf("Ecco lo stato di " ANSI_UNDERLINE "%s" ANSI_RESET ":\n", player->name);
-
-	printf("Numero carte nella mano: %d\n\n", count_cards(player->carte));
-	if (has_bonusmalus(player, MOSTRA))
-		show_card_group(player->carte, "Mano:", ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET); // show mano
-	show_card_group(player->aula, "Aula:", ANSI_BOLD ANSI_YELLOW "%s" ANSI_RESET); // show aula
-	show_card_group(player->bonus_malus, "Bonus/Malus:", ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET); // show bonus/malus
-}
