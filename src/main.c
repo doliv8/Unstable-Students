@@ -12,20 +12,7 @@
 #include "structs.h"
 #include "utils.h"
 #include "gameplay.h"
-
-cartaT* duplicate_carta(cartaT* card) {
-	cartaT* copy_card = (cartaT*)malloc_checked(sizeof(cartaT));
-	*copy_card = *card; // copy the whole struct
-	if (card->n_effetti != 0) {
-		// create new effects array
-		effettoT* effects = (effettoT*)malloc_checked(card->n_effetti*sizeof(effettoT));
-		// copy effects into the new array
-		for (int i = 0; i < card->n_effetti; i++)
-			effects[i] = card->effetti[i];
-		copy_card->effetti = effects;
-	}
-	return copy_card;
-}
+#include "card.h"
 
 effettoT* read_effetti(FILE* fp, int* n_effects) {
 	int amount = read_int(fp);
@@ -44,13 +31,13 @@ effettoT* read_effetti(FILE* fp, int* n_effects) {
 // returns the new linked list tail
 // returns (through amount pointer) the number of cards of this type present, sets *amount to 0 if no more cards are readable from fp
 // takes a pointer to the current tail's next pointer
-cartaT* read_carta(FILE* fp, cartaT** tail_next, int* amount) {
+cartaT *read_carta(FILE *fp, cartaT **tail_next, int *amount) {
 	if (fscanf(fp, "%d", amount) != 1) {
 		*amount = 0;
 		return NULL;
 	}
 	
-	cartaT* card = (cartaT*)malloc_checked(sizeof(cartaT));
+	cartaT *card = (cartaT*)malloc_checked(sizeof(cartaT));
 
 	fscanf(fp, " %" TO_STRING(CARTA_NAME_LEN) "[^\n]", card->name);
 	fscanf(fp, " %" TO_STRING(CARTA_DESCRIPTION_LEN) "[^\n]", card->description);
@@ -71,7 +58,7 @@ cartaT* read_carta(FILE* fp, cartaT** tail_next, int* amount) {
 	return card;
 }
 
-cartaT* load_mazzo(int* n_cards) {
+cartaT *load_mazzo(int *n_cards) {
 	FILE* fp = fopen(FILE_MAZZO, "r");
 	if (fp == NULL) {
 		fprintf(stderr, "Opening cards file (%s) failed!\n", FILE_MAZZO);
@@ -79,7 +66,7 @@ cartaT* load_mazzo(int* n_cards) {
 	}
 
 	*n_cards = 0;
-	cartaT* mazzo = NULL, **tail_next = &mazzo, *new_tail;
+	cartaT *mazzo = NULL, **tail_next = &mazzo, *new_tail;
 	int amount;
 	do {
 		new_tail = read_carta(fp, tail_next, &amount);
@@ -94,73 +81,10 @@ cartaT* load_mazzo(int* n_cards) {
 	return mazzo;
 }
 
-// this function uses Fisher-Yates shuffle algorithm to shuffle the (linearized) dynamic array of cards in linear time
-cartaT* shuffle_cards(cartaT* cards, int n_cards) {
-	if (n_cards == 0)
-		return NULL;
-
-	cartaT** linear_cards = malloc_checked(n_cards*sizeof(cartaT*));
-
-	for (int i = 0; i < n_cards; i++) {
-		// pop the card from the head of the linked list
-		linear_cards[i] = cards;
-		cards = cards->next;
-	}
-
-	// actual Fisher-Yates shuffling algorithm
-	cartaT* temp; // to hold temporary cartaT pointer for swapping cards
-	for (int i = n_cards-1, j; i > 0; i--) {
-		j = rand_int(0, i);
-		// swap cards at index i and j
-		temp = linear_cards[i];
-		linear_cards[i] = linear_cards[j];
-		linear_cards[j] = temp;
-	}
-
-	// reconstruct the links between the nodes (cards) of the linked list following the shuffled order
-	for (int i = 0; i < n_cards-1; i++)
-		linear_cards[i]->next = linear_cards[i+1];
-	linear_cards[n_cards-1]->next = NULL; // set tail next pointer to NULL
-
-	cartaT* new_head =  linear_cards[0];
-
-	// free the linear array of cards used during shuffle
-	free(linear_cards);
-
-	return new_head; // return new head to shuffled linked list
-}
-
-cartaT* pop_card(cartaT** head_ptr) {
-	cartaT* card = *head_ptr;
-	if (card == NULL)
-		return NULL;
-	*head_ptr = card->next;
-	card->next = NULL;
-	return card;
-}
-
-void push_card(cartaT** head_ptr, cartaT* card) {
-	card->next = *head_ptr;
-	*head_ptr = card;
-}
-
-void unlink_card(cartaT **head_ptr, cartaT *card) {
-	while (*head_ptr != NULL && *head_ptr != card)
-		head_ptr = &(*head_ptr)->next;
-	pop_card(head_ptr);
-}
-
-// idx is 1 indexed
-cartaT *card_by_index(cartaT *head, int idx) {
-	while (head != NULL && --idx > 0)
-		head = head->next;
-	return head;
-}
-
 // returns a linked list containing all the Matricola-kind cards found & removed from mazzo
-cartaT* split_matricole(cartaT** mazzo_head) {
-	cartaT* matricole_head = NULL;
-	for (cartaT** prev = mazzo_head, *curr; *prev != NULL; ) {
+cartaT *split_matricole(cartaT **mazzo_head) {
+	cartaT *matricole_head = NULL;
+	for (cartaT **prev = mazzo_head, *curr; *prev != NULL; ) {
 		curr = *prev;
 		if (curr->tipo == MATRICOLA) {
 			// remove curr card from the mazzo linked list linking
@@ -170,7 +94,6 @@ cartaT* split_matricole(cartaT** mazzo_head) {
 		} else
 			prev = &curr->next;
 	}
-
 	return matricole_head;
 }
 
@@ -244,17 +167,6 @@ void save_game(game_contextT* game_ctx) {
 	// TODO: implement saving game
 }
 
-void free_cards(cartaT* cards_head) {
-	// check for base case to keep recurse or not (freeing from tail to head)
-	if (cards_head->next)
-		free_cards(cards_head->next);
-
-	// clear actual card
-	if (cards_head->n_effetti != 0)
-		free_wrap(cards_head->effetti);
-	free_wrap(cards_head);
-}
-
 // recursive function to clear a giocatoreT* circular linked list
 void clear_players(giocatoreT* head, giocatoreT* p) {
 	// check for base case to recurse or not
@@ -263,11 +175,11 @@ void clear_players(giocatoreT* head, giocatoreT* p) {
 
 	// clear actual player
 	if (p->aula != NULL)
-		free_cards(p->aula);
+		clear_cards(p->aula);
 	if (p->bonus_malus != NULL)
-		free_cards(p->bonus_malus);
+		clear_cards(p->bonus_malus);
 	if (p->carte != NULL)
-		free_cards(p->carte);
+		clear_cards(p->carte);
 	free_wrap(p);
 }
 
@@ -275,11 +187,11 @@ void clear_game(game_contextT* game_ctx) {
 	clear_players(game_ctx->curr_player, game_ctx->curr_player);
 
 	if (game_ctx->aula_studio != NULL)
-		free_cards(game_ctx->aula_studio);
+		clear_cards(game_ctx->aula_studio);
 	if (game_ctx->mazzo_pesca != NULL)
-		free_cards(game_ctx->mazzo_pesca);
+		clear_cards(game_ctx->mazzo_pesca);
 	if (game_ctx->mazzo_scarti != NULL)
-		free_cards(game_ctx->mazzo_scarti);
+		clear_cards(game_ctx->mazzo_scarti);
 	free_wrap(game_ctx);
 }
 
