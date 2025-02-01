@@ -130,18 +130,31 @@ cartaT* shuffle_cards(cartaT* cards, int n_cards) {
 	return new_head; // return new head to shuffled linked list
 }
 
-cartaT* pop_card(cartaT** head) {
-	cartaT* card = *head;
+cartaT* pop_card(cartaT** head_ptr) {
+	cartaT* card = *head_ptr;
 	if (card == NULL)
 		return NULL;
-	*head = card->next;
+	*head_ptr = card->next;
 	card->next = NULL;
 	return card;
 }
 
-void push_card(cartaT** head, cartaT* card) {
-	card->next = *head;
-	*head = card;
+void push_card(cartaT** head_ptr, cartaT* card) {
+	card->next = *head_ptr;
+	*head_ptr = card;
+}
+
+void unlink_card(cartaT **head_ptr, cartaT *card) {
+	while (*head_ptr != NULL && *head_ptr != card)
+		head_ptr = &(*head_ptr)->next;
+	pop_card(head_ptr);
+}
+
+// idx is 1 indexed
+cartaT *card_by_index(cartaT *head, int idx) {
+	while (head != NULL && --idx > 0)
+		head = head->next;
+	return head;
 }
 
 // returns a linked list containing all the Matricola-kind cards found & removed from mazzo
@@ -472,23 +485,42 @@ void begin_round(game_contextT* game_ctx) {
 
 }
 
+cartaT *pick_card(cartaT *head, const char* prompt, const char *title, const char* title_fmt) {
+	int n_cards = count_cards(head), chosen_idx;
+	cartaT *card;
+	show_card_group(head, title, title_fmt);
+	do {
+		puts(prompt);
+		card = head;
+		for (int idx = 1; idx <= n_cards; idx++, card = card->next)
+			printf(" [TASTO %d] %s\n", idx, card->name);
+		chosen_idx = get_int();
+	} while (chosen_idx < 1 || chosen_idx > n_cards);
+	return card_by_index(head, chosen_idx);
+}
+
 void discard_card(game_contextT* game_ctx) {
-	puts("You can have a maxium of " TO_STRING(ENDROUND_MAX_CARDS) " at the end of each round!");
-	puts("Pick a card you want to discard:");
-	cartaT* cards = game_ctx->curr_player->carte;
-	// for (int i = 1; < )
-	// TODO: finish implementing this function
+	puts("Puoi avere massimo " ANSI_BOLD TO_STRING(ENDROUND_MAX_CARDS) ANSI_RESET " carte alla fine del round!");
+	cartaT *card = pick_card(game_ctx->curr_player->carte, "Scegli la carta che vuoi scartare.",
+		"Carte attualmente nella tua mano", ANSI_BOLD ANSI_RED "%s" ANSI_RESET
+	);
+	unlink_card(&game_ctx->curr_player->carte, card);
+	printf("Hai scartato: %s\n", card->name);
+	push_card(&game_ctx->mazzo_scarti, card); // put discarded card into mazzo scarti
 }
 
 void end_round(game_contextT* game_ctx) {
-	game_ctx->curr_player = game_ctx->curr_player->next; // next round its next player's turn
-	game_ctx->round_num++;
+	if (!game_ctx->game_running)
+		return;
 
 	// hand max cards check
-	// while (count_cards(game_ctx->curr_player->carte) > ENDROUND_MAX_CARDS)
-	// 	discard_card(game_ctx);
+	while (count_cards(game_ctx->curr_player->carte) > ENDROUND_MAX_CARDS)
+		discard_card(game_ctx);
 
-	// check win condition
+	// TODO: check win condition
+
+	game_ctx->curr_player = game_ctx->curr_player->next; // next round its next player's turn
+	game_ctx->round_num++;
 }
 
 int choice_action_menu() {
@@ -576,14 +608,6 @@ void view_others(game_contextT* game_ctx) {
 	}
 }
 
-// returns true if user wants to quit, false otherwise
-bool ask_quit() {
-	char choice = 'n';
-	printf("Are you sure you want to quit this game? (y/N): ");
-	scanf(" %c", &choice);
-	return tolower(choice) == 'y';
-}
-
 void play_round(game_contextT* game_ctx) {
 	bool in_action = true;
 	while (in_action) {
@@ -607,7 +631,8 @@ void play_round(game_contextT* game_ctx) {
 				break;
 			}
 			case ACTION_QUIT: {
-				if (ask_quit()) {
+				printf("Are you sure you want to quit this game? ");
+				if (ask_choice()) {
 					game_ctx->game_running = false;
 					in_action = false;
 				}

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <ctype.h>
 #include "utils.h"
 
 int get_int() {
@@ -9,6 +10,14 @@ int get_int() {
 	int val;
 	while (scanf(" %d", &val) != 1) getchar();
 	return val;
+}
+
+// returns true if user replies yes, false otherwise
+bool ask_choice() {
+	char choice = 'n';
+	printf("(y/N): ");
+	scanf(" %c", &choice);
+	return tolower(choice) == 'y';
 }
 
 void *malloc_checked(size_t size) {
