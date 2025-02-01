@@ -19,7 +19,7 @@ cartaT *shuffle_cards(cartaT *cards, int n_cards) {
 	if (n_cards == 0)
 		return NULL;
 
-	cartaT **linear_cards = malloc_checked(n_cards*sizeof(cartaT*));
+	cartaT **linear_cards = (cartaT**)malloc_checked(n_cards*sizeof(cartaT*));
 
 	for (int i = 0; i < n_cards; i++) {
 		// pop the card from the head of the linked list
@@ -45,7 +45,7 @@ cartaT *shuffle_cards(cartaT *cards, int n_cards) {
 	cartaT *new_head =  linear_cards[0];
 
 	// free the linear array of cards used during shuffle
-	free(linear_cards);
+	free_wrap(linear_cards);
 
 	return new_head; // return new head to shuffled linked list
 }
@@ -89,4 +89,11 @@ cartaT *card_by_index(cartaT *head, int idx) {
 	while (head != NULL && --idx > 0)
 		head = head->next;
 	return head;
+}
+
+int count_cards(cartaT *head) {
+	int count;
+	for (count = 0; head != NULL; head = head->next)
+		count++;
+	return count;
 }
