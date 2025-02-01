@@ -10,6 +10,26 @@
 #include "files.h"
 #include "utils.h"
 
+bool has_bonusmalus(giocatoreT *player, azioneT effect_action) {
+	bool found = false;
+	for (cartaT *card = player->bonus_malus; card != NULL && !found; card = card->next) {
+		for (int i = 0; i < card->n_effetti && !found; i++) {
+			if (card->effetti[i].azione == effect_action)
+				found = true;
+		}
+	}
+	return found;
+}
+
+void show_player_state(game_contextT *game_ctx, giocatoreT *player) {
+	printf("Ecco lo stato di " ANSI_UNDERLINE "%s" ANSI_RESET ":\n", player->name);
+
+	printf("Numero carte nella mano: %d\n\n", count_cards(player->carte));
+	if (has_bonusmalus(player, MOSTRA))
+		show_card_group(player->carte, "Mano:", ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET); // show mano
+	show_card_group(player->aula, "Aula:", ANSI_BOLD ANSI_YELLOW "%s" ANSI_RESET); // show aula
+	show_card_group(player->bonus_malus, "Bonus/Malus:", ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET); // show bonus/malus
+}
 
 void view_own(game_contextT *game_ctx) {
 	printf("Ecco le carte in tuo possesso, " ANSI_UNDERLINE "%s" ANSI_RESET ":\n\n", game_ctx->curr_player->name);
@@ -90,17 +110,6 @@ int choice_action_menu() {
 		action = get_int();
 	} while (action < ACTION_QUIT || action > ACTION_VIEW_OTHERS);
 	return action;
-}
-
-bool has_bonusmalus(giocatoreT *player, azioneT effect_action) {
-	bool found = false;
-	for (cartaT *card = player->bonus_malus; card != NULL && !found; card = card->next) {
-		for (int i = 0; i < card->n_effetti && !found; i++) {
-			if (card->effetti[i].azione == effect_action)
-				found = true;
-		}
-	}
-	return found;
 }
 
 void distribute_cards(game_contextT *game_ctx) {
@@ -203,6 +212,8 @@ void apply_start_effects(game_contextT *game_ctx) {
 
 
 void begin_round(game_contextT *game_ctx) {
+	save_game(game_ctx);
+
 	show_round(game_ctx);
 	apply_start_effects(game_ctx);
 
