@@ -77,6 +77,10 @@ int read_int(FILE *fp) {
 	return val;
 }
 
+void write_int(FILE *fp, int val) {
+	fprintf(fp, "%d\n", val);
+}
+
 char *strdup_checked(const char *str) {
 	int len = strlen(str)+1;
 	char *copy = malloc_checked(len);

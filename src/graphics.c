@@ -138,20 +138,6 @@ bool show_cards(cartaT *head) {
 	return count > 0;
 }
 
-void draw_card(game_contextT *game_ctx) {
-	// shuffle and swap mazzo_scarti with mazzo_pesca if mazzo_pesca is empty
-	if (game_ctx->mazzo_pesca == NULL) {
-		game_ctx->mazzo_pesca = shuffle_cards(game_ctx->mazzo_scarti, count_cards(game_ctx->mazzo_scarti));
-		game_ctx->mazzo_pesca = game_ctx->mazzo_scarti;
-		game_ctx->mazzo_scarti = NULL; // mazzo_scarti has been moved to mazzo_pesca (emptied)
-	}
-
-	cartaT *drawn_card = pop_card(&game_ctx->mazzo_pesca);
-	puts("Ecco la carta che hai pescato:");
-	show_card(drawn_card);
-	push_card(&game_ctx->curr_player->carte, drawn_card);
-}
-
 int get_max_row_width(cartaT *head) {
 	int count = count_cards(head);
 	if (!count)

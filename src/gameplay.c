@@ -174,9 +174,9 @@ game_contextT *new_game() {
 }
 
 void show_round(game_contextT *game_ctx) {
-	printf("Round numero: %d\n", game_ctx->round_num);
+	printf("Round numero: " ANSI_BOLD "%d" ANSI_RESET "\n", game_ctx->round_num);
 
-	printf("Ora gioca: %s\n", game_ctx->curr_player->name);
+	printf("Ora gioca: " ANSI_UNDERLINE "%s" ANSI_RESET "\n", game_ctx->curr_player->name);
 
 
 }
@@ -184,7 +184,9 @@ void show_round(game_contextT *game_ctx) {
 void apply_effects(game_contextT* game_ctx, cartaT* card) {
 
 	if (card->opzionale) {
-		printf("Vuoi applicare gli effetti della carta %s? (y/n): ", card->name);
+		puts("Vuoi applicare gli effetti di questa carta?");
+		show_card(card);
+		ask_choice();
 		// TODO: implement choice
 	}
 
@@ -210,6 +212,19 @@ void apply_start_effects(game_contextT *game_ctx) {
 	}
 }
 
+void draw_card(game_contextT *game_ctx) {
+	// shuffle and swap mazzo_scarti with mazzo_pesca if mazzo_pesca is empty
+	if (game_ctx->mazzo_pesca == NULL) {
+		game_ctx->mazzo_pesca = shuffle_cards(game_ctx->mazzo_scarti, count_cards(game_ctx->mazzo_scarti));
+		game_ctx->mazzo_pesca = game_ctx->mazzo_scarti;
+		game_ctx->mazzo_scarti = NULL; // mazzo_scarti has been moved to mazzo_pesca (emptied)
+	}
+
+	cartaT *drawn_card = pop_card(&game_ctx->mazzo_pesca);
+	puts("Ecco la carta che hai pescato:");
+	show_card(drawn_card);
+	push_card(&game_ctx->curr_player->carte, drawn_card);
+}
 
 void begin_round(game_contextT *game_ctx) {
 	save_game(game_ctx);
