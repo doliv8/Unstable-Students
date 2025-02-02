@@ -39,23 +39,40 @@ void view_own(game_contextT *game_ctx) {
 	show_card_group(game_ctx->curr_player->carte, "Mano:", ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET); // show mano
 }
 
-void view_others(game_contextT *game_ctx) {
+// returns NULL when ALL is picked
+giocatoreT *pick_player(game_contextT *game_ctx, const char *prompt, bool allow_self, bool allow_all) {
 	giocatoreT *player;
-	int chosen_idx;
+	int chosen_idx, tot_players = allow_self ? game_ctx->n_players : game_ctx->n_players - 1,
+		all_idx = tot_players + 1,
+		max_choice = allow_all ? all_idx : tot_players;
 	do {
-		puts("Scegli il giocatore del quale vuoi vedere lo stato:");
-		player = game_ctx->curr_player->next; // start from next player based on turns
-		for (int i = 1; i < game_ctx->n_players; i++, player = player->next)
+		puts(prompt);
+		player = allow_self ? game_ctx->curr_player : game_ctx->curr_player->next; // start from curr or next player based on turns
+		for (int i = 1; i < all_idx; i++, player = player->next)
 			printf(" [TASTO %d] %s\n", i, player->name);
-		printf(" [TASTO %d] Tutti i giocatori\n", game_ctx->n_players);
+		if (allow_all)
+			printf(" [TASTO %d] Tutti i giocatori\n", all_idx);
 		chosen_idx = get_int();
-	} while (chosen_idx < 1 || chosen_idx > game_ctx->n_players);
-
-	player = game_ctx->curr_player->next; // start from next player based on turns
-	for (int i = 1; i < game_ctx->n_players; i++, player = player->next) {
-		if (i == chosen_idx || chosen_idx == game_ctx->n_players)
-			show_player_state(game_ctx, player);
+	} while (chosen_idx < 1 || chosen_idx > max_choice);
+	
+	if (chosen_idx == all_idx)
+		player = NULL; // signals ALL choice
+	else {
+		player = allow_self ? game_ctx->curr_player : game_ctx->curr_player->next;
+		for (int i = 1; i < chosen_idx; i++)
+			player = player->next;
 	}
+	return player;
+}
+
+void view_others(game_contextT *game_ctx) {
+	giocatoreT *target = pick_player(game_ctx, "Scegli il giocatore del quale vuoi vedere lo stato:", false, true);
+	if (target == NULL) { // picked option is ALL
+		// start from next player based on turns
+		for (giocatoreT *player = game_ctx->curr_player->next; player != game_ctx->curr_player; player = player->next)
+			show_player_state(game_ctx, player);
+	} else
+		show_player_state(game_ctx, target);
 }
 
 // returns a linked list containing all the Matricola-kind cards found & removed from mazzo
@@ -78,6 +95,9 @@ cartaT *pick_card(cartaT *head, const char* prompt, const char *title, const cha
 	int n_cards = count_cards(head), chosen_idx;
 	cartaT *card;
 	show_card_group(head, title, title_fmt);
+	// TODO: handle no cards check
+	// if (!n_cards)
+	// 	return NULL;
 	do {
 		puts(prompt);
 		card = head;
@@ -89,13 +109,42 @@ cartaT *pick_card(cartaT *head, const char* prompt, const char *title, const cha
 }
 
 void discard_card(game_contextT* game_ctx) {
-	puts("Puoi avere massimo " ANSI_BOLD TO_STRING(ENDROUND_MAX_CARDS) ANSI_RESET " carte alla fine del round!");
 	cartaT *card = pick_card(game_ctx->curr_player->carte, "Scegli la carta che vuoi scartare.",
 		"Carte attualmente nella tua mano", ANSI_BOLD ANSI_RED "%s" ANSI_RESET
 	);
+	// TODO: handle no cards check
 	unlink_card(&game_ctx->curr_player->carte, card);
 	printf("Hai scartato: %s\n", card->name);
 	push_card(&game_ctx->mazzo_scarti, card); // put discarded card into mazzo scarti
+}
+
+void draw_card(game_contextT *game_ctx) {
+	// shuffle and swap mazzo_scarti with mazzo_pesca if mazzo_pesca is empty
+	if (game_ctx->mazzo_pesca == NULL) {
+		game_ctx->mazzo_pesca = shuffle_cards(game_ctx->mazzo_scarti, count_cards(game_ctx->mazzo_scarti));
+		game_ctx->mazzo_pesca = game_ctx->mazzo_scarti;
+		game_ctx->mazzo_scarti = NULL; // mazzo_scarti has been moved to mazzo_pesca (emptied)
+	}
+
+	cartaT *drawn_card = pop_card(&game_ctx->mazzo_pesca);
+	puts("Ecco la carta che hai pescato:");
+	show_card(drawn_card);
+	push_card(&game_ctx->curr_player->carte, drawn_card);
+}
+
+void play_card(game_contextT *game_ctx) {
+	// TODO: implement this function
+
+	cartaT *card = pick_card(game_ctx->curr_player->carte, "Scegli la carta che vuoi giocare.",
+		"La tua mano", ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET
+	);
+	unlink_card(&game_ctx->curr_player->carte, card);
+	printf("Hai scelto di giocare: %s\n", card->name);
+
+	if (card->tipo == MAGIA) {
+
+	}
+
 }
 
 int choice_action_menu() {
@@ -181,19 +230,67 @@ void show_round(game_contextT *game_ctx) {
 
 }
 
-void apply_effects(game_contextT* game_ctx, cartaT* card) {
+void swap_hands(game_contextT *game_ctx) {
+	giocatoreT *target = pick_player(game_ctx, "Scegli il giocatore col quale scambiare la tua mano:", false, false);
 
+	printf("Hai scelto di scambiare il tuo mazzo con quello di " ANSI_UNDERLINE "%s" ANSI_RESET "!\n", target->name);
+
+	cartaT *tmp = target->carte;
+	target->carte = game_ctx->curr_player->carte;
+	game_ctx->curr_player->carte = tmp;
+}
+
+void apply_effect(game_contextT *game_ctx, effettoT *effect) {
+	// TODO: apply ALL actual effects
+
+	switch (effect->azione) {
+		case GIOCA: {
+			play_card(game_ctx);
+			break;
+		}
+		case SCARTA: {
+			// TODO: add check for effect target
+			// discard_card(game_ctx);
+			break;
+		}
+		case ELIMINA: {
+			break;
+		}
+		case RUBA: {
+			break;
+		}
+		case PESCA: {
+			draw_card(game_ctx);
+			break;
+		}
+		case PRENDI: {
+			break;
+		}
+		case SCAMBIA: {
+			swap_hands(game_ctx);
+			break;
+		}
+		case BLOCCA:
+		case MOSTRA:
+		case IMPEDIRE:
+		case INGEGNERE: {
+			// no action needs to be performed
+			break;
+		}
+	}
+}
+
+void apply_effects(game_contextT *game_ctx, cartaT *card) {
+	bool apply = true;
 	if (card->opzionale) {
 		puts("Vuoi applicare gli effetti di questa carta?");
 		show_card(card);
-		ask_choice();
-		// TODO: implement choice
+		apply = ask_choice();
 	}
 
-	for (int i = 0; i < card->n_effetti; i++) {
-		printf("*to implement* APPLYING an effect!\n");
-		// TODO: apply actual effects
-		// apply_effect(game_ctx, card->effetti[i]);
+	if (apply) {
+		for (int i = 0; i < card->n_effetti; i++)
+			apply_effect(game_ctx, &card->effetti[i]);
 	}
 }
 
@@ -212,20 +309,6 @@ void apply_start_effects(game_contextT *game_ctx) {
 	}
 }
 
-void draw_card(game_contextT *game_ctx) {
-	// shuffle and swap mazzo_scarti with mazzo_pesca if mazzo_pesca is empty
-	if (game_ctx->mazzo_pesca == NULL) {
-		game_ctx->mazzo_pesca = shuffle_cards(game_ctx->mazzo_scarti, count_cards(game_ctx->mazzo_scarti));
-		game_ctx->mazzo_pesca = game_ctx->mazzo_scarti;
-		game_ctx->mazzo_scarti = NULL; // mazzo_scarti has been moved to mazzo_pesca (emptied)
-	}
-
-	cartaT *drawn_card = pop_card(&game_ctx->mazzo_pesca);
-	puts("Ecco la carta che hai pescato:");
-	show_card(drawn_card);
-	push_card(&game_ctx->curr_player->carte, drawn_card);
-}
-
 void begin_round(game_contextT *game_ctx) {
 	save_game(game_ctx);
 
@@ -241,7 +324,7 @@ void play_round(game_contextT *game_ctx) {
 	while (in_action) {
 		switch (choice_action_menu()) {
 			case ACTION_PLAY_HAND: {
-				// TODO: implement playing cards
+				play_card(game_ctx);
 				in_action = false;
 				break;
 			}
@@ -275,8 +358,10 @@ void end_round(game_contextT *game_ctx) {
 		return;
 
 	// hand max cards check
-	while (count_cards(game_ctx->curr_player->carte) > ENDROUND_MAX_CARDS)
+	while (count_cards(game_ctx->curr_player->carte) > ENDROUND_MAX_CARDS) {
+		puts("Puoi avere massimo " ANSI_BOLD TO_STRING(ENDROUND_MAX_CARDS) ANSI_RESET " carte alla fine del round!");
 		discard_card(game_ctx);
+	}
 
 	// TODO: check win condition
 
