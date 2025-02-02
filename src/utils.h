@@ -26,6 +26,7 @@ char *center_boxed_string(const char *str, int str_len, const char *border, int 
 int rand_int(int min, int max);
 
 int read_int(FILE *fp);
+void write_int(FILE *fp, int val);
 bool ask_choice();
 
 void init_multiline(multiline_textT *multiline);

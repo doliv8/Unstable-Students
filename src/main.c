@@ -16,7 +16,9 @@ int main(int argc, char *argv[]) {
 	// check salvataggio
 	assert(argc == 1);
 
-	game_contextT* game_ctx = new_game();
+	game_contextT* game_ctx;
+	// if (load_)
+	// = new_game();
 
 	// game loop
 	game_ctx->game_running = true;

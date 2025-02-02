@@ -10,8 +10,53 @@ game_contextT* load_game() {
 	return NULL;
 }
 
+void dump_effect(FILE *fp, effettoT *effect) {
+	fprintf(fp, "%d %d %d\n", (int)effect->azione, (int)effect->target_giocatori, (int)effect->target_carta);
+}
+
+void dump_effects(FILE *fp, cartaT *card) {
+	write_int(fp, card->n_effetti);
+	for (int i = 0;  i < card->n_effetti; i++)
+		dump_effect(fp, &card->effetti[i]);
+}
+
+void dump_card(FILE *fp, cartaT* card) {
+	fprintf(fp, "%s\n", card->name);
+	fprintf(fp, "%s\n", card->description);
+	write_int(fp, (int)card->tipo);
+	dump_effects(fp, card);
+	write_int(fp, (int)card->quando);
+	write_int(fp, (int)card->opzionale);
+}
+
+void dump_cards(FILE *fp, cartaT *head) {
+	write_int(fp, count_cards(head));
+	for (; head != NULL; head = head->next)
+		dump_card(fp, head);
+}
+
+void dump_player(FILE *fp, giocatoreT *player) {
+	fprintf(fp, "%s\n", player->name);
+	dump_cards(fp, player->carte); // save mano
+	dump_cards(fp, player->aula); // save aula
+	dump_cards(fp, player->bonus_malus); // save bonus/malus
+}
+
 void save_game(game_contextT* game_ctx) {
-	// TODO: implement saving game
+	FILE *fp = fopen(FILE_SAVE, "w");
+	if (fp == NULL) {
+		fprintf(stderr, "Opening save file (%s) failed!\n", FILE_SAVE);
+		exit(EXIT_FAILURE);
+	}
+
+	giocatoreT *player = game_ctx->curr_player;
+	write_int(fp, game_ctx->n_players);
+	for (int i = 0; i < game_ctx->n_players; i++, player = player->next)
+		dump_player(fp, player);
+	dump_cards(fp, game_ctx->mazzo_pesca); // save mazzo pesca
+	dump_cards(fp, game_ctx->mazzo_scarti); // save mazzo scarti
+	dump_cards(fp, game_ctx->aula_studio); // save aula studio
+	fclose(fp);
 }
 
 

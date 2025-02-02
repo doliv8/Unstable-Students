@@ -9,6 +9,7 @@
 #define MAX_PLAYERS 4
 
 #define FILE_MAZZO "mazzo.txt"
+#define FILE_SAVE "savegame.sav"
 
 #define CARDS_PER_PLAYER 5
 #define ENDROUND_MAX_CARDS 5
