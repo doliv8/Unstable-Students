@@ -11,6 +11,7 @@ void view_others(game_contextT *game_ctx);
 game_contextT *new_game();
 
 void show_round(game_contextT *game_ctx);
+void apply_effects(game_contextT *game_ctx, cartaT *card);
 void apply_start_effects(game_contextT *game_ctx);
 
 void begin_round(game_contextT *game_ctx);

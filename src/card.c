@@ -85,15 +85,46 @@ void unlink_card(cartaT **head_ptr, cartaT *card) {
 }
 
 // idx is 1 indexed
-cartaT *card_by_index(cartaT *head, int idx) {
-	while (head != NULL && --idx > 0)
-		head = head->next;
-	return head;
+cartaT *card_by_index_restricted(cartaT *head, tipo_cartaT type, int idx) {
+	cartaT *target = NULL;
+	for (; head != NULL && target == NULL; head = head->next) {
+		if (match_card_type(head, type) && --idx == 0)
+			target = head;
+	}
+	return target;
 }
 
 int count_cards(cartaT *head) {
 	int count;
 	for (count = 0; head != NULL; head = head->next)
 		count++;
+	return count;
+}
+
+bool match_card_type(cartaT *head, tipo_cartaT type) {
+	bool matched;
+	switch (type) {
+		case ALL: {
+			matched = true;
+			break;
+		}
+		case STUDENTE: {
+			matched = head->tipo == MATRICOLA || head->tipo == STUDENTE_SEMPLICE || head->tipo == LAUREANDO;
+			break;
+		}
+		default: {
+			matched = head->tipo == type;
+			break;
+		}
+	}
+	return matched;
+}
+
+int count_cards_restricted(cartaT *head, tipo_cartaT type) {
+	int count;
+	for (count = 0; head != NULL; head = head->next) {
+		if (match_card_type(head, type))
+			count++;
+	}
 	return count;
 }

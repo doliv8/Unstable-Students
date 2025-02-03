@@ -1,6 +1,7 @@
 #ifndef CARD_H
 #define CARD_H
 
+#include <stdbool.h>
 #include "types.h"
 
 void clear_cards(cartaT *head);
@@ -9,7 +10,9 @@ cartaT *duplicate_carta(cartaT *card);
 cartaT* pop_card(cartaT **head_ptr);
 void push_card(cartaT **head_ptr, cartaT *card);
 void unlink_card(cartaT **head_ptr, cartaT *card);
-cartaT *card_by_index(cartaT *card, int idx);
+cartaT *card_by_index_restricted(cartaT *card, tipo_cartaT type, int idx);
 int count_cards(cartaT *head);
+bool match_card_type(cartaT *card, tipo_cartaT type);
+int count_cards_restricted(cartaT *head, tipo_cartaT type);
 
 #endif // CARD_H
