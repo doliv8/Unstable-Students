@@ -107,19 +107,21 @@ void show_card(cartaT *card) {
 	clear_freeable_multiline(&card_info);
 }
 
-bool show_cards(cartaT *head) {
+bool show_cards_restricted(cartaT *head, tipo_cartaT type) {
 	multiline_containerT container;
 	init_multiline_container(&container);
 	freeable_multiline_textT *cards_info;
 
-	int count = count_cards(head);
+	int count = count_cards_restricted(head, type);
 
 	cards_info = (freeable_multiline_textT*)malloc_checked(count*sizeof(freeable_multiline_textT));
 	for (int i = 0; i < count; i++)
 		init_multiline(&cards_info[i]);
 
-	for (int i = 0; i < count; i++, head = head->next)
-		build_card(&cards_info[i], head);
+	for (int i = 0; i < count; head = head->next) {
+		if (match_card_type(head, type))
+			build_card(&cards_info[i++], head);
+	}
 
 	// actually print the built cards in rows containing CARDS_PER_ROW cards max each
 	for (int row = 0; row < (count + CARDS_PER_ROW-1)/CARDS_PER_ROW; row++) {
@@ -138,25 +140,29 @@ bool show_cards(cartaT *head) {
 	return count > 0;
 }
 
-int get_max_row_width(cartaT *head) {
-	int count = count_cards(head);
+int get_max_row_width_restricted(cartaT *head, tipo_cartaT type) {
+	int count = count_cards_restricted(head, type);
 	if (!count)
 		return CARD_WIDTH;
 	int max_row_count = count >= CARDS_PER_ROW ? CARDS_PER_ROW : count % CARDS_PER_ROW;
 	return CARDS_HORIZONTAL_SPACING + max_row_count * (CARD_WIDTH + CARDS_HORIZONTAL_SPACING);
 }
 
-void show_card_group(cartaT *group, const char *title, const char *title_fmt) {
+void show_card_group_restricted(cartaT *group, const char *title, const char *title_fmt, tipo_cartaT type) {
 	char *fmt_title;
 	char *l_border = "[", *r_border = "]", *vuoto_msg = "\\\\ vuoto //";
 	int borders_width = strlen(l_border)+strlen(r_border);
-	int max_group_row_width = get_max_row_width(group);
+	int max_group_row_width = get_max_row_width_restricted(group, type);
 
 	asprintf_checked(&fmt_title, title_fmt, title);
 
 	print_centered_lr_boxed_string(fmt_title, strlen(title), l_border, r_border, max_group_row_width-borders_width);
-	if (!show_cards(group))
+	if (!show_cards_restricted(group, type))
 		print_centered_lr_boxed_string(vuoto_msg, strlen(vuoto_msg), "", "\n", max_group_row_width);
 
 	free_wrap(fmt_title);
+}
+
+void show_card_group(cartaT *group, const char *title, const char *title_fmt) {
+	show_card_group_restricted(group, title, title_fmt, ALL);
 }
