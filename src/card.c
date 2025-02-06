@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <string.h>
 #include "card.h"
 #include "structs.h"
 #include "utils.h"
@@ -118,6 +119,18 @@ bool match_card_type(cartaT *head, tipo_cartaT type) {
 		}
 	}
 	return matched;
+}
+
+bool cards_equal(cartaT *first, cartaT *second) {
+	// only check for name matching
+	return strncmp(first->name, second->name, CARTA_NAME_LEN) == 0;
+}
+
+bool cards_contain(cartaT *head, cartaT *needle) {
+	bool contained = false;
+	for (; head != NULL && !contained; head = head->next)
+		contained = cards_equal(head, needle);
+	return contained;
 }
 
 int count_cards_restricted(cartaT *head, tipo_cartaT type) {
