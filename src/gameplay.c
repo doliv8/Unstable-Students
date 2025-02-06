@@ -10,6 +10,19 @@
 #include "files.h"
 #include "utils.h"
 
+#include <assert.h>
+
+bool has_bonusmalus_target(giocatoreT *player, azioneT effect_action, cartaT *target) {
+	bool found = false;
+	for (cartaT *card = player->bonus_malus; card != NULL && !found; card = card->next) {
+		for (int i = 0; i < card->n_effetti && !found; i++) {
+			if (card->effetti[i].azione == effect_action && match_card_type(target, card->effetti[i].target_carta))
+				found = true;
+		}
+	}
+	return found;
+}
+
 bool has_bonusmalus(giocatoreT *player, azioneT effect_action) {
 	bool found = false;
 	for (cartaT *card = player->bonus_malus; card != NULL && !found; card = card->next) {
@@ -20,6 +33,7 @@ bool has_bonusmalus(giocatoreT *player, azioneT effect_action) {
 	}
 	return found;
 }
+
 
 void show_player_state(game_contextT *game_ctx, giocatoreT *player) {
 	printf("Ecco lo stato di " ANSI_UNDERLINE "%s" ANSI_RESET ":\n", player->name);
@@ -173,47 +187,82 @@ void draw_card(game_contextT *game_ctx) {
 	push_card(&game_ctx->curr_player->carte, drawn_card);
 }
 
-void play_card(game_contextT *game_ctx) {
+int count_playable_cards(game_contextT *game_ctx) {
+	int playable_cards = 0;
+	for (cartaT *card = game_ctx->curr_player->carte; card != NULL; card = card->next) {
+		if (card->tipo != ISTANTANEA && // ISTANTANEA can't be played during own turn
+			!has_bonusmalus_target(game_ctx->curr_player, IMPEDIRE, card) && // check for active IMPEDIRE effect
+			!cards_contain(game_ctx->curr_player->aula, card) && // check for identical cards already in aula
+			!cards_contain(game_ctx->curr_player->bonus_malus, card) // check for identical cards already in bonus/malus
+		)
+			playable_cards++;
+	}
+	return playable_cards;
+}
+/**
+ * @brief makes current player play a card from his hand
+ * 
+ * @param game_ctx 
+ * @return true if player actually played a card
+ * @return false player wasn't able to play a card
+ */
+bool play_card(game_contextT *game_ctx) {
 	// TODO: implement this function
+	bool played = false;
+	cartaT *card;
 
-	cartaT *card = pick_card(game_ctx->curr_player->carte, "Scegli la carta che vuoi giocare.",
+	// handle no playable cards or no cards at all check
+	if (count_playable_cards(game_ctx) == 0) {
+		puts("Avresti dovuto giocare una carta ma non ne puoi giocare neanche una!");
+		return false;
+	}
+
+	card = pick_card(game_ctx->curr_player->carte, "Scegli la carta che vuoi giocare.",
 		"La tua mano", ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET
 	);
-	unlink_card(&game_ctx->curr_player->carte, card);
 	printf("Hai scelto di giocare: %s\n", card->name);
 
 	switch (card->tipo) {
-		case ISTANTANEA:
+		case ISTANTANEA: {
+			printf("Non puoi giocare una carta %s durante tuo turno!\n", tipo_cartaT_str(ISTANTANEA));
+			break;
+		}
+		case BONUS:
 		case MALUS:
 		case MATRICOLA:
 		case STUDENTE_SEMPLICE:
 		case LAUREANDO: {
-			// TODO: implement playing these cards
-			puts("*non implementato*");
-			break;
-		}
-		case BONUS: {
-			if (has_bonusmalus(game_ctx->curr_player, IMPEDIRE)) {
-				printf("Fin quando avrai l'effetto %s attivo, non puoui usare carte %s!",
+			// check for active IMPEDIRE effect
+			if (has_bonusmalus_target(game_ctx->curr_player, IMPEDIRE, card)) {
+				printf("Fin quando avrai l'effetto %s attivo, non puoi usare carte %s!",
 					azioneT_str(IMPEDIRE),
-					tipo_cartaT_str(BONUS)
+					tipo_cartaT_str(card->tipo)
 				);
-			} else
-				assert(false); // TODO: handle this
+			} else {
+				if (can_join_aula(game_ctx, game_ctx->curr_player, card)) {
+					unlink_card(&game_ctx->curr_player->carte, card);
+					join_aula(game_ctx, game_ctx->curr_player, card);
+					played = true;
+				} else {
+					puts("Questa carta non puo' essere giocata dato che ne hai una uguale sul campo.");
+				}
+			}
 			break;
 		}
 		case MAGIA: {
 			// always quando = SUBITO, no additional checks needed
+			unlink_card(&game_ctx->curr_player->carte, card);
 			apply_effects(game_ctx, card, SUBITO);
 			dispose_card(game_ctx, card);
+			played = true;
 		}
 		case ALL:
 		case STUDENTE: {
-			// not possible
+			// this code shouldn't be reachable
 			break;
 		}
 	}
-
+	return played ? true : play_card(game_ctx);
 }
 
 int choice_action_menu() {
@@ -291,14 +340,6 @@ game_contextT *new_game() {
 	return game_ctx;
 }
 
-void show_round(game_contextT *game_ctx) {
-	printf("Round numero: " ANSI_BOLD "%d" ANSI_RESET ".\n", game_ctx->round_num);
-
-	printf("Ora gioca: " ANSI_UNDERLINE "%s" ANSI_RESET "!\n", game_ctx->curr_player->name);
-
-
-}
-
 void apply_effect_scambia(game_contextT *game_ctx) {
 	giocatoreT *target = pick_player(game_ctx, "Scegli il giocatore col quale scambiare la tua mano:", false, false);
 
@@ -374,9 +415,19 @@ void apply_effect_elimina(game_contextT *game_ctx, effettoT *effect) {
 		case TUTTI:
 			apply_effect_elimina_tutti(game_ctx, effect);
 			break;
+		default:
+		// shouldn't be reachable
+		break;
 	}
 }
 
+/**
+ * @brief applies leave effects of card and removes it from the aula
+ * 
+ * @param game_ctx 
+ * @param player target aula player
+ * @param card leaving card
+ */
 void leave_aula(game_contextT *game_ctx, giocatoreT *player, cartaT *card) {
 	if (match_card_type(card, STUDENTE))
 		unlink_card(&player->aula, card); // is STUDENTE
@@ -386,13 +437,42 @@ void leave_aula(game_contextT *game_ctx, giocatoreT *player, cartaT *card) {
 	apply_effects(game_ctx, card, FINE);
 }
 
+/**
+ * @brief checks if card can join aula
+ * 
+ * @param game_ctx 
+ * @param player target aula player
+ * @param card joining card
+ * @return true if card can join aula
+ * @return false if card couldn't join aula
+ */
+bool can_join_aula(game_contextT *game_ctx, giocatoreT *player, cartaT *card) {
+	bool can_join = true;
+	if (match_card_type(card, STUDENTE)) { // is STUDENTE
+		if (cards_contain(player->aula, card))
+			can_join = false;
+	} else { // is BONUS/MALUS
+		if (cards_contain(player->bonus_malus, card))
+			can_join = false;
+	}
+	return can_join;
+}
+
+/**
+ * @brief adds card to aula and applies its join effects. always call can_join_aula before calling this function. 
+ * 
+ * @param game_ctx 
+ * @param player target aula player
+ * @param card joining card
+ * @return true if card can join aula
+ * @return false if card couldn't join aula
+ */
 void join_aula(game_contextT *game_ctx, giocatoreT *player, cartaT *card) {
-	if (match_card_type(card, STUDENTE))
-		push_card(&player->aula, card); // is STUDENTE
-	else
-		push_card(&player->bonus_malus, card); // is BONUS/MALUS
-	// apply join effects
-	apply_effects(game_ctx, card, INIZIO);
+	if (match_card_type(card, STUDENTE)) // is STUDENTE
+		push_card(&player->aula, card);
+	else // is BONUS/MALUS
+		push_card(&player->bonus_malus, card);
+	apply_effects(game_ctx, card, SUBITO); // apply join effects
 }
 
 void apply_effect_ruba(game_contextT *game_ctx, effettoT *effect) {
@@ -529,8 +609,8 @@ void play_round(game_contextT *game_ctx) {
 	while (in_action) {
 		switch (choice_action_menu()) {
 			case ACTION_PLAY_HAND: {
-				play_card(game_ctx);
-				in_action = false;
+				if (play_card(game_ctx)) // check for succesful play of card
+					in_action = false;
 				break;
 			}
 			case ACTION_DRAW: {
@@ -559,9 +639,8 @@ void play_round(game_contextT *game_ctx) {
 }
 
 bool check_win_condition(game_contextT *game_ctx) {
-	if (has_bonusmalus(game_ctx->curr_player, INGEGNERE))
-		return false; // cant win with ingegnerizzazione
-	return count_cards_restricted(game_ctx->curr_player->aula, STUDENTE) >= WIN_STUDENTS_COUNT;
+	bool can_win = has_bonusmalus(game_ctx->curr_player, INGEGNERE); // cant win with ingegnerizzazione
+	return can_win && count_cards_restricted(game_ctx->curr_player->aula, STUDENTE) >= WIN_STUDENTS_COUNT;
 }
 
 void end_round(game_contextT *game_ctx) {

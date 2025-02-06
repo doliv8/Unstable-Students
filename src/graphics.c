@@ -166,3 +166,37 @@ void show_card_group_restricted(cartaT *group, const char *title, const char *ti
 void show_card_group(cartaT *group, const char *title, const char *title_fmt) {
 	show_card_group_restricted(group, title, title_fmt, ALL);
 }
+
+void show_round(game_contextT *game_ctx) {
+	char *h_border, *v_border, *round_num_text, *player_turn_text;
+	int len_round_num_text, len_player_turn_text;
+	freeable_multiline_textT round_banner;
+	init_multiline(&round_banner);
+
+	asprintf_checked(&h_border, ANSI_BOLD ANSI_BG_MAGENTA "%c%s%c" ANSI_RESET, CARD_CORNER_LEFT, BANNER_HORIZONTAL_BAR, CARD_CORNER_RIGHT);
+	asprintf_checked(&v_border, ANSI_BOLD ANSI_BG_MAGENTA "%c" ANSI_RESET, CARD_BORDER_VERTICAL);
+
+	len_round_num_text = get_formatted_length("Round numero: %d", game_ctx->round_num);
+	asprintf_checked(&round_num_text, "Round numero: " ANSI_BOLD "%d" ANSI_RESET, game_ctx->round_num);
+
+	len_player_turn_text = get_formatted_length("Turno di: %s!", game_ctx->curr_player->name);
+	asprintf_checked(&player_turn_text, "Turno di: " ANSI_UNDERLINE "%s" ANSI_RESET "!", game_ctx->curr_player->name);
+
+	// build actual banner
+	multiline_addline(&round_banner, h_border);
+	multiline_addline(&round_banner, center_boxed_string("", 0, v_border, ROUND_BANNER_CONTENT_WIDTH)); // spacing
+	multiline_addline(&round_banner, center_boxed_string(round_num_text, len_round_num_text, v_border, ROUND_BANNER_CONTENT_WIDTH));
+	multiline_addline(&round_banner, center_boxed_string(player_turn_text, len_player_turn_text, v_border, ROUND_BANNER_CONTENT_WIDTH));
+	multiline_addline(&round_banner, center_boxed_string("", 0, v_border, ROUND_BANNER_CONTENT_WIDTH)); // spacing
+	multiline_addline(&round_banner, strdup_checked(h_border));
+
+	puts("");
+	for (int i = 0; i < round_banner.n_lines; i++)
+		puts(round_banner.lines[i]);
+	puts("");
+
+	free_wrap(player_turn_text);
+	free_wrap(round_num_text);
+	free_wrap(v_border);
+	clear_freeable_multiline(&round_banner);
+}
