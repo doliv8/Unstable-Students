@@ -13,6 +13,7 @@
 
 #define CARDS_PER_PLAYER 5
 #define ENDROUND_MAX_CARDS 5
+#define WIN_STUDENTS_COUNT 6
 
 #define ACTION_PLAY_HAND 1
 #define ACTION_DRAW 2
@@ -21,6 +22,9 @@
 #define ACTION_QUIT 0
 
 #define MAX_EFFECTS 6
+
+#define CHOICE_AULA 1
+#define CHOICE_BONUSMALUS 2
 
 #define CARD_WIDTH 32
 #define CARD_BORDER_WIDTH 1
