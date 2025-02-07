@@ -108,8 +108,6 @@ void show_card(cartaT *card) {
 }
 
 bool show_cards_restricted(cartaT *head, tipo_cartaT type) {
-	multiline_containerT container;
-	init_multiline_container(&container);
 	freeable_multiline_textT *cards_info;
 
 	int count = count_cards_restricted(head, type);
@@ -136,7 +134,6 @@ bool show_cards_restricted(cartaT *head, tipo_cartaT type) {
 	for (int i = 0; i < count; i++)
 		clear_freeable_multiline(&cards_info[i]);
 	free_wrap(cards_info);
-	clear_multiline_container(&container);
 	return count > 0;
 }
 

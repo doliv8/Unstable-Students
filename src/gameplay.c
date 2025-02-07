@@ -106,6 +106,17 @@ cartaT *split_matricole(cartaT **mazzo_head) {
 }
 
 
+/**
+ * @brief prompts user to pick a card from the provided cards list with a restriction filter and returns the picked card
+ * (still chained in the list).
+ * 
+ * @param head cards list
+ * @param type card type user is allowed to pick
+ * @param prompt text shown to the user while asked to pick the card
+ * @param title title for the cards list box
+ * @param title_fmt formatter for the title of the cards list box (visible length must be 0)
+ * @return cartaT* picked card or NULL if there's no card to pick
+ */
 cartaT *pick_card_restricted(cartaT *head, tipo_cartaT type, const char* prompt, const char *title, const char* title_fmt) {
 	int n_cards = count_cards_restricted(head, type), chosen_idx;
 	cartaT *card;
@@ -130,6 +141,15 @@ cartaT *pick_card_restricted(cartaT *head, tipo_cartaT type, const char* prompt,
 	return card_by_index_restricted(head, type, chosen_idx);
 }
 
+/**
+ * @brief prompts user to pick a card from the provided cards list and returns the picked card (still chained in the list).
+ * 
+ * @param head cards list
+ * @param prompt text shown to the user while asked to pick the card
+ * @param title title for the cards list box
+ * @param title_fmt formatter for the title of the cards list box (visible length must be 0)
+ * @return cartaT* picked card or NULL if there's no card to pick
+ */
 cartaT *pick_card(cartaT *head, const char* prompt, const char *title, const char* title_fmt) {
 	return pick_card_restricted(head, ALL, prompt, title, title_fmt);
 }
@@ -140,8 +160,14 @@ cartaT *pick_aula_card(giocatoreT *player, const char *prompt) {
 	int chosen_idx;
 	cartaT *card;
 
+	// TODO: handle this function bypass for ELIMINA picking an empty list and add empty checks.
+
 	do {
-		puts("Vuoi scegliere una carta dall'aula o dai bonus/malus?\n");
+		// TODO: do dynamic title containing target player name (reusable in pick_card & show_card_grou).
+		show_card_group(player->aula, "Aula:", ANSI_BOLD ANSI_YELLOW "%s" ANSI_RESET); // show aula
+		show_card_group(player->bonus_malus, "Bonus/Malus:", ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET); // show bonus/malus
+
+		puts("Vuoi scegliere una carta dall'aula studenti o dai bonus/malus?\n");
 		puts(" [TASTO " TO_STRING(CHOICE_AULA) "] Aula");
 		puts(" [TASTO " TO_STRING(CHOICE_BONUSMALUS) "] Bonus/Malus");
 		chosen_idx = get_int();
@@ -193,12 +219,14 @@ int count_playable_cards(game_contextT *game_ctx) {
 		if (card->tipo != ISTANTANEA && // ISTANTANEA can't be played during own turn
 			!has_bonusmalus_target(game_ctx->curr_player, IMPEDIRE, card) && // check for active IMPEDIRE effect
 			!cards_contain(game_ctx->curr_player->aula, card) && // check for identical cards already in aula
-			!cards_contain(game_ctx->curr_player->bonus_malus, card) // check for identical cards already in bonus/malus
+			!cards_contain(game_ctx->curr_player->bonus_malus, card) || // check for identical Bonus cards already in bonus/malus
+			card->tipo == MALUS // Malus cards can be always played on self or other players
 		)
 			playable_cards++;
 	}
 	return playable_cards;
 }
+
 /**
  * @brief makes current player play a card from his hand
  * 
@@ -210,6 +238,7 @@ bool play_card(game_contextT *game_ctx) {
 	// TODO: implement this function
 	bool played = false;
 	cartaT *card;
+	giocatoreT *target = game_ctx->curr_player;
 
 	// handle no playable cards or no cards at all check
 	if (count_playable_cards(game_ctx) == 0) {
@@ -224,7 +253,7 @@ bool play_card(game_contextT *game_ctx) {
 
 	switch (card->tipo) {
 		case ISTANTANEA: {
-			printf("Non puoi giocare una carta %s durante tuo turno!\n", tipo_cartaT_str(ISTANTANEA));
+			printf("Non puoi giocare una carta %s durante il tuo turno!\n", tipo_cartaT_str(ISTANTANEA));
 			break;
 		}
 		case BONUS:
@@ -232,19 +261,25 @@ bool play_card(game_contextT *game_ctx) {
 		case MATRICOLA:
 		case STUDENTE_SEMPLICE:
 		case LAUREANDO: {
-			// check for active IMPEDIRE effect
+			// check for active IMPEDIRE effect on this card type
 			if (has_bonusmalus_target(game_ctx->curr_player, IMPEDIRE, card)) {
-				printf("Fin quando avrai l'effetto %s attivo, non puoi usare carte %s!",
+				printf("Fin quando avrai l'effetto %s attivo, non puoi usare carte %s!\n",
 					azioneT_str(IMPEDIRE),
 					tipo_cartaT_str(card->tipo)
 				);
 			} else {
-				if (can_join_aula(game_ctx, game_ctx->curr_player, card)) {
+				if (card->tipo == MALUS) // MALUS can be placed both in own and other player's bonusmalus
+					target = pick_player(game_ctx, "Scegli un giocatore al quale applicare questa carta Malus.", true, false);
+				if (can_join_aula(game_ctx, target, card)) {
+					// TODO: check for MAI
 					unlink_card(&game_ctx->curr_player->carte, card);
-					join_aula(game_ctx, game_ctx->curr_player, card);
+					join_aula(game_ctx, target, card);
 					played = true;
 				} else {
-					puts("Questa carta non puo' essere giocata dato che ne hai una uguale sul campo.");
+					if (target == game_ctx->curr_player)
+						puts("Questa carta non puo' essere giocata dato che ne hai una uguale sul campo.");
+					else
+						printf("Questa carta non puo' essere giocata su %s dato che ne ha una uguale sul campo.\n", target->name);
 				}
 			}
 			break;
@@ -371,43 +406,61 @@ void apply_effect_scarta(game_contextT *game_ctx, effettoT *effect) {
 	}
 }
 
-void apply_effect_elimina_io(game_contextT *game_ctx, effettoT *effect) {
-	// allowed values: target player = IO and target card = ALL | STUDENTE | BONUS | MALUS
-	cartaT *deleted;
+void apply_effect_elimina_target(game_contextT *game_ctx, giocatoreT *target, effettoT *effect) {
+	char *prompt, *title;
+	cartaT *deleted, *target_cards;
 
-	if (effect->target_carta == ALL)
-		deleted = pick_aula_card(game_ctx->curr_player, "Scegli la carta che vuoi eliminare dalla tua aula.");
-	else if (effect->target_carta == STUDENTE)
-		deleted = pick_card_restricted(game_ctx->curr_player->aula, STUDENTE,
-			"Scegli la carta Studente che vuoi eliminare dalla tua aula.",
-			"Aula", ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET
+	if (effect->target_carta == ALL) {
+		asprintf_checked(&prompt, "Scegli la carta che vuoi eliminare dall'aula di %s.", target->name);
+		deleted = pick_aula_card(target, prompt);
+	} else { // handle STUDENTE and BONUS/MALUS
+		asprintf_checked(&prompt, "Scegli la carta %s che vuoi eliminare dall'aula di %s.",
+			tipo_cartaT_str(effect->target_carta), target->name
 		);
-	else
-		deleted = pick_card_restricted(game_ctx->curr_player->bonus_malus, effect->target_carta,
-			"Scegli la carta che vuoi eliminare dalle tue Bonus/Malus.",
-			"Aula", ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET
-		);
+		asprintf_checked(&title, "Aula di %s", target->name);
+		target_cards = effect->target_carta == STUDENTE ? target->aula : target->bonus_malus;
+		deleted = pick_card_restricted(target_cards, effect->target_carta, prompt, title, ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET);
+		free_wrap(title);
+	}
 
 	if (deleted != NULL) { // check if a card could be selected
-		leave_aula(game_ctx, game_ctx->curr_player, deleted);
+		// TODO: check for MAI usage
+		leave_aula(game_ctx, target, deleted);
 		dispose_card(game_ctx, deleted);
 	}
+
+	free_wrap(prompt);
 }
 
 void apply_effect_elimina_tu(game_contextT *game_ctx, effettoT *effect) {
+	char *pick_player_prompt;
+	giocatoreT *target;
 
+	asprintf_checked(&pick_player_prompt, "Scegli il giocatore al quale vuoi eliminare una carta %s:",
+		tipo_cartaT_str(effect->target_carta)
+	);
+	target = pick_player(game_ctx, pick_player_prompt, false, false);
+
+	apply_effect_elimina_target(game_ctx, target, effect);
+
+	free_wrap(pick_player_prompt);
 }
 
 void apply_effect_elimina_tutti(game_contextT *game_ctx, effettoT *effect) {
+	giocatoreT *target;
 
+	printf("Tutti i giocatori devono eliminare una carta %s!\n", tipo_cartaT_str(effect->target_carta));
+
+	target = game_ctx->curr_player;
+	for (int i = 0; i < game_ctx->n_players; i++, target = target->next)
+		apply_effect_elimina_target(game_ctx, target, effect);
 }
 
 void apply_effect_elimina(game_contextT *game_ctx, effettoT *effect) {
 	// allowed values: target player = IO | TU | TUTTI and target card = ALL | STUDENTE | BONUS | MALUS
-	assert(effect->target_carta != ALL); // for now this case is not handled
 	switch (effect->target_giocatori) {
 		case IO:
-			apply_effect_elimina_io(game_ctx, effect);
+			apply_effect_elimina_target(game_ctx, game_ctx->curr_player, effect);
 			break;
 		case TU:
 			apply_effect_elimina_tu(game_ctx, effect);
@@ -415,14 +468,13 @@ void apply_effect_elimina(game_contextT *game_ctx, effettoT *effect) {
 		case TUTTI:
 			apply_effect_elimina_tutti(game_ctx, effect);
 			break;
-		default:
-		// shouldn't be reachable
-		break;
+		default: // shouldn't be reachable
+			break;
 	}
 }
 
 /**
- * @brief applies leave effects of card and removes it from the aula
+ * @brief applies leave effects of card and removes it from player's aula
  * 
  * @param game_ctx 
  * @param player target aula player
@@ -433,12 +485,16 @@ void leave_aula(game_contextT *game_ctx, giocatoreT *player, cartaT *card) {
 		unlink_card(&player->aula, card); // is STUDENTE
 	else
 		unlink_card(&player->bonus_malus, card); // is BONUS/MALUS
+	// switch current player to card owner player for applying FINE effects correctly
+	giocatoreT *original_player = game_ctx->curr_player;
+	game_ctx->curr_player = player;
 	// apply leave effects
 	apply_effects(game_ctx, card, FINE);
+	game_ctx->curr_player = original_player;
 }
 
 /**
- * @brief checks if card can join aula
+ * @brief checks if card can join aula (no equal card is already in aula)
  * 
  * @param game_ctx 
  * @param player target aula player
@@ -459,7 +515,7 @@ bool can_join_aula(game_contextT *game_ctx, giocatoreT *player, cartaT *card) {
 }
 
 /**
- * @brief adds card to aula and applies its join effects. always call can_join_aula before calling this function. 
+ * @brief pushes card to player's aula and applies its join effects. always call can_join_aula before calling this function.
  * 
  * @param game_ctx 
  * @param player target aula player
@@ -479,7 +535,8 @@ void apply_effect_ruba(game_contextT *game_ctx, effettoT *effect) {
 	// allowed values: target player = TU and target card = STUDENTE | BONUS
 	char *pick_player_prompt, *pick_card_prompt, *pick_card_title;
 	giocatoreT *target;
-	cartaT **target_cards, **own_cards, *card;
+	cartaT *target_cards, *card;
+	bool can_steal = false, stolen = false;
 
 	asprintf_checked(&pick_player_prompt, "Scegli il giocatore al quale vuoi rubare una carta %s:",
 		tipo_cartaT_str(effect->target_carta)
@@ -491,23 +548,33 @@ void apply_effect_ruba(game_contextT *game_ctx, effettoT *effect) {
 	);
 	asprintf_checked(&pick_card_title, "Carte %s di %s", tipo_cartaT_str(effect->target_carta), target->name);
 
-	if (effect->target_carta == BONUS) {
-		target_cards = &target->bonus_malus;
-		own_cards = &game_ctx->curr_player->bonus_malus;
-	}
-	else { // target is STUDENTE
-		target_cards = &target->aula;
-		own_cards = &game_ctx->curr_player->aula;
+	target_cards = effect->target_carta == STUDENTE ? target->aula : target->bonus_malus;
+
+	// check if any target card can be stolen by curr_player first
+	for (card = target_cards; card != NULL && !can_steal; card = card->next) {
+		if (match_card_type(card, effect->target_carta)) {
+			if (can_join_aula(game_ctx, game_ctx->curr_player, card))
+				can_steal = true;
+		}
 	}
 
-	card = pick_card_restricted(*target_cards, effect->target_carta,
-		pick_card_prompt, pick_card_title, ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET
-	);
+	if (can_steal) {
+		do {
+			card = pick_card_restricted(target_cards, effect->target_carta,
+				pick_card_prompt, pick_card_title, ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET
+			);
 
-	unlink_card(target_cards, card); // remove the selected card from the target cards of the target player
-	printf("Hai rubato: %s\n", card->name);
-	push_card(own_cards, card); // put stolen card into own cards
-	// TODO: handle join into aula of STUDENTE
+			// TODO: check for MAI
+			if (can_join_aula(game_ctx, game_ctx->curr_player, card)) {
+				leave_aula(game_ctx, target, card);
+				join_aula(game_ctx, game_ctx->curr_player, card);
+				printf("Hai rubato: %s\n", card->name);
+				stolen = true;
+			} else
+				puts("Non puoi rubare questa carta dato che ne hai una uguale sul campo.");
+		} while (!stolen);
+	} else
+		printf("%s non ha alcuna carta %s che puoi rubare!\n", target->name, tipo_cartaT_str(effect->target_carta));
 
 	free_wrap(pick_card_title);
 	free_wrap(pick_card_prompt);
@@ -640,7 +707,7 @@ void play_round(game_contextT *game_ctx) {
 
 bool check_win_condition(game_contextT *game_ctx) {
 	bool can_win = has_bonusmalus(game_ctx->curr_player, INGEGNERE); // cant win with ingegnerizzazione
-	return can_win && count_cards_restricted(game_ctx->curr_player->aula, STUDENTE) >= WIN_STUDENTS_COUNT;
+	return can_win && count_cards_restricted(game_ctx->curr_player->aula, STUDENTE) >= WIN_STUDENTS_COUNT; // TODO: dont count MATRICOLA here
 }
 
 void end_round(game_contextT *game_ctx) {
@@ -657,6 +724,7 @@ void end_round(game_contextT *game_ctx) {
 		printf("Congratulazioni " ANSI_UNDERLINE "%s" ANSI_RESET ", hai vinto la partita!\n", game_ctx->curr_player->name);
 		game_ctx->game_running = false; // stop game
 	} else { // no win, keep playing
+		printf("Round di " ANSI_UNDERLINE "%s" ANSI_RESET " completato!\n", game_ctx->curr_player->name);
 		game_ctx->curr_player = game_ctx->curr_player->next; // next round its next player's turn
 		game_ctx->round_num++;
 	}
