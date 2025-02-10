@@ -216,11 +216,11 @@ void draw_card(game_contextT *game_ctx) {
 int count_playable_cards(game_contextT *game_ctx) {
 	int playable_cards = 0;
 	for (cartaT *card = game_ctx->curr_player->carte; card != NULL; card = card->next) {
-		if (card->tipo != ISTANTANEA && // ISTANTANEA can't be played during own turn
+		if (card->tipo == MALUS || // Malus cards can be always played on self or other players
+			(card->tipo != ISTANTANEA && // ISTANTANEA can't be played during own turn
 			!has_bonusmalus_target(game_ctx->curr_player, IMPEDIRE, card) && // check for active IMPEDIRE effect
 			!cards_contain(game_ctx->curr_player->aula, card) && // check for identical cards already in aula
-			!cards_contain(game_ctx->curr_player->bonus_malus, card) || // check for identical Bonus cards already in bonus/malus
-			card->tipo == MALUS // Malus cards can be always played on self or other players
+			!cards_contain(game_ctx->curr_player->bonus_malus, card)) // check for identical Bonus cards already in bonus/malus
 		)
 			playable_cards++;
 	}
@@ -375,8 +375,12 @@ game_contextT *new_game() {
 	return game_ctx;
 }
 
-void apply_effect_scambia(game_contextT *game_ctx) {
-	giocatoreT *target = pick_player(game_ctx, "Scegli il giocatore col quale scambiare la tua mano:", false, false);
+void apply_effect_scambia(game_contextT *game_ctx, giocatoreT **target_tu) {
+	giocatoreT *target;
+
+	if (*target_tu == NULL)
+		*target_tu = pick_player(game_ctx, "Scegli il giocatore col quale scambiare la tua mano:", false, false);
+	target = *target_tu;
 
 	printf("Hai scelto di scambiare il tuo mazzo con quello di " ANSI_UNDERLINE "%s" ANSI_RESET "!\n", target->name);
 
@@ -432,18 +436,18 @@ void apply_effect_elimina_target(game_contextT *game_ctx, giocatoreT *target, ef
 	free_wrap(prompt);
 }
 
-void apply_effect_elimina_tu(game_contextT *game_ctx, effettoT *effect) {
+void apply_effect_elimina_tu(game_contextT *game_ctx, effettoT *effect, giocatoreT **target_tu) {
 	char *pick_player_prompt;
-	giocatoreT *target;
 
-	asprintf_checked(&pick_player_prompt, "Scegli il giocatore al quale vuoi eliminare una carta %s:",
-		tipo_cartaT_str(effect->target_carta)
-	);
-	target = pick_player(game_ctx, pick_player_prompt, false, false);
+	if (*target_tu == NULL) { // check if target tu was already asked in previous TU effects for this card
+		asprintf_checked(&pick_player_prompt, "Scegli il giocatore al quale vuoi eliminare una carta %s:",
+			tipo_cartaT_str(effect->target_carta)
+		);
+		*target_tu = pick_player(game_ctx, pick_player_prompt, false, false);
+		free_wrap(pick_player_prompt);
+	}
 
-	apply_effect_elimina_target(game_ctx, target, effect);
-
-	free_wrap(pick_player_prompt);
+	apply_effect_elimina_target(game_ctx, *target_tu, effect);
 }
 
 void apply_effect_elimina_tutti(game_contextT *game_ctx, effettoT *effect) {
@@ -456,14 +460,14 @@ void apply_effect_elimina_tutti(game_contextT *game_ctx, effettoT *effect) {
 		apply_effect_elimina_target(game_ctx, target, effect);
 }
 
-void apply_effect_elimina(game_contextT *game_ctx, effettoT *effect) {
+void apply_effect_elimina(game_contextT *game_ctx, effettoT *effect, giocatoreT **target_tu) {
 	// allowed values: target player = IO | TU | TUTTI and target card = ALL | STUDENTE | BONUS | MALUS
 	switch (effect->target_giocatori) {
 		case IO:
 			apply_effect_elimina_target(game_ctx, game_ctx->curr_player, effect);
 			break;
 		case TU:
-			apply_effect_elimina_tu(game_ctx, effect);
+			apply_effect_elimina_tu(game_ctx, effect, target_tu);
 			break;
 		case TUTTI:
 			apply_effect_elimina_tutti(game_ctx, effect);
@@ -531,17 +535,20 @@ void join_aula(game_contextT *game_ctx, giocatoreT *player, cartaT *card) {
 	apply_effects(game_ctx, card, SUBITO); // apply join effects
 }
 
-void apply_effect_ruba(game_contextT *game_ctx, effettoT *effect) {
+void apply_effect_ruba(game_contextT *game_ctx, effettoT *effect, giocatoreT **target_tu) {
 	// allowed values: target player = TU and target card = STUDENTE | BONUS
 	char *pick_player_prompt, *pick_card_prompt, *pick_card_title;
-	giocatoreT *target;
 	cartaT *target_cards, *card;
+	giocatoreT* target;
 	bool can_steal = false, stolen = false;
 
-	asprintf_checked(&pick_player_prompt, "Scegli il giocatore al quale vuoi rubare una carta %s:",
-		tipo_cartaT_str(effect->target_carta)
-	);
-	target = pick_player(game_ctx, pick_player_prompt, false, false);
+	if (*target_tu == NULL) { // check if target tu was already asked in previous TU effects of the same card
+		asprintf_checked(&pick_player_prompt, "Scegli il giocatore al quale vuoi rubare una carta %s:",
+			tipo_cartaT_str(effect->target_carta)
+		);
+		*target_tu = pick_player(game_ctx, pick_player_prompt, false, false);
+	}
+	target = *target_tu;
 
 	asprintf_checked(&pick_card_prompt, "Scegli la carta %s che vuoi rubare a " ANSI_UNDERLINE "%s" ANSI_RESET ":",
 		tipo_cartaT_str(effect->target_carta), target->name
@@ -581,9 +588,8 @@ void apply_effect_ruba(game_contextT *game_ctx, effettoT *effect) {
 	free_wrap(pick_player_prompt);
 }
 
-void apply_effect(game_contextT *game_ctx, effettoT *effect) {
+void apply_effect(game_contextT *game_ctx, effettoT *effect, giocatoreT **target_tu) {
 	// TODO: apply ALL actual effects
-
 	switch (effect->azione) {
 		case GIOCA: {
 			// allowed values: target player = IO and target card = ALL
@@ -597,12 +603,12 @@ void apply_effect(game_contextT *game_ctx, effettoT *effect) {
 		}
 		case ELIMINA: {
 			// allowed values: target player = IO | TU | TUTTI and target card = ALL | STUDENTE | BONUS | MALUS
-			apply_effect_elimina(game_ctx, effect);
+			apply_effect_elimina(game_ctx, effect, target_tu);
 			break;
 		}
 		case RUBA: {
 			// allowed values: target player = TU and target card = STUDENTE | BONUS
-			apply_effect_ruba(game_ctx, effect);
+			apply_effect_ruba(game_ctx, effect, target_tu);
 			break;
 		}
 		case PESCA: {
@@ -616,7 +622,7 @@ void apply_effect(game_contextT *game_ctx, effettoT *effect) {
 		}
 		case SCAMBIA: {
 			// allowed values: target player = TU and target card = ALL
-			apply_effect_scambia(game_ctx);
+			apply_effect_scambia(game_ctx, target_tu);
 			break;
 		}
 		case BLOCCA:
@@ -631,6 +637,8 @@ void apply_effect(game_contextT *game_ctx, effettoT *effect) {
 
 void apply_effects_now(game_contextT *game_ctx, cartaT *card) {
 	bool apply = true;
+	giocatoreT *target_tu = NULL;
+
 	if (card->opzionale) {
 		puts("Vuoi applicare gli effetti di questa carta?");
 		show_card(card);
@@ -640,7 +648,7 @@ void apply_effects_now(game_contextT *game_ctx, cartaT *card) {
 	if (apply) {
 		// maybe consider "Effetti delle Carte con Azioni Multiple" from http://unstablegameswiki.com/index.php?title=Unstable_Unicorns_-_Second_Edition_Rules_-_Italian
 		for (int i = 0; i < card->n_effetti; i++)
-			apply_effect(game_ctx, &card->effetti[i]);
+			apply_effect(game_ctx, &card->effetti[i], &target_tu);
 	}
 }
 
