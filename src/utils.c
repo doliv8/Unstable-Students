@@ -63,9 +63,15 @@ void free_wrap(const void *ptr) {
 	free((void*)ptr);
 }
 
-
+/**
+ * @brief generates random int in range [min, max]
+ * 
+ * @param min lower value (included)
+ * @param max higher value (included)
+ * @return int generated int
+ */
 int rand_int(int min, int max) {
-	return rand() % (max+1) + min;
+	return rand() % (max-min+1) + min;
 }
 
 int read_int(FILE *fp) {
