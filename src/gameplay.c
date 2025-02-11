@@ -159,37 +159,47 @@ cartaT *pick_random_card_restricted(cartaT *head, tipo_cartaT type) {
 	int n_cards = count_cards_restricted(head, type), chosen_idx;
 
 	if (n_cards != 0) {
+		chosen_idx = rand_int(1, n_cards);
+		card = card_by_index_restricted(head, type, chosen_idx);
+	} else {
 		puts("Non ci sono carte da estrarre!");
-		return NULL;
+		card = NULL;
 	}
-
-	chosen_idx = rand_int(1, n_cards);
-	return card_by_index_restricted(head, type, chosen_idx);
+	return card;
 }
 
 // this function is similar to pick_card but specific to picking a card from a player's aula (bonus_malus + aula).
 // first asks user if wants to pick from aula or bonus_malus and then calls actual pick_card on it.
 cartaT *pick_aula_card(giocatoreT *player, const char *prompt) {
-	int chosen_idx;
 	cartaT *card;
+	int chosen_idx, n_aula = count_cards(player->aula), n_bonusmalus = count_cards(player->bonus_malus);
 
-	// TODO: handle this function bypass for ELIMINA picking an empty list and add empty checks.
+	if (n_aula + n_bonusmalus == 0) {
+		printf("Non ci sono carte da scegliere nell'aula di %s!\n", player->name);
+		return NULL;
+	}
 
-	do {
-		// TODO: do dynamic title containing target player name (reusable in pick_card & show_card_grou).
-		show_card_group(player->aula, "Aula:", ANSI_BOLD ANSI_YELLOW "%s" ANSI_RESET); // show aula
-		show_card_group(player->bonus_malus, "Bonus/Malus:", ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET); // show bonus/malus
-
-		puts("Vuoi scegliere una carta dall'aula studenti o dai bonus/malus?\n");
-		puts(" [TASTO " TO_STRING(CHOICE_AULA) "] Aula");
-		puts(" [TASTO " TO_STRING(CHOICE_BONUSMALUS) "] Bonus/Malus");
-		chosen_idx = get_int();
-	} while (chosen_idx < CHOICE_AULA || chosen_idx > CHOICE_BONUSMALUS);
-
-	if (chosen_idx == CHOICE_AULA)
+	if (n_bonusmalus == 0) { // only aula has cards
 		card = pick_card(player->aula, prompt, "Aula", ANSI_BOLD ANSI_YELLOW "%s" ANSI_RESET);
-	else
+	} else if (n_aula == 0) { // only bonus/malus has cards
 		card = pick_card(player->bonus_malus, prompt, "Bonus/Malus", ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET);
+	} else { // both aula and bonus/malus have cards
+		do {
+			// TODO: do dynamic title containing target player name (reusable in pick_card & show_card_grou).
+			show_card_group(player->aula, "Aula:", ANSI_BOLD ANSI_YELLOW "%s" ANSI_RESET); // show aula
+			show_card_group(player->bonus_malus, "Bonus/Malus:", ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET); // show bonus/malus
+
+			puts("Vuoi scegliere una carta dall'aula studenti o dai bonus/malus?\n");
+			puts(" [TASTO " TO_STRING(CHOICE_AULA) "] Aula");
+			puts(" [TASTO " TO_STRING(CHOICE_BONUSMALUS) "] Bonus/Malus");
+			chosen_idx = get_int();
+		} while (chosen_idx < CHOICE_AULA || chosen_idx > CHOICE_BONUSMALUS);
+
+		if (chosen_idx == CHOICE_AULA)
+			card = pick_card(player->aula, prompt, "Aula", ANSI_BOLD ANSI_YELLOW "%s" ANSI_RESET);
+		else // choice was bonus/malus
+			card = pick_card(player->bonus_malus, prompt, "Bonus/Malus", ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET);
+	}
 	return card;
 }
 
@@ -470,7 +480,8 @@ void apply_effect_elimina_tu(game_contextT *game_ctx, effettoT *effect, giocator
 	char *pick_player_prompt;
 
 	if (*target_tu == NULL) { // check if target tu was already asked in previous TU effects for this card
-		asprintf_checked(&pick_player_prompt, "Scegli il giocatore al quale vuoi eliminare una carta %s:",
+		asprintf_checked(&pick_player_prompt, "[%s]: Scegli il giocatore al quale vuoi eliminare una carta %s:",
+			game_ctx->curr_player->name,
 			tipo_cartaT_str(effect->target_carta)
 		);
 		*target_tu = pick_player(game_ctx, pick_player_prompt, false, false);
@@ -725,13 +736,36 @@ void apply_effects(game_contextT *game_ctx, cartaT *card, quandoT quando) {
 
 void apply_start_effects(game_contextT *game_ctx) {
 	giocatoreT *player = game_ctx->curr_player;
+	cartaT **aula_cards;
+	int n_cards = count_cards(player->bonus_malus) + count_cards(player->aula), idx;
 
-	// apply bonus malus quando = INIZIO effects
-	for (cartaT *card = player->bonus_malus; card != NULL; card = card->next)
-		apply_effects(game_ctx, card, INIZIO);
-	// apply aula quando = INIZIO effects
-	for (cartaT *card = player->aula; card != NULL; card = card->next)
-		apply_effects(game_ctx, card, INIZIO);
+	if (n_cards == 0) // no cards in aula, no need to apply any effect
+		return;
+
+	/* 
+	 * dump bonus_malus and aula cards in a dynamic array to apply their effects in sequence without using their linking logic
+	 * to avoid issues like: applying effects of removed cards or applying effects of another list if the current card gets moved
+	 * into another cards linked list during the applying its effects (like Sparacoriandoli using ELIMINA on itself).
+	*/
+
+	idx = 0;
+	aula_cards = (cartaT**)malloc_checked(n_cards*sizeof(cartaT*));
+
+	// dump bonus/malus cards
+	for (cartaT *card = player->bonus_malus; card != NULL; card = card->next, idx++)
+		aula_cards[idx] = card;
+	// dump aula cards
+	for (cartaT *card = player->aula; card != NULL; card = card->next, idx++)
+		aula_cards[idx] = card;
+
+	for (idx = 0; idx < n_cards; idx++) {
+		// first check if one of the aula or bonus_malus lists still contain the card or it got moved by any previous effect
+		if (cards_contain(player->bonus_malus, aula_cards[idx]) ||
+			cards_contain(player->aula, aula_cards[idx]))
+				apply_effects(game_ctx, aula_cards[idx], INIZIO); // only apply effects of cards with quando = INIZIO
+	}
+
+	free_wrap(aula_cards);
 }
 
 void begin_round(game_contextT *game_ctx) {
