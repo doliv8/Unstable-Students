@@ -56,4 +56,4 @@ struct MultiLineContainer {
 	multiline_textT **multilines;
 };
 
-#endif
+#endif // STRUCTS_H

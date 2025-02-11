@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "files.h"
-#include "structs.h"
 #include "card.h"
 #include "utils.h"
 
@@ -125,4 +124,29 @@ cartaT *load_mazzo(int *n_cards) {
 	fclose(fp);
 
 	return mazzo;
+}
+
+/**
+ * @brief reads one integer from a file stream and ensures correct reading
+ * 
+ * @param fp file stream
+ * @return int read integer
+ */
+int read_int(FILE *fp) {
+	int val;
+	if (fscanf(fp, " %d", &val) != 1) {
+		fputs("Error occurred while reading an integer from file stream!", stderr);
+		exit(EXIT_FAILURE);
+	}
+	return val;
+}
+
+/**
+ * @brief writes one integer to a file stream
+ * 
+ * @param fp file stream
+ * @param val integer to write
+ */
+void write_int(FILE *fp, int val) {
+	fprintf(fp, "%d\n", val);
 }
