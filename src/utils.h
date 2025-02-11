@@ -18,8 +18,10 @@ void *realloc_checked(void *ptr, size_t size);
 void free_wrap(const void *ptr);
 
 char *strdup_checked(const char *str);
-int get_formatted_length(const char *fmt, ...);
-int asprintf_checked(char **strp, const char *fmt, ...);
+int asprintf_s(char **strp, const char *fmt, const char *s0);
+int asprintf_ss(char **strp, const char *fmt, const char *s0, const char *s1);
+int asprintf_sss(char **strp, const char *fmt, const char *s0, const char *s1, const char *s2);
+int asprintf_d(char **strp, const char *fmt, int d0);
 char *center_boxed_string(const char *str, int str_len, const char *border, int width);
 
 int rand_int(int min, int max);

@@ -14,7 +14,8 @@
 int get_int() {
 	printf("> ");
 	int val;
-	while (scanf(" %d", &val) != 1) getchar();
+	while (scanf(" %d", &val) != 1)
+		getchar();
 	return val;
 }
 
@@ -124,32 +125,83 @@ char *strdup_checked(const char *str) {
 	return copy;
 }
 
-int vget_formatted_length(const char *fmt, va_list args) {
-	int length = vsnprintf(NULL, 0, fmt, args);
-	return length;
+/**
+ * @brief call this when an error in dynamic formatting happens. does not return.
+ * 
+ */
+void formatting_failed() {
+	fputs("Error occurred while formatting a dynamically allocated string!", stderr);
+	exit(EXIT_FAILURE);
 }
 
-int get_formatted_length(const char *fmt, ...) {
-	va_list ap;
-	va_start(ap, fmt);
-	int length = vget_formatted_length(fmt, ap);
-	va_end(ap);
-	return length;
-}
-
-int asprintf_checked(char **strp, const char *fmt, ...) {
-	va_list ap;
-	va_start(ap, fmt);
-	int length = vget_formatted_length(fmt, ap);
-	va_end(ap);
+/**
+ * @brief dynamically formats a string with one integer parameter
+ * 
+ * @param strp pointer to formatted string
+ * @param fmt format string
+ * @param d0 param 0 (int)
+ * @return int length of formatted string
+ */
+int asprintf_d(char **strp, const char *fmt, int d0) {
+	int length = snprintf(NULL, 0, fmt, d0);
 	*strp = malloc_checked(length+1);
-	va_start(ap, fmt);
-	int result = vsnprintf(*strp, length+1, fmt, ap);
-	va_end(ap);
-	if (result < 0) {
-		fputs("Error occurred while formatting a dynamically allocated string!", stderr);
-		exit(EXIT_FAILURE);
-	}
+	int result = snprintf(*strp, length+1, fmt, d0);
+	if (result < 0)
+		formatting_failed();
+	return result;
+}
+
+/**
+ * @brief dynamically formats a string with one string parameter
+ * 
+ * @param strp pointer to formatted string
+ * @param fmt format string
+ * @param s0 param 0 (string)
+ * @return int length of formatted string
+ */
+int asprintf_s(char **strp, const char *fmt, const char *s0) {
+	int length = snprintf(NULL, 0, fmt, s0);
+	*strp = malloc_checked(length+1);
+	int result = snprintf(*strp, length+1, fmt, s0);
+	if (result < 0)
+		formatting_failed();
+	return result;
+}
+
+/**
+ * @brief dynamically formats a string with two string parameter
+ * 
+ * @param strp pointer to formatted string
+ * @param fmt format string
+ * @param s0 param 0 (string)
+ * @param s1 param 1 (string)
+ * @return int length of formatted string
+ */
+int asprintf_ss(char **strp, const char *fmt, const char *s0, const char *s1) {
+	int length = snprintf(NULL, 0, fmt, s0, s1);
+	*strp = malloc_checked(length+1);
+	int result = snprintf(*strp, length+1, fmt, s0, s1);
+	if (result < 0)
+		formatting_failed();
+	return result;
+}
+
+/**
+ * @brief dynamically formats a string with three string parameter
+ * 
+ * @param strp pointer to formatted string
+ * @param fmt format string
+ * @param s0 param 0 (string)
+ * @param s1 param 1 (string)
+ * @param s2 param 2 (string)
+ * @return int length of formatted string
+ */
+int asprintf_sss(char **strp, const char *fmt, const char *s0, const char *s1, const char *s2) {
+	int length = snprintf(NULL, 0, fmt, s0, s1, s2);
+	*strp = malloc_checked(length+1);
+	int result = snprintf(*strp, length+1, fmt, s0, s1, s2);
+	if (result < 0)
+		formatting_failed();
 	return result;
 }
 
@@ -245,11 +297,15 @@ void init_wrapped(wrapped_textT* wrapped, const char *text, int max_width) {
 }
 
 char *center_lr_boxed_string(const char *str, int str_len, const char *l_border, const char *r_border, int width) {
-	int padding = width - str_len;
+	int length, padding = width - str_len;
 	int l_padding = padding / 2;
 	int r_padding = padding - l_padding;
 	char *formatted;
-	asprintf_checked(&formatted, "%s%*s%s%*s%s", l_border, l_padding, "", str, r_padding, "", r_border);
+
+	length = snprintf(NULL, 0, "%s%*s%s%*s%s", l_border, l_padding, "", str, r_padding, "", r_border);
+	formatted = malloc_checked(length+1);
+	if (snprintf(formatted, length+1, "%s%*s%s%*s%s", l_border, l_padding, "", str, r_padding, "", r_border) < 0)
+		formatting_failed();
 	return formatted;
 }
 

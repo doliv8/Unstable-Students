@@ -39,10 +39,10 @@
 
 
 #define HORIZONTAL_BAR "------------------------------" // CARD_CONTENT_WIDTH long
-#define CARD_BORDER_HORIZONTAL '-'
-#define CARD_BORDER_VERTICAL '|'
-#define CARD_CORNER_LEFT '('
-#define CARD_CORNER_RIGHT ')'
+#define CARD_BORDER_HORIZONTAL "-"
+#define CARD_BORDER_VERTICAL "|"
+#define CARD_CORNER_LEFT "("
+#define CARD_CORNER_RIGHT ")"
 
 #define ROUND_BANNER_WIDTH 64
 #define BANNER_BORDER_WIDTH 1

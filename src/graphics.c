@@ -14,16 +14,16 @@ void format_effects(freeable_multiline_textT *multiline, cartaT *card) {
 		for (int i = 0; i < MAX_EFFECTS-card->n_effetti; i++)
 			multiline_addline(multiline, strdup_checked(""));
 
-		asprintf_checked(&line, "Opzionale: %s", card->opzionale ? "Si" : "No");
+		asprintf_s(&line, "Opzionale: %s", card->opzionale ? "Si" : "No");
 		multiline_addline(multiline, line);
-		asprintf_checked(&line, "Quando: %s", quandoT_str(card->quando));
+		asprintf_s(&line, "Quando: %s", quandoT_str(card->quando));
 		multiline_addline(multiline, line);
-		asprintf_checked(&line, "Effetti (%d):", card->n_effetti);
+		asprintf_d(&line, "Effetti (%d):", card->n_effetti);
 		multiline_addline(multiline, line);
 
 		// add actual effects
 		for (int i = 0; i < card->n_effetti; i++) {
-			asprintf_checked(&line, "%s -> %s (%s)",
+			asprintf_sss(&line, "%s -> %s (%s)",
 				azioneT_str(card->effetti[i].azione),
 				tipo_cartaT_str(card->effetti[i].target_carta),
 				target_giocatoriT_str(card->effetti[i].target_giocatori)
@@ -44,14 +44,14 @@ void build_card(freeable_multiline_textT *multiline, cartaT *card) {
 	freeable_multiline_textT effects_lines;
 	init_multiline(&effects_lines);
 
-	asprintf_checked(&h_border, ANSI_BLUE "%c%s%c" ANSI_RESET, CARD_CORNER_LEFT, HORIZONTAL_BAR, CARD_CORNER_RIGHT);
-	asprintf_checked(&v_border, ANSI_BLUE "%c" ANSI_RESET, CARD_BORDER_VERTICAL);
+	h_border = ANSI_BLUE CARD_CORNER_LEFT HORIZONTAL_BAR CARD_CORNER_RIGHT ANSI_RESET;
+	v_border = ANSI_BLUE CARD_BORDER_VERTICAL ANSI_RESET;
 
 	len_name = strlen(card->name);
-	asprintf_checked(&fmt_name, ANSI_BOLD "%s" ANSI_RESET, card->name);
+	asprintf_s(&fmt_name, ANSI_BOLD "%s" ANSI_RESET, card->name);
 
-	len_type = asprintf_checked(&type, "#%s", tipo_cartaT_str(card->tipo));
-	asprintf_checked(&fmt_type, ANSI_BG_GREEN "%s" ANSI_RESET, type);
+	len_type = asprintf_s(&type, "#%s", tipo_cartaT_str(card->tipo));
+	asprintf_s(&fmt_type, ANSI_BG_GREEN "%s" ANSI_RESET, type);
 
 	// compute wrapped description
 	init_wrapped(&wrapped_description, card->description, CARD_CONTENT_WIDTH-CARD_PADDING);
@@ -61,7 +61,7 @@ void build_card(freeable_multiline_textT *multiline, cartaT *card) {
 
 	// add all lines now
 	// apend upper border
-	multiline_addline(multiline, h_border);
+	multiline_addline(multiline, strdup_checked(h_border));
 	// append type
 	multiline_addline(multiline, center_boxed_string(fmt_type, len_type, v_border, CARD_CONTENT_WIDTH));
 	// append name
@@ -90,10 +90,9 @@ void build_card(freeable_multiline_textT *multiline, cartaT *card) {
 	// append bottom border
 	multiline_addline(multiline, strdup_checked(h_border)); // duplicate the existing h_border into the heap
 
-	free_wrap(v_border);
-	free_wrap(fmt_name);
-	free_wrap(type);
 	free_wrap(fmt_type);
+	free_wrap(type);
+	free_wrap(fmt_name);
 	clear_wrapped(&wrapped_description);
 	clear_freeable_multiline(&effects_lines);
 }
@@ -109,7 +108,6 @@ void show_card(cartaT *card) {
 
 bool show_cards_restricted(cartaT *head, tipo_cartaT type) {
 	freeable_multiline_textT *cards_info;
-
 	int count = count_cards_restricted(head, type);
 
 	cards_info = (freeable_multiline_textT*)malloc_checked(count*sizeof(freeable_multiline_textT));
@@ -151,7 +149,7 @@ void show_card_group_restricted(cartaT *group, const char *title, const char *ti
 	int borders_width = strlen(l_border)+strlen(r_border);
 	int max_group_row_width = get_max_row_width_restricted(group, type);
 
-	asprintf_checked(&fmt_title, title_fmt, title);
+	asprintf_s(&fmt_title, title_fmt, title);
 
 	puts(""); // spacing
 	print_centered_lr_boxed_string(fmt_title, strlen(title), l_border, r_border, max_group_row_width-borders_width);
@@ -172,17 +170,17 @@ void show_round(game_contextT *game_ctx) {
 	freeable_multiline_textT round_banner;
 	init_multiline(&round_banner);
 
-	asprintf_checked(&h_border, ANSI_BOLD ANSI_BG_MAGENTA "%c%s%c" ANSI_RESET, CARD_CORNER_LEFT, BANNER_HORIZONTAL_BAR, CARD_CORNER_RIGHT);
-	asprintf_checked(&v_border, ANSI_BOLD ANSI_BG_MAGENTA "%c" ANSI_RESET, CARD_BORDER_VERTICAL);
+	h_border = ANSI_BOLD ANSI_BG_MAGENTA CARD_CORNER_LEFT BANNER_HORIZONTAL_BAR CARD_CORNER_RIGHT ANSI_RESET;
+	v_border = ANSI_BOLD ANSI_BG_MAGENTA CARD_BORDER_VERTICAL ANSI_RESET;
 
-	len_round_num_text = get_formatted_length("Round numero: %d", game_ctx->round_num);
-	asprintf_checked(&round_num_text, "Round numero: " ANSI_BOLD "%d" ANSI_RESET, game_ctx->round_num);
+	len_round_num_text = snprintf(NULL, 0, "Round numero: %d", game_ctx->round_num);
+	asprintf_d(&round_num_text, "Round numero: " ANSI_BOLD "%d" ANSI_RESET, game_ctx->round_num);
 
-	len_player_turn_text = get_formatted_length("Turno di: %s!", game_ctx->curr_player->name);
-	asprintf_checked(&player_turn_text, "Turno di: " ANSI_UNDERLINE "%s" ANSI_RESET "!", game_ctx->curr_player->name);
+	len_player_turn_text = snprintf(NULL, 0, "Turno di: %s!", game_ctx->curr_player->name);
+	asprintf_s(&player_turn_text, "Turno di: " ANSI_UNDERLINE "%s" ANSI_RESET "!", game_ctx->curr_player->name);
 
 	// build actual banner
-	multiline_addline(&round_banner, h_border);
+	multiline_addline(&round_banner, strdup_checked(h_border));
 	multiline_addline(&round_banner, center_boxed_string("", 0, v_border, ROUND_BANNER_CONTENT_WIDTH)); // spacing
 	multiline_addline(&round_banner, center_boxed_string(round_num_text, len_round_num_text, v_border, ROUND_BANNER_CONTENT_WIDTH));
 	multiline_addline(&round_banner, center_boxed_string(player_turn_text, len_player_turn_text, v_border, ROUND_BANNER_CONTENT_WIDTH));
@@ -196,6 +194,5 @@ void show_round(game_contextT *game_ctx) {
 
 	free_wrap(player_turn_text);
 	free_wrap(round_num_text);
-	free_wrap(v_border);
 	clear_freeable_multiline(&round_banner);
 }
