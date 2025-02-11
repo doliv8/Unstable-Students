@@ -1,7 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include "debugging.h"
+#include <stdio.h>
 #include "types.h"
 #include "structs.h"
 
@@ -43,11 +43,5 @@ void clear_wrapped(wrapped_textT *wrapped);
 void init_multiline_container(multiline_containerT *container);
 void clear_multiline_container(multiline_containerT *container);
 void container_addmultiline(multiline_containerT *container, multiline_textT *multiline);
-
-// TODO: move away in proper file
-const char *quandoT_str(quandoT quando);
-const char *target_giocatoriT_str(target_giocatoriT target);
-const char *tipo_cartaT_str(tipo_cartaT tipo);
-const char *azioneT_str(azioneT azione);
 
 #endif

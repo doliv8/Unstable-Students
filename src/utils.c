@@ -17,7 +17,7 @@ bool ask_choice() {
 	char choice = 'n';
 	printf("(y/N): ");
 	scanf(" %c", &choice);
-	return tolower(choice) == 'y';
+	return choice == 'y' || choice == 'Y';
 }
 
 void *malloc_checked(size_t size) {
@@ -74,6 +74,12 @@ int rand_int(int min, int max) {
 	return rand() % (max-min+1) + min;
 }
 
+/**
+ * @brief reads one integer from a file stream and ensures correct reading
+ * 
+ * @param fp file stream
+ * @return int read integer
+ */
 int read_int(FILE *fp) {
 	int val;
 	if (fscanf(fp, " %d", &val) != 1) {
@@ -83,6 +89,12 @@ int read_int(FILE *fp) {
 	return val;
 }
 
+/**
+ * @brief writes one integer to a file stream
+ * 
+ * @param fp file stream
+ * @param val integer to write
+ */
 void write_int(FILE *fp, int val) {
 	fprintf(fp, "%d\n", val);
 }
@@ -226,57 +238,4 @@ void container_addmultiline(multiline_containerT *container, multiline_textT *mu
 	container->n_multilines++;
 	realloc_checked(container->multilines, container->n_multilines*sizeof(multiline_textT*));
 	container->multilines[container->n_multilines-1] = multiline;
-}
-
-const char *quandoT_str(quandoT quando) {
-	static const char *mapping[] = {
-		[SUBITO] = "Subito",
-		[INIZIO] = "Inizio",
-		[FINE] = "Fine",
-		[MAI] = "Mai",
-		[SEMPRE] = "Sempre"
-	};
-	return mapping[quando];
-}
-
-const char *target_giocatoriT_str(target_giocatoriT target) {
-	static const char *mapping[] = {
-		[IO] = "Io",
-		[TU] = "Tu",
-		[VOI] = "Voi",
-		[TUTTI] = "Tutti"
-	};
-	return mapping[target];
-}
-
-const char *tipo_cartaT_str(tipo_cartaT tipo) {
-	static const char *mapping[] = {
-		[ALL] = "All",
-		[STUDENTE] = "Studente",
-		[MATRICOLA] = "Matricola",
-		[STUDENTE_SEMPLICE] = "Studente semplice",
-		[LAUREANDO] = "Laureando",
-		[BONUS] = "Bonus",
-		[MALUS] = "Malus",
-		[MAGIA] = "Magia",
-		[ISTANTANEA] = "Istantanea"
-	};
-	return mapping[tipo];
-}
-
-const char *azioneT_str(azioneT azione) {
-	static const char *mapping[] = {
-		[GIOCA] = "Gioca",
-		[SCARTA] = "Scarta",
-		[ELIMINA] = "Elimina",
-		[RUBA] = "Ruba",
-		[PESCA] = "Pesca",
-		[PRENDI] = "Prendi",
-		[BLOCCA] = "Blocca",
-		[SCAMBIA] = "Scambia",
-		[MOSTRA] = "Mostra",
-		[IMPEDIRE] = "Impedire",
-		[INGEGNERE] = "Ingegnere"
-	};
-	return mapping[azione];
 }

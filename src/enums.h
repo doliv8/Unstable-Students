@@ -41,4 +41,10 @@ enum TargetGiocatori {
 	VOI,
 	TUTTI
 };
+
+const char *quandoT_str(quandoT quando);
+const char *target_giocatoriT_str(target_giocatoriT target);
+const char *tipo_cartaT_str(tipo_cartaT tipo);
+const char *azioneT_str(azioneT azione);
+
 #endif

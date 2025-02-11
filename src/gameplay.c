@@ -760,8 +760,8 @@ void apply_start_effects(game_contextT *game_ctx) {
 
 	for (idx = 0; idx < n_cards; idx++) {
 		// first check if one of the aula or bonus_malus lists still contain the card or it got moved by any previous effect
-		if (cards_contain(player->bonus_malus, aula_cards[idx]) ||
-			cards_contain(player->aula, aula_cards[idx]))
+		if (cards_contain_specific(player->bonus_malus, aula_cards[idx]) ||
+			cards_contain_specific(player->aula, aula_cards[idx]))
 				apply_effects(game_ctx, aula_cards[idx], INIZIO); // only apply effects of cards with quando = INIZIO
 	}
 
