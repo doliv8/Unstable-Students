@@ -141,6 +141,13 @@ bool cards_contain(cartaT *head, cartaT *needle) {
 	return contained;
 }
 
+bool cards_contain_specific(cartaT *head, cartaT *needle) {
+	bool contained = false;
+	for (; head != NULL && !contained; head = head->next)
+		contained = head == needle;
+	return contained;
+}
+
 int count_cards_restricted(cartaT *head, tipo_cartaT type) {
 	int count;
 	for (count = 0; head != NULL; head = head->next) {
