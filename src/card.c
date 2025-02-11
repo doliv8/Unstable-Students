@@ -86,6 +86,14 @@ void unlink_card(cartaT **head_ptr, cartaT *card) {
 }
 
 // idx is 1 indexed
+/**
+ * @brief returns a card element from the provided list indexed by idx
+ * 
+ * @param head card list
+ * @param type card type filter
+ * @param idx 1-indexed index of card from provided card list
+ * @return cartaT* card indexed or NULL if index was out of bounds (card not found)
+ */
 cartaT *card_by_index_restricted(cartaT *head, tipo_cartaT type, int idx) {
 	cartaT *target = NULL;
 	for (; head != NULL && target == NULL; head = head->next) {

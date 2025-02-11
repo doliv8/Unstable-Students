@@ -63,7 +63,7 @@ giocatoreT *pick_player(game_contextT *game_ctx, const char *prompt, bool allow_
 		puts(prompt);
 		player = allow_self ? game_ctx->curr_player : game_ctx->curr_player->next; // start from curr or next player based on turns
 		for (int i = 1; i < all_idx; i++, player = player->next)
-			printf(" [TASTO %d] %s\n", i, player->name);
+			printf(" [TASTO %d] %s%s\n", i, player->name, player == game_ctx->curr_player ? " (io)" : "");
 		if (allow_all)
 			printf(" [TASTO %d] Tutti i giocatori\n", all_idx);
 		chosen_idx = get_int();
@@ -118,8 +118,8 @@ cartaT *split_matricole(cartaT **mazzo_head) {
  * @return cartaT* picked card or NULL if there's no card to pick
  */
 cartaT *pick_card_restricted(cartaT *head, tipo_cartaT type, const char* prompt, const char *title, const char* title_fmt) {
-	int n_cards = count_cards_restricted(head, type), chosen_idx;
 	cartaT *card;
+	int n_cards = count_cards_restricted(head, type), chosen_idx;
 
 	show_card_group_restricted(head, title, title_fmt, type);
 
@@ -133,7 +133,7 @@ cartaT *pick_card_restricted(cartaT *head, tipo_cartaT type, const char* prompt,
 		puts(prompt);
 		card = head;
 		for (int idx = 1; idx <= n_cards; card = card->next) {
-			if (match_card_type(head, type))
+			if (match_card_type(card, type))
 				printf(" [TASTO %d] %s\n", idx++, card->name);
 		}
 		chosen_idx = get_int();
@@ -389,9 +389,18 @@ void apply_effect_scambia(game_contextT *game_ctx, giocatoreT **target_tu) {
 	game_ctx->curr_player->carte = tmp;
 }
 
+/**
+ * @brief this effect makes players discard a card from their hands. for target VOI | TUTTI the card to discard is randomly picked.
+ * 
+ * @param game_ctx 
+ * @param effect 
+ */
 void apply_effect_scarta(game_contextT *game_ctx, effettoT *effect) {
 	// allowed values: target player = IO | VOI | TUTTI and target card = ALL
 	giocatoreT *thrower = game_ctx->curr_player;
+	int n_cards;
+	cartaT *discarded_card;
+
 	if (effect->target_giocatori == IO)
 		discard_card(game_ctx, &game_ctx->curr_player->carte, "Carte attualmente nella tua mano");
 	else {
@@ -401,10 +410,19 @@ void apply_effect_scarta(game_contextT *game_ctx, effettoT *effect) {
 		do {
 			// TODO: check for MAI usage
 			printf(
-				ANSI_UNDERLINE "%s" ANSI_RESET " ti costringe a scartare una carta dalla tua mano, " ANSI_UNDERLINE "%s" ANSI_RESET "!\n",
+				ANSI_UNDERLINE "%s" ANSI_RESET " ti fa scartare una carta dalla mano, " ANSI_UNDERLINE "%s" ANSI_RESET "!\n",
 				thrower->name, game_ctx->curr_player->name
 			);
-			discard_card(game_ctx, &game_ctx->curr_player->carte, "Carte attualmente nella tua mano");
+			n_cards = count_cards_restricted(game_ctx->curr_player->carte, effect->target_carta);
+			if (n_cards != 0) {
+				discarded_card = card_by_index_restricted(game_ctx->curr_player->carte, effect->target_carta, rand_int(1, n_cards));
+				printf(ANSI_UNDERLINE "%s" ANSI_RESET " ha scartato %s!\n", game_ctx->curr_player->name, discarded_card->name);
+				unlink_card(&game_ctx->curr_player->carte, discarded_card);
+				dispose_card(game_ctx, discarded_card); // dispose discarded card
+			}
+			else
+				printf(ANSI_UNDERLINE "%s" ANSI_RESET " non aveva carte da scartare nella sua mano!\n", game_ctx->curr_player->name);
+
 			game_ctx->curr_player = game_ctx->curr_player->next;
 		} while (game_ctx->curr_player != thrower);
 	}
@@ -535,6 +553,42 @@ void join_aula(game_contextT *game_ctx, giocatoreT *player, cartaT *card) {
 	apply_effects(game_ctx, card, SUBITO); // apply join effects
 }
 
+/**
+ * @brief this effect lets you pick a target TU player and extracts a random card from the target player's hand;
+ * that card gets removed from the target player's hand and put into the thrower player's hand.
+ * 
+ * @param game_ctx 
+ * @param effect 
+ * @param target_tu 
+ */
+void apply_effect_prendi(game_contextT *game_ctx, effettoT *effect, giocatoreT **target_tu) {
+	// allowed values: target player = TU and target card = ALL
+	char *pick_player_prompt;
+	int n_cards;
+	giocatoreT* target;
+	cartaT *card;
+
+	if (*target_tu == NULL) { // check if target tu was already asked in previous TU effects of the same card
+		asprintf_checked(&pick_player_prompt, "Scegli il giocatore al quale vuoi rubare una carta %s dal mazzo:",
+			tipo_cartaT_str(effect->target_carta)
+		);
+		*target_tu = pick_player(game_ctx, pick_player_prompt, false, false);
+	}
+	target = *target_tu;
+
+	// TODO: check for MAI usage
+
+	n_cards = count_cards_restricted(target->carte, effect->target_carta);
+	if (n_cards != 0) {
+		card = card_by_index_restricted(target->carte, effect->target_carta, rand_int(1, n_cards));
+		printf("Hai rubato %s da " ANSI_UNDERLINE "%s" ANSI_RESET "!\n", card->name, target->name);
+		unlink_card(&target->carte, card); // remove extracted card from target's hand
+		push_card(&game_ctx->curr_player->carte, card); // add extracted card to thrower's hand
+	}
+	else
+		printf(ANSI_UNDERLINE "%s" ANSI_RESET " non aveva carte da rubare nella sua mano!\n", target->name);
+}
+
 void apply_effect_ruba(game_contextT *game_ctx, effettoT *effect, giocatoreT **target_tu) {
 	// allowed values: target player = TU and target card = STUDENTE | BONUS
 	char *pick_player_prompt, *pick_card_prompt, *pick_card_title;
@@ -618,6 +672,7 @@ void apply_effect(game_contextT *game_ctx, effettoT *effect, giocatoreT **target
 		}
 		case PRENDI: {
 			// allowed values: target player = TU and target card = ALL
+			apply_effect_prendi(game_ctx, effect, target_tu);
 			break;
 		}
 		case SCAMBIA: {
