@@ -4,7 +4,13 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include "utils.h"
+#include "debugging.h"
 
+/**
+ * @brief prompts user to insert an integer from standard input, doesn't return until an integer is supplied
+ * 
+ * @return int inserted integer
+ */
 int get_int() {
 	printf("> ");
 	int val;
@@ -12,7 +18,12 @@ int get_int() {
 	return val;
 }
 
-// returns true if user replies yes, false otherwise
+/**
+ * @brief prompts user to make a yes or no choice
+ * 
+ * @return true if user chose yes
+ * @return false if user chose no
+ */
 bool ask_choice() {
 	char choice = 'n';
 	printf("(y/N): ");
@@ -20,6 +31,12 @@ bool ask_choice() {
 	return choice == 'y' || choice == 'Y';
 }
 
+/**
+ * @brief wrap around malloc() function, shows debug trace if compiled with -DDEBUG
+ * 
+ * @param size wanted size
+ * @return void* allocated block
+ */
 void *malloc_checked(size_t size) {
 #ifdef DEBUG
 	DBG_INFO("called %s(%lu)", __func__, size);
@@ -32,6 +49,13 @@ void *malloc_checked(size_t size) {
 	return ptr;
 }
 
+/**
+ * @brief wrap around calloc() function, shows debug trace if compiled with -DDEBUG
+ * 
+ * @param nmemb number of elements
+ * @param size size of each element
+ * @return void* allocated block
+ */
 void *calloc_checked(size_t nmemb, size_t size) {
 #ifdef DEBUG
 	DBG_INFO("called %s(%lu, %lu)", __func__, nmemb, size);
@@ -44,6 +68,13 @@ void *calloc_checked(size_t nmemb, size_t size) {
 	return ptr;
 }
 
+/**
+ * @brief wrap around realloc() function, shows debug trace if compiled with -DDEBUG
+ * 
+ * @param ptr block to resize
+ * @param size wanted size
+ * @return void* new block
+ */
 void *realloc_checked(void *ptr, size_t size) {
 #ifdef DEBUG
 	DBG_INFO("called %s(%p, %lu)", __func__, ptr, size);
@@ -56,6 +87,11 @@ void *realloc_checked(void *ptr, size_t size) {
 	return new_ptr;
 }
 
+/**
+ * @brief wrap around free() function, shows debug trace if compiled with -DDEBUG
+ * 
+ * @param ptr block to free
+ */
 void free_wrap(const void *ptr) {
 #ifdef DEBUG
 	DBG_INFO("called %s(%p)", __func__, ptr);
@@ -75,30 +111,12 @@ int rand_int(int min, int max) {
 }
 
 /**
- * @brief reads one integer from a file stream and ensures correct reading
+ * @brief mimics functionality of strdup() function.
+ * allocates a heap block to store a copy fo the provided string and returns a pointer to it.
  * 
- * @param fp file stream
- * @return int read integer
+ * @param str string to duplicate
+ * @return char* pointer to the heap block containing the duplicated string
  */
-int read_int(FILE *fp) {
-	int val;
-	if (fscanf(fp, " %d", &val) != 1) {
-		fputs("Error occurred while reading an integer from file stream!", stderr);
-		exit(EXIT_FAILURE);
-	}
-	return val;
-}
-
-/**
- * @brief writes one integer to a file stream
- * 
- * @param fp file stream
- * @param val integer to write
- */
-void write_int(FILE *fp, int val) {
-	fprintf(fp, "%d\n", val);
-}
-
 char *strdup_checked(const char *str) {
 	int len = strlen(str)+1;
 	char *copy = malloc_checked(len);
@@ -135,26 +153,49 @@ int asprintf_checked(char **strp, const char *fmt, ...) {
 	return result;
 }
 
+/**
+ * @brief initialize multiline_textT structure, must always be called before using the multiline
+ * 
+ * @param multiline pointer to the multiline
+ */
 void init_multiline(multiline_textT *multiline) {
 	multiline->n_lines = 0;
 	multiline->lines = NULL;
 	multiline->lengths = NULL;
 }
 
+/**
+ * @brief free up memory allocated by multiline_textT structure, must always be called after finished using the multiline
+ * 
+ * @param multiline pointer to the multiline
+ */
 void clear_multiline(multiline_textT *multiline) {
 	free_wrap(multiline->lines);
 	free_wrap(multiline->lengths);
 }
 
+/**
+ * @brief free up memory allocated by freeable_multiline_textT structure (hence all its lines),
+ * must always be called after finished using the freeable_multiline
+ * 
+ * @param freeable_multiline pointer to the freeable multiline
+ */
 void clear_freeable_multiline(freeable_multiline_textT *freeable_multiline) {
 	for (int i = 0; i < freeable_multiline->n_lines; i++)
 		free_wrap(freeable_multiline->lines[i]);
 	clear_multiline(freeable_multiline);
 }
 
+/**
+ * @brief append a new line to the multiline
+ * 
+ * @param multiline pointer to the multiline
+ * @param line string to add
+ */
 void multiline_addline(multiline_textT *multiline, const char *line) {
 	// increase arrays sizes
 	multiline->n_lines++;
+	// realloc arrays
 	multiline->lines = realloc_checked(multiline->lines, multiline->n_lines*sizeof(char*));
 	multiline->lengths = realloc_checked(multiline->lengths, multiline->n_lines*sizeof(int));
 	// add actual line
@@ -162,6 +203,13 @@ void multiline_addline(multiline_textT *multiline, const char *line) {
 	multiline->lengths[multiline->n_lines-1] = strlen(line);
 }
 
+/**
+ * @brief append a new line to the multiline specifying its visual length (used pretty printing)
+ * 
+ * @param multiline pointer to the multiline
+ * @param line string to add
+ * @param len visual length of the string
+ */
 void multiline_addline_with_len(multiline_textT *multiline, const char *line, int len) {
 	multiline_addline(multiline, line);
 	multiline->lengths[multiline->n_lines-1] = len;

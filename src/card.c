@@ -4,6 +4,11 @@
 #include "structs.h"
 #include "utils.h"
 
+/**
+ * @brief free a linked list of cards
+ * 
+ * @param head cards list
+ */
 void clear_cards(cartaT *head) {
 	// check for base case to keep recurse or not (freeing from tail to head)
 	if (head->next)

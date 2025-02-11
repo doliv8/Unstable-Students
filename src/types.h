@@ -18,4 +18,4 @@ typedef multiline_textT freeable_multiline_textT;
 typedef struct WrappedText wrapped_textT;
 typedef struct MultiLineContainer multiline_containerT;
 
-#endif
+#endif // TYPES_H

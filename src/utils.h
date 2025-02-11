@@ -22,11 +22,8 @@ int get_formatted_length(const char *fmt, ...);
 int asprintf_checked(char **strp, const char *fmt, ...);
 char *center_boxed_string(const char *str, int str_len, const char *border, int width);
 
-// generates a random integer in the range [min, max]
 int rand_int(int min, int max);
 
-int read_int(FILE *fp);
-void write_int(FILE *fp, int val);
 bool ask_choice();
 
 void init_multiline(multiline_textT *multiline);
@@ -44,4 +41,4 @@ void init_multiline_container(multiline_containerT *container);
 void clear_multiline_container(multiline_containerT *container);
 void container_addmultiline(multiline_containerT *container, multiline_textT *multiline);
 
-#endif
+#endif // UTILS_H
