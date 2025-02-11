@@ -455,13 +455,13 @@ void apply_effect_elimina_target(game_contextT *game_ctx, giocatoreT *target, ef
 	cartaT *deleted, *target_cards;
 
 	if (effect->target_carta == ALL) {
-		asprintf_checked(&prompt, "Scegli la carta che vuoi eliminare dall'aula di %s.", target->name);
+		asprintf_s(&prompt, "Scegli la carta che vuoi eliminare dall'aula di %s.", target->name);
 		deleted = pick_aula_card(target, prompt);
 	} else { // handle STUDENTE and BONUS/MALUS
-		asprintf_checked(&prompt, "Scegli la carta %s che vuoi eliminare dall'aula di %s.",
+		asprintf_ss(&prompt, "Scegli la carta %s che vuoi eliminare dall'aula di %s.",
 			tipo_cartaT_str(effect->target_carta), target->name
 		);
-		asprintf_checked(&title, "Aula di %s", target->name);
+		asprintf_s(&title, "Aula di %s", target->name);
 		target_cards = effect->target_carta == STUDENTE ? target->aula : target->bonus_malus;
 		deleted = pick_card_restricted(target_cards, effect->target_carta, prompt, title, ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET);
 		free_wrap(title);
@@ -480,7 +480,7 @@ void apply_effect_elimina_tu(game_contextT *game_ctx, effettoT *effect, giocator
 	char *pick_player_prompt;
 
 	if (*target_tu == NULL) { // check if target tu was already asked in previous TU effects for this card
-		asprintf_checked(&pick_player_prompt, "[%s]: Scegli il giocatore al quale vuoi eliminare una carta %s:",
+		asprintf_ss(&pick_player_prompt, "[%s]: Scegli il giocatore al quale vuoi eliminare una carta %s:",
 			game_ctx->curr_player->name,
 			tipo_cartaT_str(effect->target_carta)
 		);
@@ -591,7 +591,7 @@ void apply_effect_prendi(game_contextT *game_ctx, effettoT *effect, giocatoreT *
 	cartaT *stolen_card;
 
 	if (*target_tu == NULL) { // check if target tu was already asked in previous TU effects of the same card
-		asprintf_checked(&pick_player_prompt, "Scegli il giocatore al quale vuoi rubare una carta %s dal mazzo:",
+		asprintf_s(&pick_player_prompt, "Scegli il giocatore al quale vuoi rubare una carta %s dal mazzo:",
 			tipo_cartaT_str(effect->target_carta)
 		);
 		*target_tu = pick_player(game_ctx, pick_player_prompt, false, false);
@@ -618,17 +618,17 @@ void apply_effect_ruba(game_contextT *game_ctx, effettoT *effect, giocatoreT **t
 	bool can_steal = false, stolen = false;
 
 	if (*target_tu == NULL) { // check if target tu was already asked in previous TU effects of the same card
-		asprintf_checked(&pick_player_prompt, "Scegli il giocatore al quale vuoi rubare una carta %s:",
+		asprintf_s(&pick_player_prompt, "Scegli il giocatore al quale vuoi rubare una carta %s:",
 			tipo_cartaT_str(effect->target_carta)
 		);
 		*target_tu = pick_player(game_ctx, pick_player_prompt, false, false);
 	}
 	target = *target_tu;
 
-	asprintf_checked(&pick_card_prompt, "Scegli la carta %s che vuoi rubare a " ANSI_UNDERLINE "%s" ANSI_RESET ":",
+	asprintf_ss(&pick_card_prompt, "Scegli la carta %s che vuoi rubare a " ANSI_UNDERLINE "%s" ANSI_RESET ":",
 		tipo_cartaT_str(effect->target_carta), target->name
 	);
-	asprintf_checked(&pick_card_title, "Carte %s di %s", tipo_cartaT_str(effect->target_carta), target->name);
+	asprintf_ss(&pick_card_title, "Carte %s di %s", tipo_cartaT_str(effect->target_carta), target->name);
 
 	target_cards = effect->target_carta == STUDENTE ? target->aula : target->bonus_malus;
 
