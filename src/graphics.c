@@ -1,5 +1,7 @@
+#include <stdio.h>
 #include <stddef.h>
 #include "graphics.h"
+#include "format.h"
 #include "constants.h"
 #include "structs.h"
 #include "enums.h"

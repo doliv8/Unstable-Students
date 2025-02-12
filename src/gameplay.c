@@ -5,6 +5,7 @@
 #include <string.h>
 #include "gameplay.h"
 #include "graphics.h"
+#include "format.h"
 #include "structs.h"
 #include "card.h"
 #include "files.h"
