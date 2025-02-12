@@ -1,6 +1,7 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
+#include <stdio.h>
 #include <stdbool.h>
 #include "constants.h"
 #include "types.h"
@@ -38,6 +39,7 @@ struct GameContext {
 	cartaT *mazzo_pesca, *mazzo_scarti, *aula_studio;
 	int n_players, round_num;
 	bool game_running;
+	FILE *log_file;
 };
 
 struct MultiLineText {

@@ -8,12 +8,13 @@
 #define MIN_PLAYERS 2
 #define MAX_PLAYERS 4
 
-#define FILE_MAZZO "mazzo.txt"
-#define FILE_SAVE "savegame.sav"
-
 #define CARDS_PER_PLAYER 5
 #define ENDROUND_MAX_CARDS 5
 #define WIN_STUDENTS_COUNT 6
+
+#define FILE_MAZZO "mazzo.txt"
+#define FILE_SAVE "savegame.sav"
+#define FILE_LOG "log.txt"
 
 #define ACTION_PLAY_HAND 1
 #define ACTION_DRAW 2
@@ -49,6 +50,7 @@
 #define ROUND_BANNER_CONTENT_WIDTH ROUND_BANNER_WIDTH-2*BANNER_BORDER_WIDTH
 #define BANNER_HORIZONTAL_BAR "--------------------------------------------------------------" // ROUND_BANNER_CONTENT_WIDTH long
 
+// text colors
 #define ANSI_RESET "\033[0m"
 #define ANSI_BOLD "\033[1m"
 #define ANSI_UNDERLINE "\033[4m"
@@ -60,7 +62,7 @@
 #define ANSI_CYAN "\033[36m"
 #define ANSI_WHITE "\033[37m"
 
-// Background colors
+// background colors
 #define ANSI_BG_RED "\033[41m"
 #define ANSI_BG_GREEN "\033[42m"
 #define ANSI_BG_YELLOW "\033[43m"
