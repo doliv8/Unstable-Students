@@ -1,6 +1,5 @@
 #define _GNU_SOURCE
 
-#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include "gameplay.h"
@@ -10,8 +9,7 @@
 #include "card.h"
 #include "files.h"
 #include "utils.h"
-
-#include <assert.h>
+#include "logging.h"
 
 bool has_bonusmalus_target(giocatoreT *player, azioneT effect_action, cartaT *target) {
 	bool found = false;
@@ -234,6 +232,7 @@ void draw_card(game_contextT *game_ctx) {
 	cartaT *drawn_card = pop_card(&game_ctx->mazzo_pesca);
 	puts("Ecco la carta che hai pescato:");
 	show_card(drawn_card);
+	log_ss(game_ctx, "%s pesca %s", game_ctx->curr_player->name, drawn_card->name);
 	push_card(&game_ctx->curr_player->carte, drawn_card);
 }
 
@@ -262,15 +261,18 @@ bool play_card(game_contextT *game_ctx) {
 	// TODO: implement this function
 	bool played = false;
 	cartaT *card;
-	giocatoreT *target = game_ctx->curr_player;
+	giocatoreT *target, *thrower;
+
+	target = thrower = game_ctx->curr_player;
 
 	// handle no playable cards or no cards at all check
 	if (count_playable_cards(game_ctx) == 0) {
 		puts("Avresti dovuto giocare una carta ma non ne puoi giocare neanche una!");
+		log_s(game_ctx, "%s avrebbe dovuto giocare una carta ma non ne aveva di giocabili.", thrower->name);
 		return false;
 	}
 
-	card = pick_card(game_ctx->curr_player->carte, "Scegli la carta che vuoi giocare.",
+	card = pick_card(thrower->carte, "Scegli la carta che vuoi giocare.",
 		"La tua mano", ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET
 	);
 	printf("Hai scelto di giocare: %s\n", card->name);
@@ -286,7 +288,7 @@ bool play_card(game_contextT *game_ctx) {
 		case STUDENTE_SEMPLICE:
 		case LAUREANDO: {
 			// check for active IMPEDIRE effect on this card type
-			if (has_bonusmalus_target(game_ctx->curr_player, IMPEDIRE, card)) {
+			if (has_bonusmalus_target(thrower, IMPEDIRE, card)) {
 				printf("Fin quando avrai l'effetto %s attivo, non puoi usare carte %s!\n",
 					azioneT_str(IMPEDIRE),
 					tipo_cartaT_str(card->tipo)
@@ -296,11 +298,12 @@ bool play_card(game_contextT *game_ctx) {
 					target = pick_player(game_ctx, "Scegli un giocatore al quale applicare questa carta Malus.", true, false);
 				if (can_join_aula(game_ctx, target, card)) {
 					// TODO: check for MAI
-					unlink_card(&game_ctx->curr_player->carte, card);
+					unlink_card(&thrower->carte, card);
 					join_aula(game_ctx, target, card);
+					log_sss(game_ctx, "%s ha giocato %s su %s.", thrower->name, card->name, target->name);
 					played = true;
 				} else {
-					if (target == game_ctx->curr_player)
+					if (target == thrower)
 						puts("Questa carta non puo' essere giocata dato che ne hai una uguale sul campo.");
 					else
 						printf("Questa carta non puo' essere giocata su %s dato che ne ha una uguale sul campo.\n", target->name);
@@ -310,7 +313,7 @@ bool play_card(game_contextT *game_ctx) {
 		}
 		case MAGIA: {
 			// always quando = SUBITO, no additional checks needed
-			unlink_card(&game_ctx->curr_player->carte, card);
+			unlink_card(&thrower->carte, card);
 			apply_effects(game_ctx, card, SUBITO);
 			dispose_card(game_ctx, card);
 			played = true;
@@ -367,6 +370,8 @@ giocatoreT* new_player() {
 
 game_contextT *new_game() {
 	game_contextT *game_ctx = (game_contextT*)calloc_checked(1, sizeof(game_contextT));
+
+	init_logging(game_ctx);
 
 	do {
 		puts("Quanti giocatori giocheranno?");
@@ -534,6 +539,7 @@ void leave_aula(game_contextT *game_ctx, giocatoreT *player, cartaT *card) {
 	// switch current player to card owner player for applying FINE effects correctly
 	giocatoreT *original_player = game_ctx->curr_player;
 	game_ctx->curr_player = player;
+	log_sss(game_ctx, "Una carta %s lascia l'aula di %s: %s.", tipo_cartaT_str(card->tipo), player->name, card->name);
 	// apply leave effects
 	apply_effects(game_ctx, card, FINE);
 	game_ctx->curr_player = original_player;
@@ -574,6 +580,7 @@ void join_aula(game_contextT *game_ctx, giocatoreT *player, cartaT *card) {
 		push_card(&player->aula, card);
 	else // is BONUS/MALUS
 		push_card(&player->bonus_malus, card);
+	log_sss(game_ctx, "Una carta %s entra nell'aula di %s: %s.", tipo_cartaT_str(card->tipo), player->name, card->name);
 	apply_effects(game_ctx, card, SUBITO); // apply join effects
 }
 
@@ -863,5 +870,7 @@ void clear_game(game_contextT *game_ctx) {
 		clear_cards(game_ctx->mazzo_pesca);
 	if (game_ctx->mazzo_scarti != NULL)
 		clear_cards(game_ctx->mazzo_scarti);
+
+	shutdown_logging(game_ctx);
 	free_wrap(game_ctx);
 }

@@ -126,6 +126,15 @@ cartaT *load_mazzo(int *n_cards) {
 	return mazzo;
 }
 
+FILE *open_log_write() {
+	FILE *fp = fopen(FILE_LOG, "w");
+	if (fp == NULL) {
+		fprintf(stderr, "Opening logs file (%s) failed!\n", FILE_LOG);
+		exit(EXIT_FAILURE);
+	}
+	return fp;
+}
+
 /**
  * @brief reads one integer from a file stream and ensures correct reading
  * 
