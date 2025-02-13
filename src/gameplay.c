@@ -242,16 +242,33 @@ void draw_card(game_contextT *game_ctx) {
 	push_card(&game_ctx->curr_player->carte, drawn_card);
 }
 
-int count_playable_cards(game_contextT *game_ctx) {
+bool anyone_can_take(game_contextT *game_ctx, bool self_included, cartaT *card) {
+	bool someone_can_take = false;
+	giocatoreT *player = game_ctx->curr_player;
+
+	if (!self_included)
+		player = player->next; // start from next player if curr player is not included
+
+	do {
+		if (!cards_contain(player->aula, card))
+			someone_can_take = true;
+		player = player->next;
+	} while (player != game_ctx->curr_player && !someone_can_take);
+
+	return someone_can_take;
+}
+
+int count_playable_cards(game_contextT *game_ctx, tipo_cartaT type) {
 	int playable_cards = 0;
 	for (cartaT *card = game_ctx->curr_player->carte; card != NULL; card = card->next) {
-		if (card->tipo == MALUS || // Malus cards can be always played on self or other players
-			(card->tipo != ISTANTANEA && // ISTANTANEA can't be played during own turn
-			!has_bonusmalus_target(game_ctx->curr_player, IMPEDIRE, card) && // check for active IMPEDIRE effect
-			!cards_contain(game_ctx->curr_player->aula, card) && // check for identical cards already in aula
-			!cards_contain(game_ctx->curr_player->bonus_malus, card)) // check for identical Bonus cards already in bonus/malus
-		)
+		if (match_card_type(card, type) && // check for card matching card type
+			card->tipo != ISTANTANEA && // ISTANTANEA can't be played during own turn
+			!has_bonusmalus_target(game_ctx->curr_player, IMPEDIRE, card)) { // check for active IMPEDIRE effects on this card
+			if ((card->tipo == MALUS && anyone_can_take(game_ctx, true, card)) || // check if Malus card can be played on other players or at least self
+				(!cards_contain(game_ctx->curr_player->aula, card) && // check for identical cards already in own aula
+				!cards_contain(game_ctx->curr_player->bonus_malus, card))) // check for identical Bonus cards already in own bonus/malus
 			playable_cards++;
+		}
 	}
 	return playable_cards;
 }
@@ -260,25 +277,32 @@ int count_playable_cards(game_contextT *game_ctx) {
  * @brief makes current player play a card from his hand
  * 
  * @param game_ctx 
+ * @param type card type allowed to play
  * @return true if player actually played a card
  * @return false player wasn't able to play a card
  */
-bool play_card(game_contextT *game_ctx) {
+bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
 	// TODO: implement this function
 	bool played = false;
 	cartaT *card;
 	giocatoreT *target, *thrower;
+	char *playable_prompt;
 
 	target = thrower = game_ctx->curr_player;
 
 	// handle no playable cards or no cards at all check
-	if (count_playable_cards(game_ctx) == 0) {
+	if (count_playable_cards(game_ctx, type) == 0) {
 		puts("Avresti dovuto giocare una carta ma non ne puoi giocare neanche una!");
 		log_s(game_ctx, "%s avrebbe dovuto giocare una carta ma non ne aveva di giocabili.", thrower->name);
 		return false;
 	}
 
-	card = pick_card(thrower->carte, "Scegli la carta che vuoi giocare.",
+	if (type != ALL)
+		asprintf_s(&playable_prompt, "Scegli la carta %s che vuoi giocare.", tipo_cartaT_str(type));
+	else
+		playable_prompt = strdup_checked("Scegli la carta che vuoi giocare.");
+
+	card = pick_card_restricted(thrower->carte, type, playable_prompt,
 		"La tua mano", ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET
 	);
 	printf("Hai scelto di giocare: %s\n", card->name);
@@ -330,7 +354,10 @@ bool play_card(game_contextT *game_ctx) {
 			break;
 		}
 	}
-	return played ? true : play_card(game_ctx);
+
+	free_wrap(playable_prompt);
+
+	return played ? true : play_card(game_ctx, type); // recurse if player didnt play anything (but actually could)
 }
 
 int choice_action_menu() {
@@ -350,7 +377,7 @@ int choice_action_menu() {
 void distribute_cards(game_contextT *game_ctx) {
 	cartaT *card;
 
-	// distribute a matricola card for each player, rotating player for each given card
+	// distribute a MATRICOLA card for each player, rotating player for each given card
 	for (int i = 0; i < game_ctx->n_players; i++, game_ctx->curr_player = game_ctx->curr_player->next) {
 		card = pop_card(&game_ctx->aula_studio);
 		push_card(&game_ctx->curr_player->aula, card);
@@ -528,6 +555,15 @@ void apply_effect_elimina(game_contextT *game_ctx, effettoT *effect, giocatoreT 
 	}
 }
 
+void apply_effect_play(game_contextT *game_ctx, effettoT *effect) {
+	// allowed values: target player = IO | TU | VOI | TUTTI and target card = ALL
+	switch (effect->target_giocatori) {
+		case IO:
+			play_card(game_ctx, effect->target_carta);
+			break;
+	}
+}
+
 /**
  * @brief applies leave effects of card and removes it from player's aula
  * 
@@ -674,15 +710,14 @@ void apply_effect_ruba(game_contextT *game_ctx, effettoT *effect, giocatoreT **t
 
 	free_wrap(pick_card_title);
 	free_wrap(pick_card_prompt);
-	free_wrap(pick_player_prompt);
 }
 
 void apply_effect(game_contextT *game_ctx, effettoT *effect, giocatoreT **target_tu) {
 	// TODO: apply ALL actual effects
 	switch (effect->azione) {
 		case GIOCA: {
-			// allowed values: target player = IO and target card = ALL
-			play_card(game_ctx);
+			// mazzo allowed values: target player = IO and target card = ALL
+			apply_effect_play(game_ctx, effect);
 			break;
 		}
 		case SCARTA: {
@@ -797,7 +832,7 @@ void play_round(game_contextT *game_ctx) {
 	while (in_action) {
 		switch (choice_action_menu()) {
 			case ACTION_PLAY_HAND: {
-				if (play_card(game_ctx)) // check for succesful play of card
+				if (play_card(game_ctx, ALL)) // check for successful play of card
 					in_action = false;
 				break;
 			}
@@ -828,7 +863,9 @@ void play_round(game_contextT *game_ctx) {
 
 bool check_win_condition(game_contextT *game_ctx) {
 	bool can_win = has_bonusmalus(game_ctx->curr_player, INGEGNERE); // cant win with ingegnerizzazione
-	return can_win && count_cards_restricted(game_ctx->curr_player->aula, STUDENTE) >= WIN_STUDENTS_COUNT; // TODO: dont count MATRICOLA here
+	int tot_students = count_cards_restricted(game_ctx->curr_player->aula, STUDENTE_SEMPLICE) +
+		count_cards_restricted(game_ctx->curr_player->aula, LAUREANDO);
+	return can_win && tot_students >= WIN_STUDENTS_COUNT;
 }
 
 void end_round(game_contextT *game_ctx) {
