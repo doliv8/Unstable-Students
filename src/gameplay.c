@@ -171,6 +171,7 @@ cartaT *pick_random_card_restricted(cartaT *head, tipo_cartaT type) {
 cartaT *pick_aula_card(giocatoreT *player, const char *prompt) {
 	cartaT *card;
 	int chosen_idx, n_aula = count_cards(player->aula), n_bonusmalus = count_cards(player->bonus_malus);
+	char *aula_title, *bonusmalus_title;
 
 	if (n_aula + n_bonusmalus == 0) {
 		printf("Non ci sono carte da scegliere nell'aula di %s!\n", player->name);
@@ -183,9 +184,12 @@ cartaT *pick_aula_card(giocatoreT *player, const char *prompt) {
 		card = pick_card(player->bonus_malus, prompt, "Bonus/Malus", ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET);
 	} else { // both aula and bonus/malus have cards
 		do {
-			// TODO: do dynamic title containing target player name (reusable in pick_card & show_card_grou).
-			show_card_group(player->aula, "Aula:", ANSI_BOLD ANSI_YELLOW "%s" ANSI_RESET); // show aula
-			show_card_group(player->bonus_malus, "Bonus/Malus:", ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET); // show bonus/malus
+			// dynamic title containing target player name
+			asprintf_s(&aula_title, "Aula di %s", player->name);
+			asprintf_s(&bonusmalus_title, "Bonus/Malus di %s", player->name);
+
+			show_card_group(player->aula, aula_title, ANSI_BOLD ANSI_YELLOW "%s" ANSI_RESET); // show aula
+			show_card_group(player->bonus_malus, bonusmalus_title, ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET); // show bonus/malus
 
 			puts("Vuoi scegliere una carta dall'aula studenti o dai bonus/malus?\n");
 			puts(" [TASTO " TO_STRING(CHOICE_AULA) "] Aula");
@@ -194,9 +198,12 @@ cartaT *pick_aula_card(giocatoreT *player, const char *prompt) {
 		} while (chosen_idx < CHOICE_AULA || chosen_idx > CHOICE_BONUSMALUS);
 
 		if (chosen_idx == CHOICE_AULA)
-			card = pick_card(player->aula, prompt, "Aula", ANSI_BOLD ANSI_YELLOW "%s" ANSI_RESET);
+			card = pick_card(player->aula, prompt, aula_title, ANSI_BOLD ANSI_YELLOW "%s" ANSI_RESET);
 		else // choice was bonus/malus
-			card = pick_card(player->bonus_malus, prompt, "Bonus/Malus", ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET);
+			card = pick_card(player->bonus_malus, prompt, bonusmalus_title, ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET);
+
+		free_wrap(bonusmalus_title);
+		free_wrap(aula_title);
 	}
 	return card;
 }
