@@ -33,7 +33,6 @@ bool has_bonusmalus(giocatoreT *player, azioneT effect_action) {
 	return found;
 }
 
-
 void show_player_state(game_contextT *game_ctx, giocatoreT *player) {
 	printf("Ecco lo stato di " ANSI_UNDERLINE "%s" ANSI_RESET ":\n", player->name);
 
@@ -363,15 +362,13 @@ giocatoreT* new_player() {
 	do {
 		printf("Inserisci il nome del giocatore: ");
 		scanf(" %" TO_STRING(GIOCATORE_NAME_LEN) "[^\n]", player->name);
-	} while (!strnlen(player->name, sizeof(player->name)));
+	} while (strnlen(player->name, sizeof(player->name)) == 0);
 
 	return player;
 }
 
 game_contextT *new_game() {
 	game_contextT *game_ctx = (game_contextT*)calloc_checked(1, sizeof(game_contextT));
-
-	init_logging(game_ctx);
 
 	do {
 		puts("Quanti giocatori giocheranno?");
@@ -603,6 +600,7 @@ void apply_effect_prendi(game_contextT *game_ctx, effettoT *effect, giocatoreT *
 			tipo_cartaT_str(effect->target_carta)
 		);
 		*target_tu = pick_player(game_ctx, pick_player_prompt, false, false);
+		free_wrap(pick_player_prompt);
 	}
 	target = *target_tu;
 
@@ -630,6 +628,7 @@ void apply_effect_ruba(game_contextT *game_ctx, effettoT *effect, giocatoreT **t
 			tipo_cartaT_str(effect->target_carta)
 		);
 		*target_tu = pick_player(game_ctx, pick_player_prompt, false, false);
+		free_wrap(pick_player_prompt);
 	}
 	target = *target_tu;
 

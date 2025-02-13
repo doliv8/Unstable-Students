@@ -8,15 +8,22 @@
 #include "types.h"
 #include "structs.h"
 #include "gameplay.h"
+#include "logging.h"
+#include "files.h"
 
 int main(int argc, char *argv[]) {
+	game_contextT* game_ctx;
+
 	// seed libc random generator
 	srand(time(NULL));
 	
 	// check salvataggio
-	assert(argc == 1);
+	if (argc == 1)
+		game_ctx = new_game();
+	else
+		game_ctx = load_game(argv[1]);
 
-	game_contextT* game_ctx = new_game();
+	init_logging(game_ctx);
 
 	// game loop
 	game_ctx->game_running = true;

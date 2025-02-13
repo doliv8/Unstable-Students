@@ -10,6 +10,7 @@ cartaT *load_mazzo(int *n_cards);
 FILE *open_log_write();
 
 int read_int(FILE *fp);
-void write_int(FILE *fp, int val);
+int read_bin_int(FILE *fp);
+void write_bin_int(FILE *fp, int val);
 
 #endif // FILES_H
