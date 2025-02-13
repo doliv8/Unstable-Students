@@ -81,8 +81,6 @@ game_contextT* load_game(const char *save_path) {
 		exit(EXIT_FAILURE);
 	}
 
-	// TODO: implement loading saved games
-
 	game_ctx = (game_contextT*)calloc_checked(1, sizeof(game_contextT));
 
 	game_ctx->n_players = read_bin_int(fp);
