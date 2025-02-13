@@ -3,39 +3,136 @@
 #include "files.h"
 #include "card.h"
 #include "utils.h"
+#include "logging.h"
 
-game_contextT* load_game() {
+
+void file_read_failed() {
+	fputs("Error occurred while reading from a file stream!\n", stderr);
+	exit(EXIT_FAILURE);
+}
+
+void file_write_failed() {
+	fputs("Error occurred while writing to a file stream!\n", stderr);
+	exit(EXIT_FAILURE);
+}
+
+effettoT *load_effects(FILE *fp, int amount) {
+	effettoT *effects = NULL;
+
+	if (amount > 0) {
+		effects = (effettoT*)malloc_checked(amount*sizeof(effettoT));
+		if (fread(effects, sizeof(effettoT), amount, fp) != amount)
+			file_read_failed();
+	}
+	return effects;
+}
+
+cartaT *load_card(FILE *fp) {
+	cartaT *card;
+
+	card = (cartaT*)malloc_checked(sizeof(cartaT));
+
+	if (fread(card, sizeof(cartaT), 1, fp) != 1)
+		file_read_failed();
+
+	card->effetti = load_effects(fp, card->n_effetti);
+	return card;
+}
+
+cartaT *load_cards(FILE *fp) {
+	int n_cards;
+	cartaT *head = NULL, *curr;
+
+	n_cards = read_bin_int(fp);
+
+	// loading like this preserves cards order (pushing back new cards)
+	for (int i = 0; i < n_cards; i++) {
+		if (head == NULL)
+			curr = head = load_card(fp);
+		else
+			curr = curr->next = load_card(fp);
+	}
+
+	return head;
+}
+
+giocatoreT *load_player(FILE *fp) {
+	giocatoreT* player;
+
+	player = (giocatoreT*)calloc_checked(1, sizeof(giocatoreT));
+	if (fread(player, sizeof(giocatoreT), 1, fp) != 1)
+		file_read_failed();
+
+	// load player cards now
+	player->carte = load_cards(fp);
+	player->aula = load_cards(fp);
+	player->bonus_malus = load_cards(fp);
+	return player;
+}
+
+game_contextT* load_game(const char *save_path) {
+	FILE *fp;
+	game_contextT *game_ctx;
+	giocatoreT *curr_player;
+
+	fp = fopen(save_path, "r");
+	if (fp == NULL) {
+		fprintf(stderr, "Opening save file (%s) failed!\n", save_path);
+		exit(EXIT_FAILURE);
+	}
+
 	// TODO: implement loading saved games
-	return NULL;
+
+	game_ctx = (game_contextT*)calloc_checked(1, sizeof(game_contextT));
+
+	game_ctx->n_players = read_bin_int(fp);
+
+	for (int i = 0; i < game_ctx->n_players; i++) {
+		if (game_ctx->curr_player == NULL)
+			curr_player = game_ctx->curr_player = load_player(fp);
+		else
+			curr_player = curr_player->next = load_player(fp);
+	}
+	curr_player->next = game_ctx->curr_player; // make the linked list circular linking tail to head
+
+	game_ctx->mazzo_pesca = load_cards(fp);
+	game_ctx->mazzo_scarti = load_cards(fp);
+	game_ctx->aula_studio = load_cards(fp);
+
+	// additional info stored in save file: round number. if not present set it to 1
+	if (fread(&game_ctx->round_num, sizeof(int), 1, fp) != 1)
+		game_ctx->round_num = 1;
+
+	fclose(fp);
+
+	return game_ctx;
 }
 
 void dump_effect(FILE *fp, effettoT *effect) {
-	fprintf(fp, "%d %d %d\n", (int)effect->azione, (int)effect->target_giocatori, (int)effect->target_carta);
+	if (fwrite(effect, sizeof(effettoT), 1, fp) != 1)
+		file_write_failed();
 }
 
 void dump_effects(FILE *fp, cartaT *card) {
-	write_int(fp, card->n_effetti);
 	for (int i = 0;  i < card->n_effetti; i++)
 		dump_effect(fp, &card->effetti[i]);
 }
 
-void dump_card(FILE *fp, cartaT* card) {
-	fprintf(fp, "%s\n", card->name);
-	fprintf(fp, "%s\n", card->description);
-	write_int(fp, (int)card->tipo);
+void dump_card(FILE *fp, cartaT *card) {
+	if (fwrite(card, sizeof(cartaT), 1, fp) != 1)
+		file_write_failed();
 	dump_effects(fp, card);
-	write_int(fp, (int)card->quando);
-	write_int(fp, (int)card->opzionale);
 }
 
 void dump_cards(FILE *fp, cartaT *head) {
-	write_int(fp, count_cards(head));
+	write_bin_int(fp, count_cards(head));
 	for (; head != NULL; head = head->next)
 		dump_card(fp, head);
 }
 
 void dump_player(FILE *fp, giocatoreT *player) {
-	fprintf(fp, "%s\n", player->name);
+	if (fwrite(player, sizeof(giocatoreT), 1, fp) != 1)
+		file_write_failed();
 	dump_cards(fp, player->carte); // save mano
 	dump_cards(fp, player->aula); // save aula
 	dump_cards(fp, player->bonus_malus); // save bonus/malus
@@ -48,13 +145,16 @@ void save_game(game_contextT* game_ctx) {
 		exit(EXIT_FAILURE);
 	}
 
-	giocatoreT *player = game_ctx->curr_player;
-	write_int(fp, game_ctx->n_players);
-	for (int i = 0; i < game_ctx->n_players; i++, player = player->next)
-		dump_player(fp, player);
+	write_bin_int(fp, game_ctx->n_players);
+	for (int i = 0; i < game_ctx->n_players; i++, game_ctx->curr_player = game_ctx->curr_player->next)
+		dump_player(fp, game_ctx->curr_player);
 	dump_cards(fp, game_ctx->mazzo_pesca); // save mazzo pesca
 	dump_cards(fp, game_ctx->mazzo_scarti); // save mazzo scarti
 	dump_cards(fp, game_ctx->aula_studio); // save aula studio
+
+	// additional info stored in save file: round number. if not present set it to 1
+	write_bin_int(fp, game_ctx->round_num);
+
 	fclose(fp);
 }
 
@@ -82,7 +182,7 @@ cartaT *read_carta(FILE *fp, cartaT **tail_next, int *amount) {
 		return NULL;
 	}
 	
-	cartaT *card = (cartaT*)malloc_checked(sizeof(cartaT));
+	cartaT *card = (cartaT*)calloc_checked(1, sizeof(cartaT));
 
 	fscanf(fp, " %" TO_STRING(CARTA_NAME_LEN) "[^\n]", card->name);
 	fscanf(fp, " %" TO_STRING(CARTA_DESCRIPTION_LEN) "[^\n]", card->description);
@@ -143,19 +243,31 @@ FILE *open_log_write() {
  */
 int read_int(FILE *fp) {
 	int val;
-	if (fscanf(fp, " %d", &val) != 1) {
-		fputs("Error occurred while reading an integer from file stream!", stderr);
-		exit(EXIT_FAILURE);
-	}
+	if (fscanf(fp, " %d", &val) != 1)
+		file_read_failed();
 	return val;
 }
 
 /**
- * @brief writes one integer to a file stream
+ * @brief writes one integer to a file stream in binary form and ensures successful writing
  * 
  * @param fp file stream
  * @param val integer to write
  */
-void write_int(FILE *fp, int val) {
-	fprintf(fp, "%d\n", val);
+void write_bin_int(FILE *fp, int val) {
+	if (fwrite(&val, sizeof(int), 1, fp) != 1)
+		file_write_failed();
+}
+
+/**
+ * @brief reads one integer from a file stream in binary form and ensures successful reading
+ * 
+ * @param fp file stream
+ * @return int integer read
+ */
+int read_bin_int(FILE *fp) {
+	int val;
+	if (fread(&val, sizeof(int), 1, fp) != 1)
+		file_read_failed();
+	return val;
 }
