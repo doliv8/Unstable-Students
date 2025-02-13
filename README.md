@@ -55,6 +55,37 @@ REPOSITORY STRUCTURE
 > [!TIP]
 > Descrivere le strutture dati aggiuntive utilizzate nel progetto e perché vi sono tornate utili (se presenti).
 
+### GameContext
+La struttura aggiuntiva principale che mi è stata molto utile nel mantenere gestibile il passaggio di parametri fra le varie funzioni è stata GameContext, infatti essa viene passata a quasi tutte le funzioni inerenti alla gestione della partita.
+Ecco la struttura in questione:
+```c
+struct GameContext {
+	giocatoreT* curr_player;
+	cartaT *mazzo_pesca, *mazzo_scarti, *aula_studio;
+	int n_players, round_num;
+	bool game_running;
+	FILE *log_file;
+};
+typedef struct GameContext game_contextT;
+```
+
+Mi è sufficiente utilizzare tale struttura per contenere l'intero stato della partita (all'inizio di un round, non durante), come si può notare dai prototipi delle funzioni usate per caricare e salvare i salvataggi:
+
+```c
+game_contextT* load_game();
+void save_game(game_contextT* game_ctx);
+```
+
+Ciò che contiene questa struttura è:
+- un puntatore al giocatore che deve giocare (o che sta giocando) questo turno, che viene fatto avanzare con comodità grazie alla circolarità della lista dei giocatori alla quale appartiene.
+- un puntatore alla testa ciascuna lista concatenata di carte: pesca, scarti e aula studio.
+- un intero rappresentante la quantità di giocatori che stanno partecipando alla partita.
+- un intero rappresentante il numero del round al quale lo stato della partita si trova.
+- un booleano rappresentante che il gioco è in esecuzione (o in conclusione, solo quando un giocatore vince e la partita termina, oppure si esce dalla partita con il tasto 0 del menu di gioco).
+- un puntatore a FILE (file stream) relativo al file di log, aperto prima di iniziare a giocare e chiuso quando si esce dal gioco.
+
+L'utilizzo che faccio di questa struttura è semplice e lineare: la alloco sullo heap all'avvio del gioco (tramite le funzioni new_game o load_game) e ne passo il puntatore alle diverse funzioni del game-loop (begin_round, play_round, end_round) che la passeranno a loro volta ad altre funzioni che implementano la logica di gioco; alla fine dell'esecuzione del gioco (uscita dal game-loop) la rilascio assieme a tutti i suoi campi (tramite clear_game).
+
 <br>
 
 ## Descrizione flusso di gioco
