@@ -10,6 +10,8 @@ void view_own(game_contextT *game_ctx);
 void view_others(game_contextT *game_ctx);
 // end actions
 
+void dispose_card(game_contextT *game_ctx, cartaT *card);
+
 game_contextT *new_game();
 
 void show_round(game_contextT *game_ctx);

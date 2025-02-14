@@ -1,6 +1,8 @@
 #ifndef ENUMS_H
 #define ENUMS_H
 
+#include "types.h"
+
 enum TipoCarta {
 	ALL,
 	STUDENTE,

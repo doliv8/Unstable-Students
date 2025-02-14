@@ -33,9 +33,26 @@ REPOSITORY STRUCTURE
 │
 │ SOURCE FILES
 ├── src                      	// directory contenente l'intero source code del progetto
-│   ├── main.c                  // relazione e documentazione
-├── ···.c
-├── ···.h
+│   ├── main.c
+│   ├── constants.h
+│   ├── structs.h
+│   ├── enums.c
+│   ├── enums.h
+│   ├── types.h
+│   ├── card.c
+│   ├── card.h
+│   ├── gameplay.c
+│   ├── gameplay.h
+│   ├── files.c
+│   ├── files.h
+│   ├── format.c
+│   ├── format.h
+│   ├── graphics.c
+│   ├── graphics.h
+│   ├── logging.c
+│   ├── logging.h
+│   ├── utils.c
+│   └── utils.h
 │
 │ OTHER FILES
 ├── README.md                   //relazione e documentazione
@@ -48,6 +65,12 @@ REPOSITORY STRUCTURE
 ## Spiegazione file sorgente
 > [!TIP]
 > Per ogni file sorgente (.c/.h) presente nel progetto, spiegare brevemente il contenuto e lo scopo del file.
+
+### main.c
+Questo file contiene l'EntryPoint del programma, ovvero la funzione `main`, nella quale avviene l'inizializzazione del gioco e il game loop.
+
+### constants.h
+Questo header non ha un corrispettivo file sorgente associato in quanto contiene solamente le definizioni delle costanti (es. numero massimo e minimo di giocatori e lunghezze massime di alcune stringhe) e alcuni letterali usati nel gioco (es. nomi statici dei file coi quali interagisce il programma e stringhe utilizzate nella realizzazione della grafica su terminale).
 
 <br>
 
@@ -84,7 +107,7 @@ Ciò che contiene questa struttura è:
 - un booleano rappresentante che il gioco è in esecuzione (o in conclusione, solo quando un giocatore vince e la partita termina, oppure si esce dalla partita con il tasto 0 del menu di gioco).
 - un puntatore a FILE (file stream) relativo al file di log, aperto prima di iniziare a giocare e chiuso quando si esce dal gioco.
 
-L'utilizzo che faccio di questa struttura è semplice e lineare: la alloco sullo heap all'avvio del gioco (tramite le funzioni new_game o load_game) e ne passo il puntatore alle diverse funzioni del game-loop (begin_round, play_round, end_round) che la passeranno a loro volta ad altre funzioni che implementano la logica di gioco; alla fine dell'esecuzione del gioco (uscita dal game-loop) la rilascio assieme a tutti i suoi campi (tramite clear_game).
+L'utilizzo che faccio di questa struttura è semplice e lineare: la alloco sullo heap all'avvio del gioco (tramite le funzioni `new_game` o `load_game`) e ne passo il puntatore alle diverse funzioni del game-loop (`begin_round`, `play_round`, `end_round`) che la passeranno a loro volta ad altre funzioni che implementano la logica di gioco; alla fine dell'esecuzione del gioco (uscita dal game-loop) la rilascio assieme a tutti i suoi campi (tramite `clear_game`).
 
 <br>
 

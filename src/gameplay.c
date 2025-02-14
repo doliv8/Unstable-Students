@@ -33,12 +33,42 @@ bool has_bonusmalus(giocatoreT *player, azioneT effect_action) {
 	return found;
 }
 
+bool ask_wants_block(game_contextT *game_ctx, cartaT *attack_card, giocatoreT *target, cartaT *defense_card) {
+	// TODO: differentiate between different types of attack cards and change message accordingly
+	show_card(defense_card);
+	printf("[%s] Vuoi difenderti dagli effetti di %s imposti da %s usando questa carta?\n",
+		target->name, attack_card->name, game_ctx->curr_player->name);
+	return ask_choice();
+}
+
+bool uses_blocca(game_contextT *game_ctx, cartaT *attack_card, giocatoreT *target) {
+	bool blocks = false;
+
+	for (cartaT *card = target->carte; card != NULL && !blocks; card = card->next) {
+		if (match_card_type(card, ISTANTANEA) && // check if player has any ISTANTANEA card
+			card->quando == SUBITO && // assert quando = SUBITO, just in case
+			!has_bonusmalus_target(target, IMPEDIRE, card)) { // check if card can be used (no IMPEDIRE is applied on it)
+			for (int i = 0; i < card->n_effetti && !blocks; i++) {
+				if (card->effetti[i].azione == BLOCCA && match_card_type(attack_card, card->effetti[i].target_carta)) {
+					if (ask_wants_block(game_ctx, attack_card, target, card)) {
+						unlink_card(&target->carte, card); // remove BLOCCA card from target's hand
+						dispose_card(game_ctx, card); // and dispose it
+						blocks = true;
+					}
+				}
+			}
+		}
+	}
+	return blocks;
+}
+
 void show_player_state(game_contextT *game_ctx, giocatoreT *player) {
 	printf("Ecco lo stato di " ANSI_UNDERLINE "%s" ANSI_RESET ":\n", player->name);
 
-	printf("Numero carte nella mano: %d\n\n", count_cards(player->carte));
 	if (has_bonusmalus(player, MOSTRA))
 		show_card_group(player->carte, "Mano:", ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET); // show mano
+	else
+		printf("Numero carte nella mano: %d\n", count_cards(player->carte));
 	show_card_group(player->aula, "Aula:", ANSI_BOLD ANSI_YELLOW "%s" ANSI_RESET); // show aula
 	show_card_group(player->bonus_malus, "Bonus/Malus:", ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET); // show bonus/malus
 }
@@ -250,7 +280,7 @@ bool anyone_can_take(game_contextT *game_ctx, bool self_included, cartaT *card) 
 		player = player->next; // start from next player if curr player is not included
 
 	do {
-		if (!cards_contain(player->aula, card))
+		if (can_join_aula(game_ctx, player, card))
 			someone_can_take = true;
 		player = player->next;
 	} while (player != game_ctx->curr_player && !someone_can_take);
@@ -259,6 +289,7 @@ bool anyone_can_take(game_contextT *game_ctx, bool self_included, cartaT *card) 
 }
 
 int count_playable_cards(game_contextT *game_ctx, tipo_cartaT type) {
+	// TODO: re-read this and check it's working properly
 	int playable_cards = 0;
 	for (cartaT *card = game_ctx->curr_player->carte; card != NULL; card = card->next) {
 		if (match_card_type(card, type) && // check for card matching card type
@@ -561,6 +592,7 @@ void apply_effect_play(game_contextT *game_ctx, effettoT *effect) {
 		case IO:
 			play_card(game_ctx, effect->target_carta);
 			break;
+			// TODO: keep working here
 	}
 }
 
