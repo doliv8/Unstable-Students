@@ -27,7 +27,7 @@
 #define CHOICE_AULA 1
 #define CHOICE_BONUSMALUS 2
 
-#define CARD_WIDTH 32
+#define CARD_WIDTH 34
 #define CARD_BORDER_WIDTH 1
 #define CARD_CONTENT_WIDTH CARD_WIDTH-2*CARD_BORDER_WIDTH
 #define CARD_PADDING 4
@@ -39,7 +39,7 @@
 #define CARDS_HORIZONTAL_SPACING 2
 
 
-#define HORIZONTAL_BAR "------------------------------" // CARD_CONTENT_WIDTH long
+#define HORIZONTAL_BAR "--------------------------------" // CARD_CONTENT_WIDTH long
 #define CARD_BORDER_HORIZONTAL "-"
 #define CARD_BORDER_VERTICAL "|"
 #define CARD_CORNER_LEFT "("
