@@ -62,6 +62,12 @@ bool uses_blocca(game_contextT *game_ctx, cartaT *attack_card, giocatoreT *targe
 	return blocks;
 }
 
+/**
+ * @brief displays a player's public cards and number of private cards or even the private cards list if the player has an active MOSTRA effect
+ * 
+ * @param game_ctx 
+ * @param player target player
+ */
 void show_player_state(game_contextT *game_ctx, giocatoreT *player) {
 	printf("Ecco lo stato di " ANSI_UNDERLINE "%s" ANSI_RESET ":\n", player->name);
 
@@ -73,6 +79,11 @@ void show_player_state(game_contextT *game_ctx, giocatoreT *player) {
 	show_card_group(player->bonus_malus, "Bonus/Malus:", ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET); // show bonus/malus
 }
 
+/**
+ * @brief displays player's own cards (private ones included)
+ * 
+ * @param game_ctx 
+ */
 void view_own(game_contextT *game_ctx) {
 	printf("Ecco le carte in tuo possesso, " ANSI_UNDERLINE "%s" ANSI_RESET ":\n\n", game_ctx->curr_player->name);
 
@@ -81,7 +92,30 @@ void view_own(game_contextT *game_ctx) {
 	show_card_group(game_ctx->curr_player->carte, "Mano:", ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET); // show mano
 }
 
-// returns NULL when ALL is picked
+/**
+ * @brief allows to pick a player or every player to then show their states through show_player_state
+ * 
+ * @param game_ctx 
+ */
+void view_others(game_contextT *game_ctx) {
+	giocatoreT *target = pick_player(game_ctx, "Scegli il giocatore del quale vuoi vedere lo stato:", false, true);
+	if (target == NULL) { // picked option is ALL
+		// start from next player based on turns
+		for (giocatoreT *player = game_ctx->curr_player->next; player != game_ctx->curr_player; player = player->next)
+			show_player_state(game_ctx, player);
+	} else
+		show_player_state(game_ctx, target);
+}
+
+/**
+ * @brief prompts user to pick a player from the game
+ * 
+ * @param game_ctx 
+ * @param prompt message displayed during the picking
+ * @param allow_self should picking self be an option?
+ * @param allow_all should all players be an option?
+ * @return giocatoreT* pointer to selected player or NULL if all players is picked
+ */
 giocatoreT *pick_player(game_contextT *game_ctx, const char *prompt, bool allow_self, bool allow_all) {
 	giocatoreT *player;
 	int chosen_idx, tot_players = allow_self ? game_ctx->n_players : game_ctx->n_players - 1,
@@ -107,33 +141,6 @@ giocatoreT *pick_player(game_contextT *game_ctx, const char *prompt, bool allow_
 	return player;
 }
 
-void view_others(game_contextT *game_ctx) {
-	giocatoreT *target = pick_player(game_ctx, "Scegli il giocatore del quale vuoi vedere lo stato:", false, true);
-	if (target == NULL) { // picked option is ALL
-		// start from next player based on turns
-		for (giocatoreT *player = game_ctx->curr_player->next; player != game_ctx->curr_player; player = player->next)
-			show_player_state(game_ctx, player);
-	} else
-		show_player_state(game_ctx, target);
-}
-
-// returns a linked list containing all the Matricola-kind cards found & removed from mazzo
-cartaT *split_matricole(cartaT **mazzo_head) {
-	cartaT *matricole_head = NULL;
-	for (cartaT **prev = mazzo_head, *curr; *prev != NULL; ) {
-		curr = *prev;
-		if (curr->tipo == MATRICOLA) {
-			// remove curr card from the mazzo linked list linking
-			pop_card(prev);
-			// link this matricola card to matricole_head linked_list
-			push_card(&matricole_head, curr);
-		} else
-			prev = &curr->next;
-	}
-	return matricole_head;
-}
-
-
 /**
  * @brief prompts user to pick a card from the provided cards list with a restriction filter and returns the picked card
  * (still chained in the list).
@@ -143,7 +150,7 @@ cartaT *split_matricole(cartaT **mazzo_head) {
  * @param prompt text shown to the user while asked to pick the card
  * @param title title for the cards list box
  * @param title_fmt formatter for the title of the cards list box (visible length must be 0)
- * @return cartaT* picked card or NULL if there's no card to pick
+ * @return cartaT* pointer to picked card or NULL if there's no card to pick
  */
 cartaT *pick_card_restricted(cartaT *head, tipo_cartaT type, const char* prompt, const char *title, const char* title_fmt) {
 	cartaT *card;
@@ -176,12 +183,20 @@ cartaT *pick_card_restricted(cartaT *head, tipo_cartaT type, const char* prompt,
  * @param prompt text shown to the user while asked to pick the card
  * @param title title for the cards list box
  * @param title_fmt formatter for the title of the cards list box (visible length must be 0)
- * @return cartaT* picked card or NULL if there's no card to pick
+ * @return cartaT* pointer to picked card or NULL if there's no card to pick
  */
 cartaT *pick_card(cartaT *head, const char* prompt, const char *title, const char* title_fmt) {
 	return pick_card_restricted(head, ALL, prompt, title, title_fmt);
 }
 
+/**
+ * @brief automatically picks a card from the provided cards list with a restriction filter and returns the picked card
+ * (still chained in the list).
+ * 
+ * @param head cards list
+ * @param type card type user is allowed to pick
+ * @return cartaT* pointer to picked card or NULL if there's no card to pick
+ */
 cartaT *pick_random_card_restricted(cartaT *head, tipo_cartaT type) {
 	cartaT *card;
 	int n_cards = count_cards_restricted(head, type), chosen_idx;
@@ -196,9 +211,16 @@ cartaT *pick_random_card_restricted(cartaT *head, tipo_cartaT type) {
 	return card;
 }
 
-// this function is similar to pick_card but specific to picking a card from a player's aula (bonus_malus + aula).
-// first asks user if wants to pick from aula or bonus_malus and then calls actual pick_card on it.
+/**
+ * @brief this function is similar to pick_card but specific to picking a card from a player's aula (bonus_malus + aula).
+ * first asks user if wants to pick from aula or bonus_malus and then calls actual pick_card on the chosen list.
+ * 
+ * @param player target player
+ * @param prompt shown when picking the card from one of the lists
+ * @return cartaT* pointer to picked card or NULL if no cards were present
+ */
 cartaT *pick_aula_card(giocatoreT *player, const char *prompt) {
+	// TODO: check if this function needs to be _restricted
 	cartaT *card;
 	int chosen_idx, n_aula = count_cards(player->aula), n_bonusmalus = count_cards(player->bonus_malus);
 	char *aula_title, *bonusmalus_title;
@@ -239,14 +261,14 @@ cartaT *pick_aula_card(giocatoreT *player, const char *prompt) {
 }
 
 void dispose_card(game_contextT *game_ctx, cartaT *card) {
-	if (card->tipo == MATRICOLA)
+	if (match_card_type(card, MATRICOLA))
 		push_card(&game_ctx->aula_studio, card); // put MATRICOLA into aula studio
 	else
 		push_card(&game_ctx->mazzo_scarti, card); // put card into mazzo scarti
 }
 
 void discard_card(game_contextT* game_ctx, cartaT **cards, const char *title) {
-	// handle no cards check
+	// TODO: handle no cards check better
 	if (count_cards(*cards) == 0) {
 		puts("Avresti dovuto scartare una carta, ma non ne hai!");
 		return;
@@ -391,6 +413,11 @@ bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
 	return played ? true : play_card(game_ctx, type); // recurse if player didnt play anything (but actually could)
 }
 
+/**
+ * @brief prompts user to pick an option from action menu
+ * 
+ * @return int picked action menu option
+ */
 int choice_action_menu() {
 	int action;
 	do {
@@ -405,6 +432,32 @@ int choice_action_menu() {
 	return action;
 }
 
+/**
+ * @brief returns a linked list containing all the Matricola-kind cards found and removed from provided mazzo
+ * 
+ * @param mazzo_head pointer to head of mazzo linked list
+ * @return cartaT* linked list of all the MATRICOLA found and removed from mazzo
+ */
+cartaT *split_matricole(cartaT **mazzo_head) {
+	cartaT *matricole_head = NULL;
+	for (cartaT **prev = mazzo_head, *curr; *prev != NULL; ) {
+		curr = *prev;
+		if (match_card_type(curr, MATRICOLA)) {
+			// remove curr card from the mazzo linked list linking
+			pop_card(prev);
+			// link this matricola card to matricole_head linked_list
+			push_card(&matricole_head, curr);
+		} else
+			prev = &curr->next;
+	}
+	return matricole_head;
+}
+
+/**
+ * @brief distributes cards at the start of the game to each player as described by the game rules
+ * 
+ * @param game_ctx 
+ */
 void distribute_cards(game_contextT *game_ctx) {
 	cartaT *card;
 
@@ -421,6 +474,11 @@ void distribute_cards(game_contextT *game_ctx) {
 	}
 }
 
+/**
+ * @brief create a new player (prompting user for the name)
+ * 
+ * @return giocatoreT* newly created player
+ */
 giocatoreT* new_player() {
 	giocatoreT* player = (giocatoreT*)calloc_checked(1, sizeof(giocatoreT));
 
@@ -432,6 +490,11 @@ giocatoreT* new_player() {
 	return player;
 }
 
+/**
+ * @brief create a new game context adding players, loading mazzo, initializing different decks and distributing cards
+ * 
+ * @return game_contextT* newly created game context
+ */
 game_contextT *new_game() {
 	game_contextT *game_ctx = (game_contextT*)calloc_checked(1, sizeof(game_contextT));
 
@@ -454,10 +517,6 @@ game_contextT *new_game() {
 	// load cards
 	int n_cards;
 	cartaT *mazzo = load_mazzo(&n_cards);
-
-	show_card_group(mazzo, "Mazzo", "%s");
-
-
 	mazzo = shuffle_cards(mazzo, n_cards);
 
 	game_ctx->aula_studio = split_matricole(&mazzo);
@@ -465,7 +524,7 @@ game_contextT *new_game() {
 
 	distribute_cards(game_ctx);
 
-	game_ctx->round_num = 1;
+	game_ctx->round_num = 1; // rounds start from 1
 
 	return game_ctx;
 }
@@ -591,7 +650,7 @@ void apply_effect_elimina(game_contextT *game_ctx, effettoT *effect, giocatoreT 
 }
 
 void apply_effect_play(game_contextT *game_ctx, effettoT *effect) {
-	// allowed values: target player = IO | TU | VOI | TUTTI and target card = ALL
+	// allowed values: target player = IO | TU | VOI | TUTTI and target card = ALL, STUDENTE, MATRICOLA, STUDENTE_SEMPLICE, LAUREANDO, BONUS, MALUS, MAGIA, ISTANTANEA
 	switch (effect->target_giocatori) {
 		case IO:
 			play_card(game_ctx, effect->target_carta);
@@ -796,6 +855,12 @@ void apply_effect(game_contextT *game_ctx, effettoT *effect, giocatoreT **target
 	}
 }
 
+/**
+ * @brief applies all effects of a card during current player's turn (also asks user if wants to apply the effects if they are opzional)
+ * 
+ * @param game_ctx 
+ * @param card card to apply effects from
+ */
 void apply_effects_now(game_contextT *game_ctx, cartaT *card) {
 	bool apply = true;
 	giocatoreT *target_tu = NULL;
@@ -813,6 +878,13 @@ void apply_effects_now(game_contextT *game_ctx, cartaT *card) {
 	}
 }
 
+/**
+ * @brief applies all effects of a card during current player's turn if supplied quando matches card's quando
+ * 
+ * @param game_ctx 
+ * @param card card to apply effects from
+ * @param quando time the card must match
+ */
 void apply_effects(game_contextT *game_ctx, cartaT *card, quandoT quando) {
 	if (card->quando == quando)
 		apply_effects_now(game_ctx, card);
@@ -865,16 +937,17 @@ void begin_round(game_contextT *game_ctx) {
 
 void play_round(game_contextT *game_ctx) {
 	bool in_action = true;
-	while (in_action) {
+
+	while (in_action) { // keep the menu open until action phase ends
 		switch (choice_action_menu()) {
 			case ACTION_PLAY_HAND: {
 				if (play_card(game_ctx, ALL)) // check for successful play of card
-					in_action = false;
+					in_action = false; // end action phase
 				break;
 			}
 			case ACTION_DRAW: {
 				draw_card(game_ctx);
-				in_action = false;
+				in_action = false; // end action phase
 				break;
 			}
 			case ACTION_VIEW_OWN: {
@@ -889,7 +962,7 @@ void play_round(game_contextT *game_ctx) {
 				printf("Are you sure you want to quit this game? ");
 				if (ask_choice()) {
 					game_ctx->game_running = false;
-					in_action = false;
+					in_action = false; // end action phase
 				}
 				break;
 			}
@@ -897,6 +970,13 @@ void play_round(game_contextT *game_ctx) {
 	}
 }
 
+/**
+ * @brief checks if the game can end because the current round player won
+ * 
+ * @param game_ctx 
+ * @return true if current round player won
+ * @return false if current round player didn't win
+ */
 bool check_win_condition(game_contextT *game_ctx) {
 	bool can_win = has_bonusmalus(game_ctx->curr_player, INGEGNERE); // cant win with ingegnerizzazione
 	int tot_students = count_cards_restricted(game_ctx->curr_player->aula, STUDENTE_SEMPLICE) +
@@ -924,7 +1004,12 @@ void end_round(game_contextT *game_ctx) {
 	}
 }
 
-// recursive function to clear a giocatoreT* circular linked list
+/**
+ * @brief recursive function to clear a giocatoreT* circular linked list
+ * 
+ * @param head pointer to the head of the circular linked list
+ * @param p pointer to the node of the circular linked list to clear
+ */
 void clear_players(giocatoreT *head, giocatoreT *p) {
 	// check for base case to recurse or not
 	if (p->next != head)
@@ -940,6 +1025,11 @@ void clear_players(giocatoreT *head, giocatoreT *p) {
 	free_wrap(p);
 }
 
+/**
+ * @brief perform cleanup of the entire game, freeing players and every deck of cards
+ * 
+ * @param game_ctx 
+ */
 void clear_game(game_contextT *game_ctx) {
 	clear_players(game_ctx->curr_player, game_ctx->curr_player);
 

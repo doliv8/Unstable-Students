@@ -16,6 +16,7 @@ void format_effects(freeable_multiline_textT *multiline, cartaT *card) {
 		for (int i = 0; i < MAX_EFFECTS-card->n_effetti; i++)
 			multiline_addline(multiline, strdup_checked(""));
 
+		// add effects header
 		asprintf_s(&line, "Opzionale: %s", card->opzionale ? "Si" : "No");
 		multiline_addline(multiline, line);
 		asprintf_s(&line, "Quando: %s", quandoT_str(card->quando));
@@ -33,7 +34,8 @@ void format_effects(freeable_multiline_textT *multiline, cartaT *card) {
 			multiline_addline(multiline, line);
 		}
 	} else {
-		for (int i = 1; i < CARD_EFFECTS_HEIGHT; i++)
+		// add padding
+		for (int i = 1; i < CARD_EFFECTS_HEIGHT; i++) // skip 1 row reserved to "Nessun effetto!"
 			multiline_addline(multiline, strdup_checked(""));
 		multiline_addline(multiline, strdup_checked("Nessun effetto!"));
 	}
@@ -165,6 +167,11 @@ void show_card_group(cartaT *group, const char *title, const char *title_fmt) {
 	show_card_group_restricted(group, title, title_fmt, ALL);
 }
 
+/**
+ * @brief displays a box showing round info (round number and the name of the player playing this round)
+ * 
+ * @param game_ctx pointer to the game context
+ */
 void show_round(game_contextT *game_ctx) {
 	char *h_border, *v_border, *round_num_text, *player_turn_text;
 	int len_round_num_text, len_player_turn_text;
