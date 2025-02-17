@@ -19,7 +19,7 @@ void multiline_addline_with_len(multiline_textT *multiline, const char *line, in
 void print_centered_lr_boxed_string(const char *str, int str_len, const char *l_border, const char *r_border, int width);
 void print_centered_boxed_multiline(multiline_textT *multiline, const char *border, int width);
 
-void init_wrapped(wrapped_textT *wrapped, const char *text, int max_width);
+void wrap_text(wrapped_textT *wrapped, const char *text, int max_width);
 void clear_wrapped(wrapped_textT *wrapped);
 
 void init_multiline_container(multiline_containerT *container);

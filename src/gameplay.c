@@ -454,6 +454,10 @@ game_contextT *new_game() {
 	// load cards
 	int n_cards;
 	cartaT *mazzo = load_mazzo(&n_cards);
+
+	show_card_group(mazzo, "Mazzo", "%s");
+
+
 	mazzo = shuffle_cards(mazzo, n_cards);
 
 	game_ctx->aula_studio = split_matricole(&mazzo);
