@@ -258,34 +258,3 @@ void print_centered_boxed_multiline(multiline_textT *multiline, const char *bord
 	for (int i = 0; i < multiline->n_lines; i++)
 		print_centered_lr_boxed_string(multiline->lines[i], multiline->lengths[i], border, border, width);
 }
-
-/**
- * @brief initialize multiline_containerT structure internal fields, must always be called before using multiline_containerT
- * 
- * @param container pointer to the container
- */
-void init_multiline_container(multiline_containerT *container) {
-	container->n_multilines = 0;
-	container->multilines = NULL;
-}
-
-/**
- * @brief free up memory allocated by multiline_containerT structure, must always be called after finished using the container
- * 
- * @param container pointer to the container
- */
-void clear_multiline_container(multiline_containerT *container) {
-	free_wrap(container->multilines);
-}
-
-/**
- * @brief adds a multiline_textT to a multiline_containerT. multilines must be freed separately
- * 
- * @param container pointer to the container
- * @param multiline pointer to the multiline to add
- */
-void container_addmultiline(multiline_containerT *container, multiline_textT *multiline) {
-	container->n_multilines++;
-	realloc_checked(container->multilines, container->n_multilines*sizeof(multiline_textT*));
-	container->multilines[container->n_multilines-1] = multiline;
-}

@@ -22,8 +22,4 @@ void print_centered_boxed_multiline(multiline_textT *multiline, const char *bord
 void wrap_text(wrapped_textT *wrapped, const char *text, int max_width);
 void clear_wrapped(wrapped_textT *wrapped);
 
-void init_multiline_container(multiline_containerT *container);
-void clear_multiline_container(multiline_containerT *container);
-void container_addmultiline(multiline_containerT *container, multiline_textT *multiline);
-
 #endif // FORMAT_H
