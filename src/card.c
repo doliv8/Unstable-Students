@@ -56,6 +56,27 @@ cartaT *shuffle_cards(cartaT *cards, int n_cards) {
 	return new_head; // return new head to shuffled linked list
 }
 
+/**
+ * @brief returns a linked list containing all the Matricola-kind cards found and removed from provided mazzo
+ * 
+ * @param mazzo_head pointer to head of mazzo linked list
+ * @return cartaT* linked list of all the MATRICOLA found and removed from mazzo
+ */
+cartaT *split_matricole(cartaT **mazzo_head) {
+	cartaT *matricole_head = NULL;
+	for (cartaT **prev = mazzo_head, *curr; *prev != NULL; ) {
+		curr = *prev;
+		if (match_card_type(curr, MATRICOLA)) {
+			// remove curr card from the mazzo linked list linking
+			pop_card(prev);
+			// link this matricola card to matricole_head linked_list
+			push_card(&matricole_head, curr);
+		} else
+			prev = &curr->next;
+	}
+	return matricole_head;
+}
+
 cartaT *duplicate_carta(cartaT *card) {
 	cartaT *copy_card = (cartaT*)malloc_checked(sizeof(cartaT));
 	*copy_card = *card; // copy the whole struct

@@ -41,6 +41,8 @@ REPOSITORY STRUCTURE
 │   ├── types.h
 │   ├── card.c
 │   ├── card.h
+│   ├── game.c
+│   ├── game.h
 │   ├── gameplay.c
 │   ├── gameplay.h
 │   ├── files.c
@@ -67,13 +69,19 @@ REPOSITORY STRUCTURE
 > Per ogni file sorgente (.c/.h) presente nel progetto, spiegare brevemente il contenuto e lo scopo del file.
 
 ### main.c
-Questo file contiene l'entry point del programma, ovvero la funzione `main`, nella quale avviene l'inizializzazione del gioco e il game loop.
+Questo file sorgente contiene l'entry point del programma, ovvero la funzione `main`, nella quale avviene l'inizializzazione del gioco e il game loop.
 
 ### constants.h
-Questo header non ha un corrispettivo file sorgente associato in quanto contiene solamente le definizioni delle costanti (es. numero massimo e minimo di giocatori e lunghezze massime di alcune stringhe) e alcuni letterali usati nel gioco (es. nomi statici dei file coi quali interagisce il programma e stringhe utilizzate nella realizzazione della grafica su terminale).
+Questo header non ha un corrispettivo file sorgente .c associato in quanto contiene solamente le definizioni delle costanti (es. numero massimo e minimo di giocatori e lunghezze massime di alcune stringhe) e alcuni letterali usati nel gioco (es. nomi statici dei file coi quali interagisce il programma e stringhe utilizzate nella realizzazione della grafica su terminale).
 
 ### structs.h
-In questo header sono contenute tutte le strutture utilizzate nel progetto (descritte nella seguente sezione). Una scelta un po' particolare inserirle tutte nello stesso file anzi che in appositi file come card.h, player.h e simili ma ho trovato questa soluzione meno confusionaria e dispersiva.
+In questo header sono definite tutte le strutture utilizzate nel progetto (descritte nella seguente sezione). Una scelta un po' particolare inserirle tutte nello stesso file anzi che in appositi file come card.h, player.h e simili ma ho trovato questa soluzione meno confusionaria e meno dispersiva.
+
+### game.c & game.h
+Questi file sorgente contengono delle funzioni essenziali per l'inizializzazione e la terminazione del gioco, ma non necessarie durante il suo dinamico svolgimento.
+
+### gameplay.c & gameplay.h
+Questi file sorgente contengono praticamente l'intera logica di gioco e le principali funzioni per la gestione della partita in corso.
 
 
 <br>

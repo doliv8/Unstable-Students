@@ -6,6 +6,7 @@
 
 void clear_cards(cartaT *head);
 cartaT *shuffle_cards(cartaT *cards, int n_cards);
+cartaT *split_matricole(cartaT **mazzo_head);
 cartaT *duplicate_carta(cartaT *card);
 cartaT* pop_card(cartaT **head_ptr);
 void push_card(cartaT **head_ptr, cartaT *card);
