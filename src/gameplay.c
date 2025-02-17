@@ -82,7 +82,7 @@ void show_player_state(game_contextT *game_ctx, giocatoreT *player) {
  * @param game_ctx 
  */
 void view_own(game_contextT *game_ctx) {
-	printf("Ecco le carte in tuo possesso, " ANSI_UNDERLINE "%s" ANSI_RESET ":\n\n", game_ctx->curr_player->name);
+	printf("Ecco le carte in tuo possesso, " ANSI_UNDERLINE "%s" ANSI_RESET ":\n", game_ctx->curr_player->name);
 
 	show_card_group(game_ctx->curr_player->aula, "Aula:", ANSI_BOLD ANSI_YELLOW "%s" ANSI_RESET); // show aula
 	show_card_group(game_ctx->curr_player->bonus_malus, "Bonus/Malus:", ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET); // show bonus/malus
@@ -291,22 +291,6 @@ void draw_card(game_contextT *game_ctx) {
 	push_card(&game_ctx->curr_player->carte, drawn_card);
 }
 
-bool anyone_can_take(game_contextT *game_ctx, bool self_included, cartaT *card) {
-	bool someone_can_take = false;
-	giocatoreT *player = game_ctx->curr_player;
-
-	if (!self_included)
-		player = player->next; // start from next player if curr player is not included
-
-	do {
-		if (can_join_aula(game_ctx, player, card))
-			someone_can_take = true;
-		player = player->next;
-	} while (player != game_ctx->curr_player && !someone_can_take);
-
-	return someone_can_take;
-}
-
 int count_playable_cards(game_contextT *game_ctx, tipo_cartaT type) {
 	// TODO: re-read this and check it's working properly
 	int playable_cards = 0;
@@ -314,9 +298,6 @@ int count_playable_cards(game_contextT *game_ctx, tipo_cartaT type) {
 		if (match_card_type(card, type) && // check for card matching card type
 			card->tipo != ISTANTANEA && // ISTANTANEA can't be played during own turn
 			!has_bonusmalus_target(game_ctx->curr_player, IMPEDIRE, card)) { // check for active IMPEDIRE effects on this card
-			if ((card->tipo == MALUS && anyone_can_take(game_ctx, true, card)) || // check if Malus card can be played on other players or at least self
-				(!cards_contain(game_ctx->curr_player->aula, card) && // check for identical cards already in own aula
-				!cards_contain(game_ctx->curr_player->bonus_malus, card))) // check for identical Bonus cards already in own bonus/malus
 			playable_cards++;
 		}
 	}
@@ -329,14 +310,14 @@ int count_playable_cards(game_contextT *game_ctx, tipo_cartaT type) {
  * @param game_ctx 
  * @param type card type allowed to play
  * @return true if player actually played a card
- * @return false player wasn't able to play a card
+ * @return false player couldn't play a card
  */
 bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
 	// TODO: implement this function
 	bool played = false;
 	cartaT *card;
 	giocatoreT *target, *thrower;
-	char *playable_prompt;
+	char *playable_prompt, *player_prompt;
 
 	target = thrower = game_ctx->curr_player;
 
@@ -373,9 +354,18 @@ bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
 					azioneT_str(IMPEDIRE),
 					tipo_cartaT_str(card->tipo)
 				);
+				log_sss(game_ctx, "%s ha provato a giocare %s ma ha l'effetto %s attivo su carte tale tipo di carta.",
+					thrower->name,
+					card->name,
+					azioneT_str(IMPEDIRE)
+				);
 			} else {
-				if (card->tipo == MALUS) // MALUS can be placed both in own and other player's bonusmalus
-					target = pick_player(game_ctx, "Scegli un giocatore al quale applicare questa carta Malus.", true, false);
+				// BONUS and MALUS can be placed both in own and other player's bonusmalus
+				if (match_card_type(card, BONUS) || match_card_type(card, MALUS)) {
+					asprintf_s(&player_prompt, "Scegli un giocatore al quale applicare questa carta %s.", tipo_cartaT_str(card->tipo));
+					target = pick_player(game_ctx, player_prompt, true, false);
+					free_wrap(player_prompt);
+				}
 				if (can_join_aula(game_ctx, target, card)) {
 					// TODO: check for MAI
 					unlink_card(&thrower->carte, card);
@@ -384,9 +374,20 @@ bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
 					played = true;
 				} else {
 					if (target == thrower)
-						puts("Questa carta non puo' essere giocata dato che ne hai una uguale sul campo.");
+						printf("Questa carta (%s) non puo' essere piazzata nella tua aula dato che ne hai gia' una uguale.\n", card->name);
 					else
-						printf("Questa carta non puo' essere giocata su %s dato che ne ha una uguale sul campo.\n", target->name);
+						printf("Questa carta (%s) non puo' essere piazzata nell'aula di %s dato che ne ha gia' una uguale.\n",
+							card->name,
+							target->name
+						);
+					printf("Puoi comunque giocare questa carta ma verrebbe scartata, confermi? ");
+					if (ask_choice()) { // user still wants to play the card
+						unlink_card(&thrower->carte, card);
+						dispose_card(game_ctx, card);
+						puts("Carta scartata!");
+						log_sss(game_ctx, "%s ha provato a giocare %s su %s (duplicato), scartandola.", thrower->name, card->name, target->name);
+						played = true;
+					}
 				}
 			}
 			break;
@@ -486,7 +487,10 @@ void apply_effect_elimina_target(game_contextT *game_ctx, giocatoreT *target, ef
 	cartaT *deleted, *target_cards;
 
 	if (effect->target_carta == ALL) {
-		asprintf_s(&prompt, "Scegli la carta che vuoi eliminare dall'aula di %s.", target->name);
+		if (game_ctx->curr_player == target)
+			prompt = strdup_checked("Scegli la carta che vuoi eliminare dalla tua aula");
+		else
+			asprintf_s(&prompt, "Scegli la carta che vuoi eliminare dall'aula di %s.", target->name);
 		deleted = pick_aula_card(target, prompt);
 	} else { // handle STUDENTE and BONUS/MALUS
 		asprintf_ss(&prompt, "Scegli la carta %s che vuoi eliminare dall'aula di %s.",
