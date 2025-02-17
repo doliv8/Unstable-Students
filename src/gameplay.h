@@ -10,6 +10,8 @@ void view_own(game_contextT *game_ctx);
 void view_others(game_contextT *game_ctx);
 // end actions
 
+giocatoreT *pick_player(game_contextT *game_ctx, const char *prompt, bool allow_self, bool allow_all);
+
 void dispose_card(game_contextT *game_ctx, cartaT *card);
 
 game_contextT *new_game();
