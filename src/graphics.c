@@ -56,7 +56,7 @@ void build_card(freeable_multiline_textT *multiline, cartaT *card) {
 	asprintf_s(&fmt_type, ANSI_BG_GREEN "%s" ANSI_RESET, type);
 
 	// compute wrapped description
-	init_wrapped(&wrapped_description, card->description, CARD_CONTENT_WIDTH-CARD_PADDING);
+	wrap_text(&wrapped_description, card->description, CARD_CONTENT_WIDTH-CARD_PADDING);
 
 	// compute effects
 	format_effects(&effects_lines, card);
@@ -157,7 +157,6 @@ void show_card_group_restricted(cartaT *group, const char *title, const char *ti
 	print_centered_lr_boxed_string(fmt_title, strlen(title), l_border, r_border, max_group_row_width-borders_width);
 	if (!show_cards_restricted(group, type))
 		print_centered_lr_boxed_string(vuoto_msg, strlen(vuoto_msg), "", "\n", max_group_row_width);
-	puts(""); // spacing
 
 	free_wrap(fmt_title);
 }
