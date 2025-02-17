@@ -77,6 +77,10 @@ Questo header non ha un corrispettivo file sorgente .c associato in quanto conti
 ### structs.h
 In questo header sono definite tutte le strutture utilizzate nel progetto (descritte nella seguente sezione). Una scelta un po' particolare inserirle tutte nello stesso file anzi che in appositi file come card.h, player.h e simili ma ho trovato questa soluzione meno confusionaria e meno dispersiva.
 
+### enums.c & enums.h
+Seguendo la stessa logica della della scelta adottata per structs.h, nel file header sono definite tutte le enumerazioni usate nel progetto.
+Nel file .c sono invece definite le funzioni per effettuare le conversioni da ogni valore di ciascun enum alle corrispondenti stringhe, effettuando le associazioni tramite un metodo che ho trovato molto pulito e ottimale.
+
 ### game.c & game.h
 Questi file sorgente contengono delle funzioni essenziali per l'inizializzazione e la terminazione del gioco, ma non necessarie durante il suo dinamico svolgimento.
 
@@ -126,6 +130,41 @@ L'utilizzo che faccio di questa struttura è semplice e lineare: la alloco sullo
 ## Descrizione flusso di gioco
 > [!TIP]
 > Descrivere ad alto livello come vengono gestite le varie fasi di gioco (es. il loop principale, la gestione degli eventi, ecc.)
+
+In questa sezione del `README.md` e nel codice (variabili e commenti) faccio riferimento a:
+- utente [user]: chi interagisce col gioco sul terminale.
+- giocatore corrente [curr(ent) player]: il giocatore a cui spetta giocare nell'attuale round.
+- giocatore target: il giocatore che dovrà subire degli effetti (può essere il giocatore corrente).
+- carte giocabili: le carte che è permesso giocare al giocatore corrente.
+- carte duplicate: delle copie identiche di una stessa carta.
+- lunghezza visibile [visible length]: la lunghezza visiva di una stringa una volta stampata sul terminale, non considerando gli escape ANSI per i colori e la formattazione (quindi non si tratta sempre della sua lunghezza in bytes in memoria).
+
+...
+
+
+...
+
+
+### Carte giocabili
+Le carte giocabili vengono contate tramite la funzione `count_playable_cards`, che considera vari casi, di seguito spiegati:
+- Solo carte del tipo specificato (type) possono essere giocate: supponendo di star giocando a seguito di un effetto come `[GIOCA, IO, STUDENTE]` sarebbe possibile giocare solamente una carta STUDENTE (`MATRICOLA`, `STUDENTE_SEMPLICE` o `LAUREANDO`) dal proprio mazzo, mentre con type = `ALL` questo controllo viene sempre passato.
+- Le carte di tipo `ISTANTANEA` non possono essere giocate durante il proprio turno.
+- Le carte con tipo target di un effetto IMPEDIRE attivo sul giocatore non possono essere giocate.
+
+### Giocare una carta
+La funzione `play_card`, che si occupa per l'appunto di permettere al giocatore corrente di scegliere una carta del suo mazzo da giocare.\
+Se non ci sono carte giocabili secondo quanto descritto in [Carte Giocabili](#carte-giocabili) la funzione termina senza chiedere alcuna interazione all'utente in quanto non è possibile giocare alcuna carta.\
+...\
+In caso di carta duplicata già presente nell'aula del target chiedo conferma di voler giocare comunque tale carta sul target all'utente e in caso positivo la carta andrà persa (scartata) e l'azione di play si conclude, mentre in caso negativo l'utente potrà scegliere una nuova carta o un nuovo target su cui giocarla (l'azione di play non si considera conclusa).
+
+
+TODO: scarta io choice
+
+...
+
+Le carte Bonus/Malus possono essere giocate sia su sé stessi che sugli altri giocatori, mentre le carte STUDENTE solo su sé stessi.
+
+
 
 <br>
 
