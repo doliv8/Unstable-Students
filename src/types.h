@@ -16,6 +16,5 @@ typedef struct GameContext game_contextT;
 typedef struct MultiLineText multiline_textT;
 typedef multiline_textT freeable_multiline_textT;
 typedef struct WrappedText wrapped_textT;
-typedef struct MultiLineContainer multiline_containerT;
 
 #endif // TYPES_H
