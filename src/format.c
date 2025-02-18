@@ -85,6 +85,26 @@ int asprintf_sss(char **strp, const char *fmt, const char *s0, const char *s1, c
 }
 
 /**
+ * @brief dynamically formats a string with four string parameter
+ * 
+ * @param strp pointer to formatted string
+ * @param fmt format string
+ * @param s0 param 0 (string)
+ * @param s1 param 1 (string)
+ * @param s2 param 2 (string)
+ * @param s3 param 3 (string)
+ * @return int length of formatted string
+ */
+int asprintf_ssss(char **strp, const char *fmt, const char *s0, const char *s1, const char *s2, const char *s3) {
+	int length = snprintf(NULL, 0, fmt, s0, s1, s2, s3);
+	*strp = malloc_checked(length+1);
+	int result = snprintf(*strp, length+1, fmt, s0, s1, s2, s3);
+	if (result < 0)
+		formatting_failed();
+	return result;
+}
+
+/**
  * @brief initialize multiline_textT structure internal fields, must always be called before using multiline_textT or freeable_multiline_textT
  * 
  * @param multiline pointer to the multiline

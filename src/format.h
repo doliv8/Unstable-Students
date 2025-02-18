@@ -8,6 +8,7 @@
 int asprintf_s(char **strp, const char *fmt, const char *s0);
 int asprintf_ss(char **strp, const char *fmt, const char *s0, const char *s1);
 int asprintf_sss(char **strp, const char *fmt, const char *s0, const char *s1, const char *s2);
+int asprintf_ssss(char **strp, const char *fmt, const char *s0, const char *s1, const char *s2, const char *s3);
 int asprintf_d(char **strp, const char *fmt, int d0);
 char *center_boxed_string(const char *str, int str_len, const char *border, int width);
 
