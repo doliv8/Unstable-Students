@@ -38,3 +38,10 @@ void log_sss(game_contextT *game_ctx, const char *fmt, const char *s0, const cha
 	log_msg(game_ctx, msg);
 	free_wrap(msg);
 }
+
+void log_ssss(game_contextT *game_ctx, const char *fmt, const char *s0, const char *s1, const char *s2, const char *s3) {
+	char *msg;
+	asprintf_ssss(&msg, fmt, s0, s1, s2, s3);
+	log_msg(game_ctx, msg);
+	free_wrap(msg);
+}
