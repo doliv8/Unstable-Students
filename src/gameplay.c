@@ -264,16 +264,19 @@ void dispose_card(game_contextT *game_ctx, cartaT *card) {
 		push_card(&game_ctx->mazzo_scarti, card); // put card into mazzo scarti
 }
 
-void discard_card(game_contextT* game_ctx, cartaT **cards, const char *title) {
-	// TODO: handle no cards check better
-	if (count_cards(*cards) == 0) {
-		puts("Avresti dovuto scartare una carta, ma non ne hai!");
-		return;
+void discard_card(game_contextT* game_ctx, cartaT **cards, tipo_cartaT type, const char *title) {
+	cartaT *card = pick_card_restricted(*cards, type, "Scegli la carta che vuoi scartare.", title, ANSI_BOLD ANSI_RED "%s" ANSI_RESET);
+
+	if (card != NULL) {
+		unlink_card(cards, card);
+		dispose_card(game_ctx, card); // dispose discarded card
+		printf("Hai scartato: %s\n", card->name);
+		log_ss(game_ctx, "%s ha scartato '%s'.", game_ctx->curr_player->name, card->name);
 	}
-	cartaT *card = pick_card(*cards, "Scegli la carta che vuoi scartare.", title, ANSI_BOLD ANSI_RED "%s" ANSI_RESET);
-	unlink_card(cards, card);
-	printf("Hai scartato: %s\n", card->name);
-	dispose_card(game_ctx, card); // dispose discarded card
+	else {
+		printf("Avresti dovuto scartare una carta %s, ma non ne hai!\n", tipo_cartaT_str(type));
+		log_ss(game_ctx, "%s avrebbe dovuto scartare una carta %s, ma non ne aveva.", game_ctx->curr_player->name, tipo_cartaT_str(type));
+	}
 }
 
 void draw_card(game_contextT *game_ctx) {
@@ -287,7 +290,7 @@ void draw_card(game_contextT *game_ctx) {
 	cartaT *drawn_card = pop_card(&game_ctx->mazzo_pesca);
 	puts("Ecco la carta che hai pescato:");
 	show_card(drawn_card);
-	log_ss(game_ctx, "%s pesca %s", game_ctx->curr_player->name, drawn_card->name);
+	log_ss(game_ctx, "%s ha pescato '%s'.", game_ctx->curr_player->name, drawn_card->name);
 	push_card(&game_ctx->curr_player->carte, drawn_card);
 }
 
@@ -445,41 +448,112 @@ void apply_effect_scambia(game_contextT *game_ctx, giocatoreT **target_tu) {
 }
 
 /**
- * @brief this effect makes players discard a card from their hands. for target VOI | TUTTI the card to discard is randomly picked.
+ * @brief applies scarta effect on the given target.
+ * 
+ * @param game_ctx 
+ * @param target player to activate the effect on
+ * @param effect SCARTA effect
+ */
+void apply_effect_scarta_target(game_contextT *game_ctx, giocatoreT *target, effettoT *effect) {
+	char *title;
+	cartaT *discarded_card;
+
+	if (target == game_ctx->curr_player) { // target is self, picking which card to discard is allowed
+		printf("Devi scartare una carta (%s), " ANSI_UNDERLINE "%s" ANSI_RESET "!\n",
+			tipo_cartaT_str(effect->target_carta),
+			game_ctx->curr_player->name
+		);
+
+		if (effect->target_carta == ALL)
+			title = strdup_checked("La tua mano");
+		else
+			asprintf_s(&title, "%s nella tua mano", tipo_cartaT_str(effect->target_carta));
+
+		discard_card(game_ctx, &game_ctx->curr_player->carte, effect->target_carta, title);
+		free_wrap(title);
+	} else { // target is another player, random card extraction is used
+		printf(ANSI_UNDERLINE "%s" ANSI_RESET " ti fa scartare una carta (%s) dalla mano, " ANSI_UNDERLINE "%s" ANSI_RESET "!\n",
+			game_ctx->curr_player->name,
+			tipo_cartaT_str(effect->target_carta),
+			target->name
+		);
+		discarded_card = pick_random_card_restricted(target->carte, effect->target_carta);
+		if (discarded_card != NULL) {
+			unlink_card(&target->carte, discarded_card);
+			dispose_card(game_ctx, discarded_card); // dispose discarded card
+			printf(ANSI_UNDERLINE "%s" ANSI_RESET " ha scartato '%s'!\n", target->name, discarded_card->name);
+			log_sss(game_ctx, "%s ha scartato %s a causa di %s.",
+				target->name,
+				discarded_card->name,
+				game_ctx->curr_player->name
+			);
+		}
+		else {
+			printf(ANSI_UNDERLINE "%s" ANSI_RESET " non aveva carte (%s) da scartare nella sua mano!\n",
+				target->name,
+				tipo_cartaT_str(effect->target_carta)
+			);
+			log_sss(game_ctx, "%s doveva scartare una carta %s a causa di %s, ma non ne aveva.",
+				target->name,
+				tipo_cartaT_str(effect->target_carta),
+				game_ctx->curr_player->name
+			);
+		}
+	}
+}
+
+/**
+ * @brief this effect makes players discard a card from their hands.
  * 
  * @param game_ctx 
  * @param effect 
  */
-void apply_effect_scarta(game_contextT *game_ctx, effettoT *effect) {
-	// allowed values: target player = IO | VOI | TUTTI and target card = ALL
-	giocatoreT *thrower = game_ctx->curr_player;
-	cartaT *discarded_card;
+bool apply_effect_scarta(game_contextT *game_ctx, effettoT *effect, giocatoreT **target_tu) {
+	// allowed values: target player = * and target card = *
+	char *pick_player_prompt;
+	giocatoreT *target;
+	bool blocked = false;
 
-	if (effect->target_giocatori == IO)
-		discard_card(game_ctx, &game_ctx->curr_player->carte, "Carte attualmente nella tua mano");
-	else {
-		// iterate through all target players using game_ctx->curr_player and make them discard one card
-		if (effect->target_giocatori == VOI)
-			game_ctx->curr_player = game_ctx->curr_player->next; // start from next if thrower is not included
-		do {
-			// TODO: check for MAI usage
-			printf(
-				ANSI_UNDERLINE "%s" ANSI_RESET " ti fa scartare una carta dalla mano, " ANSI_UNDERLINE "%s" ANSI_RESET "!\n",
-				thrower->name, game_ctx->curr_player->name
-			);
-			
-			discarded_card = pick_random_card_restricted(game_ctx->curr_player->carte, effect->target_carta);
-			if (discarded_card != NULL) {
-				printf(ANSI_UNDERLINE "%s" ANSI_RESET " ha scartato %s!\n", game_ctx->curr_player->name, discarded_card->name);
-				unlink_card(&game_ctx->curr_player->carte, discarded_card);
-				dispose_card(game_ctx, discarded_card); // dispose discarded card
+	switch (effect->target_giocatori) {
+		case IO: {
+			apply_effect_scarta_target(game_ctx, game_ctx->curr_player, effect);
+			break;
+		}
+		case TU: {
+			if (*target_tu == NULL) { // check if target tu was already asked in previous TU effects for this card
+				asprintf_ss(&pick_player_prompt, "[%s]: Scegli il giocatore al quale vuoi far scartare una carta %s:",
+					game_ctx->curr_player->name,
+					tipo_cartaT_str(effect->target_carta)
+				);
+				*target_tu = pick_player(game_ctx, pick_player_prompt, false, false);
+				free_wrap(pick_player_prompt);
 			}
-			else
-				printf(ANSI_UNDERLINE "%s" ANSI_RESET " non aveva carte da scartare nella sua mano!\n", game_ctx->curr_player->name);
-
-			game_ctx->curr_player = game_ctx->curr_player->next;
-		} while (game_ctx->curr_player != thrower);
+			// TODO: check for MAI usage
+			apply_effect_scarta_target(game_ctx, *target_tu, effect);
+			break;
+		}
+		case VOI:
+		case TUTTI: {
+			// TODO: check for MAI usage
+			if (effect->target_giocatori == VOI) {
+				printf("Tutti i giocatori (eccetto " ANSI_UNDERLINE "%s" ANSI_RESET ") devono scartare una carta %s!\n",
+					game_ctx->curr_player->name,
+					tipo_cartaT_str(effect->target_carta)
+				);
+				target = game_ctx->curr_player->next; // start from next player if curr player is not included
+			} else {
+				printf("Tutti i giocatori devono scartare una carta %s!\n", tipo_cartaT_str(effect->target_carta));
+				target = game_ctx->curr_player; // start from curr player, as it is included
+			}
+			// iterate and apply effect from target (included) to game_ctx->curr_player (not included)
+			do {
+				apply_effect_scarta_target(game_ctx, target, effect);
+				target = target->next;
+			} while (target != game_ctx->curr_player);
+			break;
+		}
 	}
+	return blocked;
 }
 
 void apply_effect_elimina_target(game_contextT *game_ctx, giocatoreT *target, effettoT *effect) {
@@ -547,8 +621,6 @@ void apply_effect_elimina(game_contextT *game_ctx, effettoT *effect, giocatoreT 
 			break;
 		case TUTTI:
 			apply_effect_elimina_tutti(game_ctx, effect);
-			break;
-		default: // shouldn't be reachable
 			break;
 	}
 }
@@ -711,8 +783,18 @@ void apply_effect_ruba(game_contextT *game_ctx, effettoT *effect, giocatoreT **t
 	free_wrap(pick_card_prompt);
 }
 
-void apply_effect(game_contextT *game_ctx, effettoT *effect, giocatoreT **target_tu) {
+/**
+ * @brief 
+ * 
+ * @param game_ctx 
+ * @param effect 
+ * @param target_tu 
+ * @return true if effect was blocked
+ * @return false if effect wasn't blocked
+ */
+bool apply_effect(game_contextT *game_ctx, effettoT *effect, giocatoreT **target_tu) {
 	// TODO: apply ALL actual effects
+	bool blocked = false;
 	switch (effect->azione) {
 		case GIOCA: {
 			// mazzo allowed values: target player = IO and target card = ALL
@@ -720,8 +802,8 @@ void apply_effect(game_contextT *game_ctx, effettoT *effect, giocatoreT **target
 			break;
 		}
 		case SCARTA: {
-			// allowed values: target player = IO | VOI | TUTTI and target card = ALL
-			apply_effect_scarta(game_ctx, effect);
+			// mazzo allowed values: target player = IO | VOI | TUTTI and target card = ALL
+			blocked = apply_effect_scarta(game_ctx, effect, target_tu);
 			break;
 		}
 		case ELIMINA: {
@@ -757,6 +839,7 @@ void apply_effect(game_contextT *game_ctx, effettoT *effect, giocatoreT **target
 			break;
 		}
 	}
+	return blocked;
 }
 
 /**
@@ -775,10 +858,15 @@ void apply_effects_now(game_contextT *game_ctx, cartaT *card) {
 		apply = ask_choice();
 	}
 
-	if (apply) {
-		// maybe consider "Effetti delle Carte con Azioni Multiple" from http://unstablegameswiki.com/index.php?title=Unstable_Unicorns_-_Second_Edition_Rules_-_Italian
-		for (int i = 0; i < card->n_effetti; i++)
-			apply_effect(game_ctx, &card->effetti[i], &target_tu);
+	for (int i = 0; i < card->n_effetti && apply; i++) {
+		if (apply_effect(game_ctx, &card->effetti[i], &target_tu)) {
+			printf("La catena degli effetti di '%s' giocata da " ANSI_UNDERLINE "%s" ANSI_RESET " e' stata interrotta!\n",
+				card->name,
+				game_ctx->curr_player->name
+			);
+			log_ss(game_ctx, "La catena degli effetti di '%s' giocata da %s e' stata interrotta.", card->name, game_ctx->curr_player->name);
+			apply = false; // stop executing further effects
+		}
 	}
 }
 
@@ -895,7 +983,7 @@ void end_round(game_contextT *game_ctx) {
 	// hand max cards check
 	while (count_cards(game_ctx->curr_player->carte) > ENDROUND_MAX_CARDS) {
 		puts("Puoi avere massimo " ANSI_BOLD TO_STRING(ENDROUND_MAX_CARDS) ANSI_RESET " carte in mano alla fine del round!");
-		discard_card(game_ctx, &game_ctx->curr_player->carte, "Carte attualmente nella tua mano");
+		discard_card(game_ctx, &game_ctx->curr_player->carte, ALL, "Carte attualmente nella tua mano");
 	}
 
 	if (check_win_condition(game_ctx)) { // check if curr player won

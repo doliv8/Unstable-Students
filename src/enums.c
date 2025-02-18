@@ -24,7 +24,7 @@ const char *target_giocatoriT_str(target_giocatoriT target) {
 
 const char *tipo_cartaT_str(tipo_cartaT tipo) {
 	static const char *mapping[] = {
-		[ALL] = "All",
+		[ALL] = "Qualsiasi",
 		[STUDENTE] = "Studente",
 		[MATRICOLA] = "Matricola",
 		[STUDENTE_SEMPLICE] = "Studente semplice",
