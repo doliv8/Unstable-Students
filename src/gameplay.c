@@ -30,33 +30,97 @@ bool has_bonusmalus(giocatoreT *player, azioneT effect_action) {
 	return found;
 }
 
-bool ask_wants_block(game_contextT *game_ctx, cartaT *attack_card, giocatoreT *target, cartaT *defense_card) {
-	// TODO: differentiate between different types of attack cards and change message accordingly
-	show_card(defense_card);
-	printf("[%s] Vuoi difenderti dagli effetti di %s imposti da %s usando questa carta?\n",
-		target->name, attack_card->name, game_ctx->curr_player->name);
-	return ask_choice();
-}
-
-bool uses_blocca(game_contextT *game_ctx, cartaT *attack_card, giocatoreT *target) {
-	bool blocks = false;
-
-	for (cartaT *card = target->carte; card != NULL && !blocks; card = card->next) {
-		if (match_card_type(card, ISTANTANEA) && // check if player has any ISTANTANEA card
-			card->quando == SUBITO && // assert quando = SUBITO, just in case
-			!has_bonusmalus_target(target, IMPEDIRE, card)) { // check if card can be used (no IMPEDIRE is applied on it)
-			for (int i = 0; i < card->n_effetti && !blocks; i++) {
-				if (card->effetti[i].azione == BLOCCA && match_card_type(attack_card, card->effetti[i].target_carta)) {
-					if (ask_wants_block(game_ctx, attack_card, target, card)) {
-						unlink_card(&target->carte, card); // remove BLOCCA card from target's hand
-						dispose_card(game_ctx, card); // and dispose it
-						blocks = true;
-					}
-				}
-			}
+/**
+ * @brief checks if a card can defend a target player from an attacking card.
+ * 
+ * @param target player the attack_card is being played on
+ * @param defend_card candidate defense card
+ * @param attack_card attacking card to defend from
+ * @return true if defend_card can block attack_card's effects
+ * @return false if defend_card can't block attack_card's effects or can't even be played by target
+ */
+bool card_can_block(giocatoreT *target, cartaT *defend_card, cartaT *attack_card) {
+	bool can_block = false;
+	if (match_card_type(defend_card, ISTANTANEA) && // check if card type is ISTANTANEA
+		defend_card->quando == SUBITO && // assert quando = SUBITO, just in case
+		!has_bonusmalus_target(target, IMPEDIRE, defend_card)) { // check if card can be used (no IMPEDIRE is applied on it)
+		for (int i = 0; i < defend_card->n_effetti && !can_block; i++) {
+			if (defend_card->effetti[i].azione == BLOCCA && match_card_type(attack_card, defend_card->effetti[i].target_carta))
+				can_block = true;
 		}
 	}
-	return blocks;
+	return can_block;
+}
+
+/**
+ * @brief checks if player can defend from an attacking card
+ * 
+ * @param target player the attack_card is being played on
+ * @param attack_card attacking card to defend from
+ * @return true if target player's hand has any card to defend against attack_card
+ * @return false if target player can't defend from attack_card
+ */
+bool player_can_defend(giocatoreT *target, cartaT *attack_card) {
+	bool can_defend = false;
+
+	for (cartaT *card = target->carte; card != NULL && !can_defend; card = card->next) {
+		if (card_can_block(target, card, attack_card))
+			can_defend = true;
+	}
+	return can_defend;
+}
+
+/**
+ * @brief allows target player to use ISTANTANEA card in reply to an effect inflicted by current player (mainly to use BLOCCA on it).
+ * this function also applies effects of the defense card used.
+ * 
+ * @param game_ctx 
+ * @param target player the attack_card is being played on
+ * @param attack_card attacking card to defend from
+ * @return true if the attak was blocked by target
+ * @return false if the attack wasn't blocked by target
+ */
+bool target_defends(game_contextT *game_ctx, giocatoreT *target, cartaT *attack_card) {
+	char *prompt;
+	bool valid_defense = false, defends = false;
+	cartaT *defense_card = NULL;
+	giocatoreT *attacker = game_ctx->curr_player;
+
+	if (player_can_defend(target, attack_card)) { // first check if target player can actually defend from the attack
+		printf("[%s] Puoi difenderti dall'attacco di '%s' da parte di %s. Vuoi difenderti? ",
+			target->name,
+			attack_card->name,
+			attacker->name
+		);
+		defends = ask_choice(); // then ask if target wants to defend from the attack
+	}
+
+	if (defends) { // user can and wants to defend from the attack
+		asprintf_sss(&prompt, "[%s] Scegli con quale carta %s difenderti dall'attacco di %s.",
+			target->name,
+			tipo_cartaT_str(ISTANTANEA),
+			attacker->name
+		);
+		// ask target which defense card wants to use from his hand (only ISTANTANEA cards)
+		do {
+			defense_card = pick_card_restricted(target->carte, ISTANTANEA, prompt, "Istantanee nella tua mano", ANSI_BLUE "%s" ANSI_RESET);
+			if (card_can_block(target, defense_card, attack_card)) // verify picked defense card can defend from the attack card
+				valid_defense = true;
+		} while (!valid_defense);
+		free_wrap(prompt);
+
+		printf("%s si difende dall'attacco di %s usando '%s'!\n", target->name, attacker->name, defense_card->name);
+		log_sss(game_ctx, "%s si difende dall'attacco di %s usando '%s'.", target->name, attacker->name, defense_card->name);
+
+		unlink_card(&target->carte, defense_card); // remove chosen defense card from target's hand
+	
+		game_ctx->curr_player = target; // switch current player to defending player for applying defense card effects correctly
+		apply_effects(game_ctx, defense_card, SUBITO); // appply additional defense card effects
+		game_ctx->curr_player = attacker; // switch back to attacking player
+
+		dispose_card(game_ctx, defense_card); // dispose chosen defense card after its use ended
+	}
+	return defends;
 }
 
 /**
@@ -373,7 +437,7 @@ bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
 					// TODO: check for MAI
 					unlink_card(&thrower->carte, card);
 					join_aula(game_ctx, target, card);
-					log_sss(game_ctx, "%s ha giocato %s su %s.", thrower->name, card->name, target->name);
+					log_sss(game_ctx, "%s ha giocato '%s' su %s.", thrower->name, card->name, target->name);
 					played = true;
 				} else {
 					if (target == thrower)
@@ -388,7 +452,7 @@ bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
 						unlink_card(&thrower->carte, card);
 						dispose_card(game_ctx, card);
 						puts("Carta scartata!");
-						log_sss(game_ctx, "%s ha provato a giocare %s su %s (duplicato), scartandola.", thrower->name, card->name, target->name);
+						log_sss(game_ctx, "%s ha provato a giocare '%s' su %s (duplicato), scartandola.", thrower->name, card->name, target->name);
 						played = true;
 					}
 				}
@@ -503,13 +567,13 @@ void apply_effect_scarta_target(game_contextT *game_ctx, giocatoreT *target, eff
 }
 
 /**
- * @brief this effect makes players discard a card from their hands.
+ * @brief this effect makes targets discard a card from their hands.
+ * allowed values: target player = * and target card = *
  * 
  * @param game_ctx 
- * @param effect 
+ * @param effect SCARTA effect
  */
-bool apply_effect_scarta(game_contextT *game_ctx, effettoT *effect, giocatoreT **target_tu) {
-	// allowed values: target player = * and target card = *
+bool apply_effect_scarta(game_contextT *game_ctx, cartaT *card, effettoT *effect, giocatoreT **target_tu) {
 	char *pick_player_prompt;
 	giocatoreT *target;
 	bool blocked = false;
@@ -528,13 +592,14 @@ bool apply_effect_scarta(game_contextT *game_ctx, effettoT *effect, giocatoreT *
 				*target_tu = pick_player(game_ctx, pick_player_prompt, false, false);
 				free_wrap(pick_player_prompt);
 			}
-			// TODO: check for MAI usage
-			apply_effect_scarta_target(game_ctx, *target_tu, effect);
+			if (!target_defends(game_ctx, *target_tu, card))
+				apply_effect_scarta_target(game_ctx, *target_tu, effect);
+			else
+				blocked = true;
 			break;
 		}
 		case VOI:
 		case TUTTI: {
-			// TODO: check for MAI usage
 			if (effect->target_giocatori == VOI) {
 				printf("Tutti i giocatori (eccetto " ANSI_UNDERLINE "%s" ANSI_RESET ") devono scartare una carta %s!\n",
 					game_ctx->curr_player->name,
@@ -545,11 +610,17 @@ bool apply_effect_scarta(game_contextT *game_ctx, effettoT *effect, giocatoreT *
 				printf("Tutti i giocatori devono scartare una carta %s!\n", tipo_cartaT_str(effect->target_carta));
 				target = game_ctx->curr_player; // start from curr player, as it is included
 			}
-			// iterate and apply effect from target (included) to game_ctx->curr_player (not included)
-			do {
-				apply_effect_scarta_target(game_ctx, target, effect);
-				target = target->next;
-			} while (target != game_ctx->curr_player);
+			// ask every player (except thrower) if they want to defend
+			for (giocatoreT *defender = game_ctx->curr_player->next; defender != game_ctx->curr_player && !blocked; defender = defender->next)
+				if (target_defends(game_ctx, defender, card))
+					blocked = true;
+			if (!blocked) { // no defense is used
+				// iterate and apply effect from target (included) to game_ctx->curr_player (not included)
+				do {
+					apply_effect_scarta_target(game_ctx, target, effect);
+					target = target->next;
+				} while (target != game_ctx->curr_player);
+			}
 			break;
 		}
 	}
@@ -565,6 +636,7 @@ void apply_effect_elimina_target(game_contextT *game_ctx, giocatoreT *target, ef
 			prompt = strdup_checked("Scegli la carta che vuoi eliminare dalla tua aula");
 		else
 			asprintf_s(&prompt, "Scegli la carta che vuoi eliminare dall'aula di %s.", target->name);
+		printf("[%s] Devi eliminare una carta dalla tua aula!\n", game_ctx->curr_player->name);
 		deleted = pick_aula_card(target, prompt);
 	} else { // handle STUDENTE and BONUS/MALUS
 		asprintf_ss(&prompt, "Scegli la carta %s che vuoi eliminare dall'aula di %s.",
@@ -625,13 +697,28 @@ void apply_effect_elimina(game_contextT *game_ctx, effettoT *effect, giocatoreT 
 	}
 }
 
-void apply_effect_play(game_contextT *game_ctx, effettoT *effect) {
+void apply_effect_gioca(game_contextT *game_ctx, effettoT *effect) {
 	// allowed values: target player = IO | TU | VOI | TUTTI and target card = ALL, STUDENTE, MATRICOLA, STUDENTE_SEMPLICE, LAUREANDO, BONUS, MALUS, MAGIA, ISTANTANEA
+
+	giocatoreT *thrower = game_ctx->curr_player;
+
 	switch (effect->target_giocatori) {
 		case IO:
 			play_card(game_ctx, effect->target_carta);
 			break;
 			// TODO: keep working here
+		case VOI:
+		case TUTTI: {
+			if (effect->target_giocatori == VOI) {
+
+			}
+			do {
+
+			} while (game_ctx->curr_player != thrower);
+
+
+			break;
+		}
 	}
 }
 
@@ -722,7 +809,7 @@ void apply_effect_prendi(game_contextT *game_ctx, effettoT *effect, giocatoreT *
 
 	stolen_card = pick_random_card_restricted(target->carte, effect->target_carta);
 	if (stolen_card != NULL) {
-		printf("Hai rubato %s da " ANSI_UNDERLINE "%s" ANSI_RESET "!\n", stolen_card->name, target->name);
+		printf("Hai rubato '%s' da " ANSI_UNDERLINE "%s" ANSI_RESET "!\n", stolen_card->name, target->name);
 		unlink_card(&target->carte, stolen_card); // remove extracted card from target's hand
 		push_card(&game_ctx->curr_player->carte, stolen_card); // add extracted card to thrower's hand
 	}
@@ -792,18 +879,18 @@ void apply_effect_ruba(game_contextT *game_ctx, effettoT *effect, giocatoreT **t
  * @return true if effect was blocked
  * @return false if effect wasn't blocked
  */
-bool apply_effect(game_contextT *game_ctx, effettoT *effect, giocatoreT **target_tu) {
+bool apply_effect(game_contextT *game_ctx, cartaT *card, effettoT *effect, giocatoreT **target_tu) {
 	// TODO: apply ALL actual effects
 	bool blocked = false;
 	switch (effect->azione) {
 		case GIOCA: {
 			// mazzo allowed values: target player = IO and target card = ALL
-			apply_effect_play(game_ctx, effect);
+			apply_effect_gioca(game_ctx, effect);
 			break;
 		}
 		case SCARTA: {
 			// mazzo allowed values: target player = IO | VOI | TUTTI and target card = ALL
-			blocked = apply_effect_scarta(game_ctx, effect, target_tu);
+			blocked = apply_effect_scarta(game_ctx, card, effect, target_tu);
 			break;
 		}
 		case ELIMINA: {
@@ -859,7 +946,7 @@ void apply_effects_now(game_contextT *game_ctx, cartaT *card) {
 	}
 
 	for (int i = 0; i < card->n_effetti && apply; i++) {
-		if (apply_effect(game_ctx, &card->effetti[i], &target_tu)) {
+		if (apply_effect(game_ctx, card, &card->effetti[i], &target_tu)) {
 			printf("La catena degli effetti di '%s' giocata da " ANSI_UNDERLINE "%s" ANSI_RESET " e' stata interrotta!\n",
 				card->name,
 				game_ctx->curr_player->name
