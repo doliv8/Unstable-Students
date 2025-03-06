@@ -50,10 +50,12 @@
 #define ROUND_BANNER_CONTENT_WIDTH ROUND_BANNER_WIDTH-2*BANNER_BORDER_WIDTH
 #define BANNER_HORIZONTAL_BAR "--------------------------------------------------------------" // ROUND_BANNER_CONTENT_WIDTH long
 
-// text colors
+// text styles
 #define ANSI_RESET "\033[0m"
 #define ANSI_BOLD "\033[1m"
 #define ANSI_UNDERLINE "\033[4m"
+
+// text colors
 #define ANSI_RED "\033[31m"
 #define ANSI_GREEN "\033[32m"
 #define ANSI_YELLOW "\033[33m"
