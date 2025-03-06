@@ -185,7 +185,7 @@ void show_round(game_contextT *game_ctx) {
 	asprintf_d(&round_num_text, "Round numero: " ANSI_BOLD "%d" ANSI_RESET, game_ctx->round_num);
 
 	len_player_turn_text = snprintf(NULL, 0, "Turno di: %s!", game_ctx->curr_player->name);
-	asprintf_s(&player_turn_text, "Turno di: " ANSI_UNDERLINE "%s" ANSI_RESET "!", game_ctx->curr_player->name);
+	asprintf_s(&player_turn_text, "Turno di: " PRETTY_USERNAME "!", game_ctx->curr_player->name);
 
 	// build actual banner
 	multiline_addline(&round_banner, strdup_checked(h_border));
