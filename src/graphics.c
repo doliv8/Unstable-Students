@@ -48,14 +48,14 @@ void build_card(freeable_multiline_textT *multiline, cartaT *card) {
 	freeable_multiline_textT effects_lines;
 	init_multiline(&effects_lines);
 
-	h_border = ANSI_BLUE CARD_CORNER_LEFT HORIZONTAL_BAR CARD_CORNER_RIGHT ANSI_RESET;
-	v_border = ANSI_BLUE CARD_BORDER_VERTICAL ANSI_RESET;
+	asprintf_s(&h_border, "%s" CARD_CORNER_LEFT HORIZONTAL_BAR CARD_CORNER_RIGHT ANSI_RESET, tipo_cartaT_color(card->tipo));
+	asprintf_s(&v_border, "%s" CARD_BORDER_VERTICAL ANSI_RESET, tipo_cartaT_color(card->tipo));
 
 	len_name = strlen(card->name);
 	asprintf_s(&fmt_name, ANSI_BOLD "%s" ANSI_RESET, card->name);
 
 	len_type = asprintf_s(&type, "#%s", tipo_cartaT_str(card->tipo));
-	asprintf_s(&fmt_type, ANSI_BG_GREEN "%s" ANSI_RESET, type);
+	asprintf_ss(&fmt_type, ANSI_BOLD "%s%s" ANSI_RESET, tipo_cartaT_color(card->tipo), type);
 
 	// compute wrapped description
 	wrap_text(&wrapped_description, card->description, CARD_CONTENT_WIDTH-CARD_PADDING);
@@ -97,6 +97,8 @@ void build_card(freeable_multiline_textT *multiline, cartaT *card) {
 	free_wrap(fmt_type);
 	free_wrap(type);
 	free_wrap(fmt_name);
+	free_wrap(v_border);
+	free_wrap(h_border);
 	clear_wrapped(&wrapped_description);
 	clear_freeable_multiline(&effects_lines);
 }
