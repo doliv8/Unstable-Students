@@ -13,7 +13,7 @@
 <br>
 
 > ### **Table of Content**
->  1. [Spiegazione file sorgente](#spiega-file-sorgente)
+>  1. [Spiegazione file sorgente](#spiegazione-file-sorgente)
 >  1. [Descrizione e scopo strutture aggiuntive](#descrizione-e-scopo-strutture-aggiuntive)
 >  1. [Descrizione flusso di gioco](#descrizione-flusso-di-gioco)
 >  1. [Descrizione logica AI](#descrizione-logica-ai)
