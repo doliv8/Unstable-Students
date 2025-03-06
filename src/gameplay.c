@@ -43,10 +43,10 @@ bool has_bonusmalus(giocatoreT *player, azioneT effect_action) {
 }
 
 /**
- * @brief checks if a card can defend a target player from an attacking card.
+ * @brief checks if a card can defend given target player from an attacking card.
  * 
  * @param target player the attack_card is being played on
- * @param defend_card candidate defense card
+ * @param defend_card candidate defense card (owned by target player)
  * @param attack_card attacking card to defend from
  * @return true if defend_card can block attack_card's effects
  * @return false if defend_card can't block attack_card's effects or can't even be played by target
@@ -65,7 +65,7 @@ bool card_can_block(giocatoreT *target, cartaT *defend_card, cartaT *attack_card
 }
 
 /**
- * @brief checks if player can defend from an attacking card
+ * @brief checks if given target player can defend from an attacking card
  * 
  * @param target player the attack_card is being played on
  * @param attack_card attacking card to defend from
@@ -99,7 +99,7 @@ bool target_defends(game_contextT *game_ctx, giocatoreT *target, cartaT *attack_
 	giocatoreT *attacker = game_ctx->curr_player;
 
 	if (player_can_defend(target, attack_card)) { // first check if target player can actually defend from the attack
-		printf("[%s] Puoi difenderti dall'attacco di '%s' da parte di %s. Vuoi difenderti? ",
+		printf("[%s] Puoi difenderti dall'attacco di '%s' da parte di " PRETTY_USERNAME ". Vuoi difenderti? ",
 			target->name,
 			attack_card->name,
 			attacker->name
@@ -108,7 +108,7 @@ bool target_defends(game_contextT *game_ctx, giocatoreT *target, cartaT *attack_
 	}
 
 	if (defends) { // user can and wants to defend from the attack
-		asprintf_sss(&prompt, "[%s] Scegli con quale carta %s difenderti dall'attacco di %s.",
+		asprintf_sss(&prompt, "[%s] Scegli con quale carta %s difenderti dall'attacco di " PRETTY_USERNAME ".",
 			target->name,
 			tipo_cartaT_str(ISTANTANEA),
 			attacker->name
@@ -121,7 +121,7 @@ bool target_defends(game_contextT *game_ctx, giocatoreT *target, cartaT *attack_
 		} while (!valid_defense);
 		free_wrap(prompt);
 
-		printf("%s si difende dall'attacco di '%s' da parte di %s usando '%s'!\n",
+		printf(PRETTY_USERNAME " si difende dall'attacco di '%s' da parte di " PRETTY_USERNAME " usando '%s'!\n",
 			target->name, attack_card->name, attacker->name, defense_card->name
 		);
 		log_ssss(game_ctx, "%s si difende dall'attacco di '%s' da parte di %s usando '%s'.",
@@ -146,7 +146,7 @@ bool target_defends(game_contextT *game_ctx, giocatoreT *target, cartaT *attack_
  * @param player target player
  */
 void show_player_state(game_contextT *game_ctx, giocatoreT *player) {
-	printf("Ecco lo stato di " ANSI_UNDERLINE "%s" ANSI_RESET ":\n", player->name);
+	printf("Ecco lo stato di " PRETTY_USERNAME ":\n", player->name);
 
 	if (has_bonusmalus(player, MOSTRA))
 		show_card_group(player->carte, "Mano:", ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET); // show mano
@@ -162,7 +162,7 @@ void show_player_state(game_contextT *game_ctx, giocatoreT *player) {
  * @param game_ctx 
  */
 void view_own(game_contextT *game_ctx) {
-	printf("Ecco le carte in tuo possesso, " ANSI_UNDERLINE "%s" ANSI_RESET ":\n", game_ctx->curr_player->name);
+	printf("Ecco le carte in tuo possesso, " PRETTY_USERNAME ":\n", game_ctx->curr_player->name);
 
 	show_card_group(game_ctx->curr_player->aula, "Aula:", ANSI_BOLD ANSI_YELLOW "%s" ANSI_RESET); // show aula
 	show_card_group(game_ctx->curr_player->bonus_malus, "Bonus/Malus:", ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET); // show bonus/malus
@@ -559,7 +559,7 @@ void apply_effect_scambia(game_contextT *game_ctx, giocatoreT **target_tu) {
 		*target_tu = pick_player(game_ctx, "Scegli il giocatore col quale scambiare la tua mano:", false, false);
 	target = *target_tu;
 
-	printf("Hai scelto di scambiare il tuo mazzo con quello di " ANSI_UNDERLINE "%s" ANSI_RESET "!\n", target->name);
+	printf("Hai scelto di scambiare il tuo mazzo con quello di " PRETTY_USERNAME "!\n", target->name);
 	log_ss(game_ctx, "%s scambia il suo mazzo con quello di %s.", game_ctx->curr_player->name, target->name);
 
 	cartaT *tmp = target->carte;
@@ -579,7 +579,7 @@ void apply_effect_scarta_target(game_contextT *game_ctx, giocatoreT *target, eff
 	cartaT *discarded_card;
 
 	if (target == game_ctx->curr_player) { // target is self, picking which card to discard is allowed
-		printf("Devi scartare una carta (%s), " ANSI_UNDERLINE "%s" ANSI_RESET "!\n",
+		printf("Devi scartare una carta (%s), " PRETTY_USERNAME "!\n",
 			tipo_cartaT_str(effect->target_carta),
 			game_ctx->curr_player->name
 		);
@@ -592,7 +592,7 @@ void apply_effect_scarta_target(game_contextT *game_ctx, giocatoreT *target, eff
 		discard_card(game_ctx, &game_ctx->curr_player->carte, effect->target_carta, title);
 		free_wrap(title);
 	} else { // target is another player, random card extraction is used
-		printf(ANSI_UNDERLINE "%s" ANSI_RESET " ti fa scartare una carta (%s) dalla mano, " ANSI_UNDERLINE "%s" ANSI_RESET "!\n",
+		printf(PRETTY_USERNAME " ti fa scartare una carta (%s) dalla mano, " PRETTY_USERNAME "!\n",
 			game_ctx->curr_player->name,
 			tipo_cartaT_str(effect->target_carta),
 			target->name
@@ -601,7 +601,7 @@ void apply_effect_scarta_target(game_contextT *game_ctx, giocatoreT *target, eff
 		if (discarded_card != NULL) {
 			unlink_card(&target->carte, discarded_card);
 			dispose_card(game_ctx, discarded_card); // dispose discarded card
-			printf(ANSI_UNDERLINE "%s" ANSI_RESET " ha scartato '%s'!\n", target->name, discarded_card->name);
+			printf(PRETTY_USERNAME " ha scartato '%s'!\n", target->name, discarded_card->name);
 			log_sss(game_ctx, "%s ha scartato %s a causa di %s.",
 				target->name,
 				discarded_card->name,
@@ -609,7 +609,7 @@ void apply_effect_scarta_target(game_contextT *game_ctx, giocatoreT *target, eff
 			);
 		}
 		else {
-			printf(ANSI_UNDERLINE "%s" ANSI_RESET " non aveva carte (%s) da scartare nella sua mano!\n",
+			printf(PRETTY_USERNAME " non aveva carte (%s) da scartare nella sua mano!\n",
 				target->name,
 				tipo_cartaT_str(effect->target_carta)
 			);
@@ -661,11 +661,11 @@ bool apply_effect_scarta(game_contextT *game_ctx, cartaT *card, effettoT *effect
 		case VOI:
 		case TUTTI: {
 			if (effect->target_giocatori == VOI) {
-				printf("Tutti i giocatori (eccetto " ANSI_UNDERLINE "%s" ANSI_RESET ") devono scartare una carta %s!\n",
+				printf("Tutti i giocatori (eccetto " PRETTY_USERNAME ") devono scartare una carta %s!\n",
 					game_ctx->curr_player->name,
 					tipo_cartaT_str(effect->target_carta)
 				);
-				target = game_ctx->curr_player->next; // start from next player if curr player is not included
+				target = game_ctx->curr_player->next; // start from next player as curr player is not included
 			} else {
 				printf("Tutti i giocatori devono scartare una carta %s!\n", tipo_cartaT_str(effect->target_carta));
 				target = game_ctx->curr_player; // start from curr player, as it is included
@@ -768,7 +768,7 @@ bool apply_effect_elimina(game_contextT *game_ctx, cartaT *card, effettoT *effec
 		case VOI:
 		case TUTTI: {
 			if (effect->target_giocatori == VOI) {
-				printf("Tutti i giocatori (eccetto " ANSI_UNDERLINE "%s" ANSI_RESET ") devono eliminare una carta %s!\n",
+				printf("Tutti i giocatori (eccetto " PRETTY_USERNAME ") devono eliminare una carta %s!\n",
 					game_ctx->curr_player->name,
 					tipo_cartaT_str(effect->target_carta)
 				);
@@ -912,12 +912,12 @@ void apply_effect_prendi(game_contextT *game_ctx, effettoT *effect, giocatoreT *
 
 	stolen_card = pick_random_card_restricted(target->carte, effect->target_carta);
 	if (stolen_card != NULL) {
-		printf("Hai rubato '%s' da " ANSI_UNDERLINE "%s" ANSI_RESET "!\n", stolen_card->name, target->name);
+		printf("Hai rubato '%s' da " PRETTY_USERNAME "!\n", stolen_card->name, target->name);
 		unlink_card(&target->carte, stolen_card); // remove extracted card from target's hand
 		push_card(&game_ctx->curr_player->carte, stolen_card); // add extracted card to thrower's hand
 	}
 	else
-		printf(ANSI_UNDERLINE "%s" ANSI_RESET " non aveva carte da rubare nella sua mano!\n", target->name);
+		printf(PRETTY_USERNAME " non aveva carte da rubare nella sua mano!\n", target->name);
 }
 
 void apply_effect_ruba(game_contextT *game_ctx, effettoT *effect, giocatoreT **target_tu) {
@@ -936,7 +936,7 @@ void apply_effect_ruba(game_contextT *game_ctx, effettoT *effect, giocatoreT **t
 	}
 	target = *target_tu;
 
-	asprintf_ss(&pick_card_prompt, "Scegli la carta %s che vuoi rubare a " ANSI_UNDERLINE "%s" ANSI_RESET ":",
+	asprintf_ss(&pick_card_prompt, "Scegli la carta %s che vuoi rubare a " PRETTY_USERNAME ":",
 		tipo_cartaT_str(effect->target_carta), target->name
 	);
 	asprintf_ss(&pick_card_title, "Carte %s di %s", tipo_cartaT_str(effect->target_carta), target->name);
@@ -1051,7 +1051,7 @@ void apply_effects_now(game_contextT *game_ctx, cartaT *card) {
 	if (apply) {
 		for (int i = 0; i < card->n_effetti && !blocked; i++) {
 			if (apply_effect(game_ctx, card, &card->effetti[i], &target_tu)) {
-				printf("La catena degli effetti di '%s' giocata da " ANSI_UNDERLINE "%s" ANSI_RESET " e' stata interrotta!\n",
+				printf("La catena degli effetti di '%s' giocata da " PRETTY_USERNAME " e' stata interrotta!\n",
 					card->name,
 					game_ctx->curr_player->name
 				);
@@ -1184,10 +1184,10 @@ void end_round(game_contextT *game_ctx) {
 	}
 
 	if (check_win_condition(game_ctx)) { // check if curr player won
-		printf("Congratulazioni " ANSI_UNDERLINE "%s" ANSI_RESET ", hai vinto la partita!\n", game_ctx->curr_player->name);
+		printf("Congratulazioni " PRETTY_USERNAME ", hai vinto la partita!\n", game_ctx->curr_player->name);
 		game_ctx->game_running = false; // stop game
 	} else { // no win, keep playing
-		printf("Round di " ANSI_UNDERLINE "%s" ANSI_RESET " completato!\n", game_ctx->curr_player->name);
+		printf("Round di " PRETTY_USERNAME " completato!\n", game_ctx->curr_player->name);
 		game_ctx->curr_player = game_ctx->curr_player->next; // next round its next player's turn
 		game_ctx->round_num++;
 	}

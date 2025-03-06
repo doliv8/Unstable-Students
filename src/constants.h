@@ -71,4 +71,6 @@
 #define ANSI_BG_CYAN "\033[46m"
 #define ANSI_BG_WHITE "\033[47m"
 
+#define PRETTY_USERNAME ANSI_UNDERLINE "%s" ANSI_RESET
+
 #endif // CONSTANTS_H

@@ -25,7 +25,7 @@ int get_int() {
  */
 bool ask_choice() {
 	char choice = 'n';
-	printf("(y/N): ");
+	printf("(" ANSI_GREEN "y" ANSI_RESET "/" ANSI_RED "N" ANSI_RESET "): ");
 	scanf(" %c", &choice);
 	return choice == 'y' || choice == 'Y';
 }
