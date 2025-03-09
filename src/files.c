@@ -71,7 +71,6 @@ giocatoreT *load_player(FILE *fp) {
 }
 
 game_contextT* load_game(const char *save_path) {
-	// TODO: add logging stating loaded save name
 	FILE *fp;
 	game_contextT *game_ctx;
 	giocatoreT *curr_player;
