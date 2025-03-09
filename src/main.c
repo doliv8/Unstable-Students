@@ -10,6 +10,7 @@
 #include "gameplay.h"
 #include "logging.h"
 #include "files.h"
+#include "menu.h"
 
 int main(int argc, char *argv[]) {
 	game_contextT* game_ctx;
@@ -19,9 +20,9 @@ int main(int argc, char *argv[]) {
 	
 	// check salvataggio
 	if (argc == ONE_ELEMENT) // no additional arguments are passed
-		game_ctx = new_game();
+		game_ctx = main_menu(NULL);
 	else
-		game_ctx = load_game(argv[1]); // pass first command-line argument
+		game_ctx = main_menu(argv[1]); // save path is passed as first command-line argument
 
 	// game loop
 	game_ctx->game_running = true;

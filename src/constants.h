@@ -26,6 +26,19 @@
 
 #define ONE_ELEMENT 1
 
+// "Slant" font
+#define MENU_ASCII_ART ANSI_YELLOW \
+"   __  __           __        __    __        _____ __            __           __      \n" \
+"  / / / /___  _____/ /_____ _/ /_  / /__     / ___// /___  ______/ /__  ____  / /______\n" \
+" / / / / __ \\/ ___/ __/ __ `/ __ \\/ / _ \\    \\__ \\/ __/ / / / __  / _ \\/ __ \\/ __/ ___/\n" \
+"/ /_/ / / / (__  ) /_/ /_/ / /_/ / /  __/   ___/ / /_/ /_/ / /_/ /  __/ / / / /_(__  ) \n" \
+"\\____/_/ /_/____/\\__/\\__,_/_.___/_/\\___/   /____/\\__/\\__,_/\\__,_/\\___/_/ /_/\\__/____/  \n" \
+ANSI_RESET "                                    with " ANSI_RED "<3" ANSI_RESET " by " ANSI_BOLD ANSI_CYAN "doliv" ANSI_RESET "\n"
+
+#define MENU_NEWGAME 1
+#define MENU_LOADSAVE 2
+#define MENU_QUIT 0
+
 #define CHOICE_AULA 1
 #define CHOICE_BONUSMALUS 2
 

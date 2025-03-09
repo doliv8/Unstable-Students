@@ -61,6 +61,8 @@ REPOSITORY STRUCTURE
 └── .gitignore                  //file da ignorare
 ```
 
+TODO: add missing files (saves & menu)
+
 <br>
 <br>
 
