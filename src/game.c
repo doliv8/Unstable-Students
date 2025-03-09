@@ -34,7 +34,7 @@ void distribute_cards(game_contextT *game_ctx) {
  * @return giocatoreT* newly created player
  */
 giocatoreT* new_player() {
-	giocatoreT* player = (giocatoreT*)calloc_checked(1, sizeof(giocatoreT));
+	giocatoreT* player = (giocatoreT*)calloc_checked(ONE_ELEMENT, sizeof(giocatoreT));
 
 	do {
 		printf("Inserisci il nome del giocatore: ");
@@ -50,7 +50,10 @@ giocatoreT* new_player() {
  * @return game_contextT* newly created game context
  */
 game_contextT *new_game() {
-	game_contextT *game_ctx = (game_contextT*)calloc_checked(1, sizeof(game_contextT));
+	game_contextT *game_ctx = (game_contextT*)calloc_checked(ONE_ELEMENT, sizeof(game_contextT));
+
+	init_logging(game_ctx);
+	fputs("Creazione nuova partita...\n", game_ctx->log_file);
 
 	do {
 		puts("Quanti giocatori giocheranno?");
@@ -119,6 +122,7 @@ void clear_game(game_contextT *game_ctx) {
 	if (game_ctx->mazzo_scarti != NULL)
 		clear_cards(game_ctx->mazzo_scarti);
 
+	fputs("Chiusura del gioco...\n", game_ctx->log_file);
 	shutdown_logging(game_ctx);
 	free_wrap(game_ctx);
 }
