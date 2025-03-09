@@ -279,7 +279,7 @@ cartaT *pick_random_card_restricted(cartaT *head, tipo_cartaT type) {
 	int n_cards = count_cards_restricted(head, type), chosen_idx;
 
 	if (n_cards != 0) {
-		chosen_idx = rand_int(1, n_cards);
+		chosen_idx = rand_int(1, n_cards); // pick a 1-indexed index of the restricted cards
 		card = card_by_index_restricted(head, type, chosen_idx);
 	} else {
 		puts("Non ci sono carte da estrarre!");

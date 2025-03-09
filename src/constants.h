@@ -24,6 +24,8 @@
 
 #define MAX_EFFECTS 6
 
+#define ONE_ELEMENT 1
+
 #define CHOICE_AULA 1
 #define CHOICE_BONUSMALUS 2
 

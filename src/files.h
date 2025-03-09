@@ -8,7 +8,7 @@ game_contextT* load_game();
 void save_game(game_contextT* game_ctx);
 
 cartaT *load_mazzo(int *n_cards);
-FILE *open_log_write();
+FILE *open_log_append();
 
 int read_int(FILE *fp);
 int read_bin_int(FILE *fp);

@@ -32,7 +32,7 @@ cartaT *load_card(FILE *fp) {
 
 	card = (cartaT*)malloc_checked(sizeof(cartaT));
 
-	if (fread(card, sizeof(cartaT), 1, fp) != 1)
+	if (fread(card, sizeof(cartaT), ONE_ELEMENT, fp) != ONE_ELEMENT)
 		file_read_failed();
 
 	card->effetti = load_effects(fp, card->n_effetti);
@@ -59,8 +59,8 @@ cartaT *load_cards(FILE *fp) {
 giocatoreT *load_player(FILE *fp) {
 	giocatoreT* player;
 
-	player = (giocatoreT*)calloc_checked(1, sizeof(giocatoreT));
-	if (fread(player, sizeof(giocatoreT), 1, fp) != 1)
+	player = (giocatoreT*)calloc_checked(ONE_ELEMENT, sizeof(giocatoreT));
+	if (fread(player, sizeof(giocatoreT), ONE_ELEMENT, fp) != ONE_ELEMENT)
 		file_read_failed();
 
 	// load player cards now
@@ -82,7 +82,10 @@ game_contextT* load_game(const char *save_path) {
 		exit(EXIT_FAILURE);
 	}
 
-	game_ctx = (game_contextT*)calloc_checked(1, sizeof(game_contextT));
+	game_ctx = (game_contextT*)calloc_checked(ONE_ELEMENT, sizeof(game_contextT));
+
+	init_logging(game_ctx);
+	fprintf(game_ctx->log_file, "Caricamento partita da '%s'...\n", save_path);
 
 	game_ctx->n_players = read_bin_int(fp);
 
@@ -99,7 +102,7 @@ game_contextT* load_game(const char *save_path) {
 	game_ctx->aula_studio = load_cards(fp);
 
 	// additional info stored in save file: round number. if not present set it to 1
-	if (fread(&game_ctx->round_num, sizeof(int), 1, fp) != 1)
+	if (fread(&game_ctx->round_num, sizeof(int), ONE_ELEMENT, fp) != ONE_ELEMENT)
 		game_ctx->round_num = 1;
 
 	fclose(fp);
@@ -108,7 +111,7 @@ game_contextT* load_game(const char *save_path) {
 }
 
 void dump_effect(FILE *fp, effettoT *effect) {
-	if (fwrite(effect, sizeof(effettoT), 1, fp) != 1)
+	if (fwrite(effect, sizeof(effettoT), ONE_ELEMENT, fp) != ONE_ELEMENT)
 		file_write_failed();
 }
 
@@ -118,7 +121,7 @@ void dump_effects(FILE *fp, cartaT *card) {
 }
 
 void dump_card(FILE *fp, cartaT *card) {
-	if (fwrite(card, sizeof(cartaT), 1, fp) != 1)
+	if (fwrite(card, sizeof(cartaT), ONE_ELEMENT, fp) != ONE_ELEMENT)
 		file_write_failed();
 	dump_effects(fp, card);
 }
@@ -130,7 +133,7 @@ void dump_cards(FILE *fp, cartaT *head) {
 }
 
 void dump_player(FILE *fp, giocatoreT *player) {
-	if (fwrite(player, sizeof(giocatoreT), 1, fp) != 1)
+	if (fwrite(player, sizeof(giocatoreT), ONE_ELEMENT, fp) != ONE_ELEMENT)
 		file_write_failed();
 	dump_cards(fp, player->carte); // save mano
 	dump_cards(fp, player->aula); // save aula
@@ -176,12 +179,12 @@ effettoT* read_effetti(FILE* fp, int* n_effects) {
 // returns (through amount pointer) the number of cards of this type present, sets *amount to 0 if no more cards are readable from fp
 // takes a pointer to the current tail's next pointer
 cartaT *read_carta(FILE *fp, cartaT **tail_next, int *amount) {
-	if (fscanf(fp, "%d", amount) != 1) {
+	if (fscanf(fp, "%d", amount) != ONE_ELEMENT) {
 		*amount = 0;
 		return NULL;
 	}
 	
-	cartaT *card = (cartaT*)calloc_checked(1, sizeof(cartaT));
+	cartaT *card = (cartaT*)calloc_checked(ONE_ELEMENT, sizeof(cartaT));
 
 	fscanf(fp, " %" TO_STRING(CARTA_NAME_LEN) "[^\n]", card->name);
 	fscanf(fp, " %" TO_STRING(CARTA_DESCRIPTION_LEN) "[^\n]", card->description);
@@ -225,8 +228,8 @@ cartaT *load_mazzo(int *n_cards) {
 	return mazzo;
 }
 
-FILE *open_log_write() {
-	FILE *fp = fopen(FILE_LOG, "w");
+FILE *open_log_append() {
+	FILE *fp = fopen(FILE_LOG, "a");
 	if (fp == NULL) {
 		fprintf(stderr, "Opening logs file (%s) failed!\n", FILE_LOG);
 		exit(EXIT_FAILURE);
@@ -242,7 +245,7 @@ FILE *open_log_write() {
  */
 int read_int(FILE *fp) {
 	int val;
-	if (fscanf(fp, " %d", &val) != 1)
+	if (fscanf(fp, " %d", &val) != ONE_ELEMENT)
 		file_read_failed();
 	return val;
 }
@@ -254,7 +257,7 @@ int read_int(FILE *fp) {
  * @param val integer to write
  */
 void write_bin_int(FILE *fp, int val) {
-	if (fwrite(&val, sizeof(int), 1, fp) != 1)
+	if (fwrite(&val, sizeof(int), ONE_ELEMENT, fp) != ONE_ELEMENT)
 		file_write_failed();
 }
 
@@ -266,7 +269,7 @@ void write_bin_int(FILE *fp, int val) {
  */
 int read_bin_int(FILE *fp) {
 	int val;
-	if (fread(&val, sizeof(int), 1, fp) != 1)
+	if (fread(&val, sizeof(int), ONE_ELEMENT, fp) != ONE_ELEMENT)
 		file_read_failed();
 	return val;
 }

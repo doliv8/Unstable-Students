@@ -12,7 +12,7 @@
 int get_int() {
 	printf("> ");
 	int val;
-	while (scanf(" %d", &val) != 1)
+	while (scanf(" %d", &val) != ONE_ELEMENT)
 		getchar();
 	return val;
 }

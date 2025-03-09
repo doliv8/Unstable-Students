@@ -18,12 +18,10 @@ int main(int argc, char *argv[]) {
 	srand(time(NULL));
 	
 	// check salvataggio
-	if (argc == 1)
+	if (argc == ONE_ELEMENT) // no additional arguments are passed
 		game_ctx = new_game();
 	else
-		game_ctx = load_game(argv[1]);
-
-	init_logging(game_ctx);
+		game_ctx = load_game(argv[1]); // pass first command-line argument
 
 	// game loop
 	game_ctx->game_running = true;

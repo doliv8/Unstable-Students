@@ -5,8 +5,8 @@
 #include "utils.h"
 
 void init_logging(game_contextT *game_ctx) {
-	game_ctx->log_file = open_log_write();
-	fputs("Creazione nuova partita...\n", game_ctx->log_file);
+	game_ctx->log_file = open_log_append();
+	fputs("Avvio del logging...\n", game_ctx->log_file);
 }
 
 void shutdown_logging(game_contextT *game_ctx) {
