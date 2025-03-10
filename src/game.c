@@ -6,7 +6,6 @@
 #include "files.h"
 #include "logging.h"
 #include "utils.h"
-#include "format.h"
 #include "saves.h"
 
 /**
@@ -35,13 +34,13 @@ void distribute_cards(game_contextT *game_ctx) {
  * 
  * @return giocatoreT* newly created player
  */
-giocatoreT* new_player() {
-	giocatoreT* player = (giocatoreT*)calloc_checked(ONE_ELEMENT, sizeof(giocatoreT));
+giocatoreT *new_player() {
+	giocatoreT *player = (giocatoreT*)calloc_checked(ONE_ELEMENT, sizeof(giocatoreT));
 
 	do {
 		printf("Inserisci il nome del giocatore: ");
 		scanf(" %" TO_STRING(GIOCATORE_NAME_LEN) "[^\n]", player->name);
-	} while (strnlen(player->name, sizeof(player->name)) == 0);
+	} while (!strnlen(player->name, sizeof(player->name)));
 
 	return player;
 }
@@ -52,6 +51,8 @@ giocatoreT* new_player() {
  * @return game_contextT* newly created game context
  */
 game_contextT *new_game() {
+	cartaT *mazzo;
+	int n_cards;
 	char *save_name;
 	game_contextT *game_ctx = (game_contextT*)calloc_checked(ONE_ELEMENT, sizeof(game_contextT));
 
@@ -81,9 +82,10 @@ game_contextT *new_game() {
 	curr_player->next = game_ctx->curr_player; // make the linked list circular linking tail to head
 
 	// load cards
-	int n_cards;
-	cartaT *mazzo = load_mazzo(&n_cards);
-	mazzo = shuffle_cards(mazzo, n_cards);
+	mazzo = load_mazzo(&n_cards);
+	fprintf(game_ctx->log_file, "Caricate %d carte nel mazzo!\n", n_cards);
+
+	mazzo = shuffle_cards(mazzo);
 
 	game_ctx->aula_studio = split_matricole(&mazzo);
 	game_ctx->mazzo_pesca = mazzo;

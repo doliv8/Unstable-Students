@@ -3,6 +3,6 @@
 
 #include "types.h"
 
-game_contextT *main_menu(char *provided_save);
+game_contextT *main_menu(const char *provided_save);
 
 #endif // MENU_H

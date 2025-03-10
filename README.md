@@ -45,6 +45,10 @@ REPOSITORY STRUCTURE
 │   ├── game.h
 │   ├── gameplay.c
 │   ├── gameplay.h
+│   ├── menu.c
+│   ├── menu.h
+│   ├── saves.c
+│   ├── saves.h
 │   ├── files.c
 │   ├── files.h
 │   ├── format.c
@@ -60,8 +64,6 @@ REPOSITORY STRUCTURE
 ├── README.md                   //relazione e documentazione
 └── .gitignore                  //file da ignorare
 ```
-
-TODO: add missing files (saves & menu)
 
 <br>
 <br>
@@ -83,12 +85,23 @@ In questo header sono definite tutte le strutture utilizzate nel progetto (descr
 Seguendo la stessa logica della della scelta adottata per structs.h, nel file header sono definite tutte le enumerazioni usate nel progetto.
 Nel file .c sono invece definite le funzioni per effettuare le conversioni da ogni valore di ciascun enum alle corrispondenti stringhe, effettuando le associazioni tramite un metodo che ho trovato molto pulito e ottimale.
 
+### types.h
+In questo file sono contenute le definizioni dei tipi user-defined usati nel progetto.
+
+### card.c & card.h
+In questi file sorgente sono definite le principali operazioni effettuabili sulle carte, allo stesso modo di funzioni ausiliare nella gestione delle stesse.
+
 ### game.c & game.h
-Questi file sorgente contengono delle funzioni essenziali per l'inizializzazione e la terminazione del gioco, ma non necessarie durante il suo dinamico svolgimento.
+Questi file sorgente contengono delle funzioni essenziali per l'inizializzazione e la terminazione del gioco, ma non utilizzate durante il suo dinamico svolgimento.
 
 ### gameplay.c & gameplay.h
 Questi file sorgente contengono praticamente l'intera logica di gioco e le principali funzioni per la gestione della partita in corso.
 
+### menu.c & menu.h
+Contengono solamente la funzione che gestisce il menu' principale mostrato all'avvio del gioco, prima di iniziare una partita.
+
+### saves.c & saves.h
+Qui viene gestita la logica dei salvataggi, con relativo menu' di scelta salvataggio salvato nella cache.
 
 <br>
 
