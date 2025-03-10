@@ -12,8 +12,12 @@
 #define ENDROUND_MAX_CARDS 5
 #define WIN_STUDENTS_COUNT 6
 
+#define SAVE_NAME_LEN 256
+
+#define SAVES_DIRECTORY "saves/"
+#define FILE_SAVES_CACHE "cache.txt"
+#define SAVE_PATH_EXTENSION ".sav"
 #define FILE_MAZZO "mazzo.txt"
-#define FILE_SAVE "savegame.sav"
 #define FILE_LOG "log.txt"
 
 #define ACTION_PLAY_HAND 1

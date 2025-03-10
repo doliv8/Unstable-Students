@@ -40,6 +40,7 @@ struct GameContext {
 	int n_players, round_num;
 	bool game_running;
 	FILE *log_file;
+	char *save_path;
 };
 
 struct MultiLineText {
