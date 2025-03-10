@@ -5,12 +5,11 @@
 #include "game.h"
 #include "saves.h"
 
-game_contextT *main_menu(char *provided_save) {
+game_contextT *main_menu(const char *provided_save) {
 	int option;
 	char *save_name;
 	game_contextT *game_ctx;
 
-	// maybe add a game banner here
 	puts(MENU_ASCII_ART);
 
 	if (provided_save == NULL) {
@@ -20,6 +19,7 @@ game_contextT *main_menu(char *provided_save) {
 			puts("[" TO_STRING(MENU_QUIT) "] Esci dal gioco");
 			option = get_int();
 		} while (option < MENU_QUIT || option > MENU_LOADSAVE);
+
 		switch (option) {
 			case MENU_NEWGAME: {
 				game_ctx = new_game();

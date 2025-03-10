@@ -394,7 +394,7 @@ void discard_card(game_contextT* game_ctx, cartaT **cards, tipo_cartaT type, con
 void draw_card(game_contextT *game_ctx) {
 	// shuffle and swap mazzo_scarti with mazzo_pesca if mazzo_pesca is empty
 	if (game_ctx->mazzo_pesca == NULL) {
-		game_ctx->mazzo_pesca = shuffle_cards(game_ctx->mazzo_scarti, count_cards(game_ctx->mazzo_scarti));
+		game_ctx->mazzo_pesca = shuffle_cards(game_ctx->mazzo_scarti);
 		game_ctx->mazzo_pesca = game_ctx->mazzo_scarti;
 		game_ctx->mazzo_scarti = NULL; // mazzo_scarti has been moved to mazzo_pesca (emptied)
 	}

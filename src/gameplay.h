@@ -28,7 +28,4 @@ void begin_round(game_contextT *game_ctx);
 void play_round(game_contextT *game_ctx);
 void end_round(game_contextT *game_ctx);
 
-void clear_players(giocatoreT *head, giocatoreT *p);
-void clear_game(game_contextT *game_ctx);
-
 #endif // GAMEPLAY_H

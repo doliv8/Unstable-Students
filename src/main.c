@@ -3,16 +3,14 @@
 // Tipologia progetto: avanzato
 
 #include <stdlib.h>
-#include <assert.h>
 #include <time.h>
 #include "types.h"
 #include "structs.h"
 #include "gameplay.h"
-#include "logging.h"
-#include "files.h"
 #include "menu.h"
+#include "game.h"
 
-int main(int argc, char *argv[]) {
+int main(int argc, const char *argv[]) {
 	game_contextT* game_ctx;
 
 	// seed libc random generator
