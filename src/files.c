@@ -4,7 +4,8 @@
 #include "card.h"
 #include "utils.h"
 #include "logging.h"
-
+#include "format.h"
+#include "saves.h"
 
 void file_read_failed() {
 	fputs("Error occurred while reading from a file stream!\n", stderr);
@@ -70,21 +71,32 @@ giocatoreT *load_player(FILE *fp) {
 	return player;
 }
 
-game_contextT* load_game(const char *save_path) {
+game_contextT* load_game(const char *save_name) {
 	FILE *fp;
-	game_contextT *game_ctx;
 	giocatoreT *curr_player;
+	game_contextT *game_ctx = (game_contextT*)calloc_checked(ONE_ELEMENT, sizeof(game_contextT));
 
-	fp = fopen(save_path, "r");
-	if (fp == NULL) {
-		fprintf(stderr, "Opening save file (%s) failed!\n", save_path);
+	if (!valid_save_name(save_name)) {
+		fprintf(stderr, "Invalid save name (%s)!\nDevi solo specificare il nome (senza estensione) del file di "
+			"salvataggio presente nella cartella '%s'!\n", save_name, SAVES_DIRECTORY
+		);
 		exit(EXIT_FAILURE);
 	}
 
-	game_ctx = (game_contextT*)calloc_checked(ONE_ELEMENT, sizeof(game_contextT));
+	game_ctx->save_path = get_save_path(save_name);
+
+	fp = fopen(game_ctx->save_path, "r");
+	if (fp == NULL) {
+		fprintf(stderr, "Opening save file (%s) failed!\nAssicurati che il file di salvataggio sia in '%s'!\n",
+			game_ctx->save_path, SAVES_DIRECTORY
+		);
+		exit(EXIT_FAILURE);
+	}
+
+	cache_save_name(game_ctx->save_path);
 
 	init_logging(game_ctx);
-	fprintf(game_ctx->log_file, "Caricamento partita da '%s'...\n", save_path);
+	fprintf(game_ctx->log_file, "Caricamento partita da '%s'...\n", game_ctx->save_path);
 
 	game_ctx->n_players = read_bin_int(fp);
 
@@ -140,11 +152,13 @@ void dump_player(FILE *fp, giocatoreT *player) {
 }
 
 void save_game(game_contextT* game_ctx) {
-	FILE *fp = fopen(FILE_SAVE, "w");
+	FILE *fp = fopen(game_ctx->save_path, "w");
 	if (fp == NULL) {
-		fprintf(stderr, "Opening save file (%s) failed!\n", FILE_SAVE);
+		fprintf(stderr, "Opening save file (%s) failed!\n", game_ctx->save_path);
 		exit(EXIT_FAILURE);
 	}
+
+	log_s(game_ctx, "Salvataggio su '%s' in corso...", game_ctx->save_path);
 
 	write_bin_int(fp, game_ctx->n_players);
 	for (int i = 0; i < game_ctx->n_players; i++, game_ctx->curr_player = game_ctx->curr_player->next)
@@ -234,6 +248,39 @@ FILE *open_log_append() {
 		exit(EXIT_FAILURE);
 	}
 	return fp;
+}
+
+void load_saves_cache(freeable_multiline_textT *saves) {
+	char save_name[SAVE_NAME_LEN];
+	FILE *fp = fopen(SAVES_DIRECTORY FILE_SAVES_CACHE, "r");
+	if (fp == NULL) {
+		// either the cache file doesn't exist or the whole SAVES_DIRECTORY doesn't exist.
+		// try creating the FILE_SAVES_CACHE file to check if directory exists.
+		fp = fopen(SAVES_DIRECTORY FILE_SAVES_CACHE, "w");
+		if (fp == NULL) {
+			fprintf(stderr, "Opening saves cache file (%s) failed!\nAssicurati che la cartella '%s' esista e se non esiste creala!\n",
+				SAVES_DIRECTORY FILE_SAVES_CACHE, SAVES_DIRECTORY);
+			exit(EXIT_FAILURE);
+		}
+	} else {
+		while (fscanf(fp, " %" TO_STRING(SAVE_NAME_LEN) "[^\n]", save_name) > 0)
+			multiline_addline(saves, strdup_checked(save_name));
+	}
+	fclose(fp);
+}
+
+void save_saves_cache(freeable_multiline_textT *saves) {
+	FILE *fp = fopen(SAVES_DIRECTORY FILE_SAVES_CACHE, "w");
+	if (fp == NULL) {
+		// the SAVES_DIRECTORY doesn't exist.
+		fprintf(stderr, "Opening saves cache file (%s) failed!\nAssicurati che la cartella '%s' esista e se non esiste creala!\n",
+			SAVES_DIRECTORY FILE_SAVES_CACHE, SAVES_DIRECTORY);
+		exit(EXIT_FAILURE);
+	} else {
+		for (int i = 0; i < saves->n_lines; i++)
+			fprintf(fp, "%s\n", saves->lines[i]);
+	}
+	fclose(fp);
 }
 
 /**

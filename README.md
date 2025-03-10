@@ -106,6 +106,7 @@ struct GameContext {
 	int n_players, round_num;
 	bool game_running;
 	FILE *log_file;
+	const char *save_path;
 };
 typedef struct GameContext game_contextT;
 ```
@@ -113,7 +114,7 @@ typedef struct GameContext game_contextT;
 Mi è sufficiente utilizzare tale struttura per contenere l'intero stato della partita (all'inizio di un round, non durante), come si può notare dai prototipi delle funzioni usate per caricare e salvare i salvataggi:
 
 ```c
-game_contextT* load_game();
+game_contextT* load_game(const char *save_name);
 void save_game(game_contextT* game_ctx);
 ```
 

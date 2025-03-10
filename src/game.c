@@ -6,6 +6,8 @@
 #include "files.h"
 #include "logging.h"
 #include "utils.h"
+#include "format.h"
+#include "saves.h"
 
 /**
  * @brief distributes cards at the start of the game to each player as described by the game rules
@@ -50,10 +52,17 @@ giocatoreT* new_player() {
  * @return game_contextT* newly created game context
  */
 game_contextT *new_game() {
+	char *save_name;
 	game_contextT *game_ctx = (game_contextT*)calloc_checked(ONE_ELEMENT, sizeof(game_contextT));
 
 	init_logging(game_ctx);
-	fputs("Creazione nuova partita...\n", game_ctx->log_file);
+	log_msg(game_ctx, "Creazione nuova partita...");
+
+	save_name = ask_save_name(true);
+	game_ctx->save_path = get_save_path(save_name);
+	free_wrap(save_name);
+
+	cache_save_name(game_ctx->save_path);
 
 	do {
 		puts("Quanti giocatori giocheranno?");
@@ -122,7 +131,9 @@ void clear_game(game_contextT *game_ctx) {
 	if (game_ctx->mazzo_scarti != NULL)
 		clear_cards(game_ctx->mazzo_scarti);
 
-	fputs("Chiusura del gioco...\n", game_ctx->log_file);
+	log_msg(game_ctx, "Chiusura del gioco...");
+
 	shutdown_logging(game_ctx);
+	free_wrap(game_ctx->save_path);
 	free_wrap(game_ctx);
 }
