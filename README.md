@@ -114,7 +114,7 @@ La struttura aggiuntiva principale che mi è stata molto utile nel mantenere ges
 Ecco la struttura in questione:
 ```c
 struct GameContext {
-	giocatoreT* curr_player;
+	giocatoreT *curr_player;
 	cartaT *mazzo_pesca, *mazzo_scarti, *aula_studio;
 	int n_players, round_num;
 	bool game_running;
@@ -141,6 +141,47 @@ Ciò che contiene questa struttura è:
 
 L'utilizzo che faccio di questa struttura è semplice e lineare: la alloco sullo heap all'avvio del gioco (tramite le funzioni `new_game` o `load_game`) e ne passo il puntatore alle diverse funzioni del game-loop (`begin_round`, `play_round`, `end_round`) che la passeranno a loro volta ad altre funzioni che implementano la logica di gioco; alla fine dell'esecuzione del gioco (uscita dal game-loop) la rilascio assieme a tutti i suoi campi (tramite `clear_game`).
 
+
+### MultiLineText
+Per gestire la formattazione di testo su più linee ho definito una apposita struttura che possa contenere un numero arbitrario di linee, tramite allocazioni dinamiche.
+Ecco la struttura:
+```c
+struct MultiLineText {
+	int n_lines;
+	const char **lines;
+	int *lengths;
+};
+typedef struct MultiLineText multiline_textT;
+typedef multiline_textT freeable_multiline_textT;
+```
+
+Il campo `lines` contiene un puntatore ad un array di `char*` (dinamicamente allocato) contenente esattamente `n_lines` puntatori. \
+Il campo `lengths` contiene un puntatore ad un array di interi (dinamicamente allocato) contenente esattamente `n_lines` interi, rappresentante ciascuno la lunghezza dell'`i`-esima linea puntata dall'array `lines` all'indice `i`.
+
+Si può notare che questa struttura viene bindata a due diversi tipi (definiti in `types.h`), il secondo dei quali (`freeable_multiline_textT`) delinea, tramite il suo nome, la necessità di effettuare un cleanup delle linee (stringhe) in esso contenute, poiché tutte allocate nell'heap; la funzione per fare ciò è `clear_freeable_multiline`.
+
+I principali file nei quali viene impiegata questa struttura sono `format.c` e `graphics.c`. \
+Questa struttura mi è stata largamente d'aiuto per rappresentare i box delle carte formattate singolarmente (tramite `build_card`), per poi printarli tutti assieme lungo una riga ed eventualmente in colonne, come matrici tramite la funzione `show_cards_restricted`, ottenendo risultati come il seguente:
+
+![Gruppo di box di carte stampate su diverse linee e colonne](/imgs/cards_group.png "Gruppo di box di carte stampate su diverse linee e colonne")
+
+### WrappedText
+Nuovamente, per la gestione della formattazione, ho creato una apposita struttura per contenere una stringa di testo che viene divisa in più linee, rispettando una data lunghezza massima, tramite la sostituzione, nelle corrette posizioni, degli spazi con dei terminatori di stringa (`'\0'`), di fatto, creando nuove sottostringhe. La logica di tale divisione è gestita in `format.c` dalla funzione `wrap_text`. \
+Ecco la struttura dati che contiene le informazioni necessarie a mantenere traccia delle sottostringhe generate:
+```c
+struct WrappedText {
+	char *text;
+	multiline_textT multiline;
+};
+```
+
+Come si può vedere questa struttura fa uso della precedentemente descritta struttura `MultiLineText` nella sua forma che non necessita cleanup di ciascuna delle stringhe singolarmente, dato che la funzione `wrap_text` usa solamente una stringa allocata sullo heap (puntata da `text` per poi essere freeata) che viene splittata, ma pur sempre mantenuta in un solo chunk dell'heap (che contiene quindi tutte le sottostringhe).
+
+Ho usato questa struttura per formattare all'interno del box delle carte le descrizioni andando a capo in maniera dinamica, come nell'esempio di seguito, partendo dalla stringa
+di descrizione `"Se questa carta e' nella tua aula all'inizio del tuo turno, puoi scartare 2 carte poi eliminare una carta studente dall'aula di un altro giocatore."` si ottiene questo risultato wrappandola:
+
+![Box della carta 'Aula dei vecchi progetti'](/imgs/card_box.png "Box della carta 'Aula dei vecchi progetti'")
+
 <br>
 
 ## Descrizione flusso di gioco
@@ -163,7 +204,7 @@ In questa sezione del `README.md` e nel codice (variabili e commenti) faccio rif
 
 ### Carte giocabili
 Le carte giocabili vengono contate tramite la funzione `count_playable_cards`, che considera vari casi, di seguito spiegati:
-- Solo carte del tipo specificato (type) possono essere giocate: supponendo di star giocando a seguito di un effetto come `[GIOCA, IO, STUDENTE]` sarebbe possibile giocare solamente una carta STUDENTE (`MATRICOLA`, `STUDENTE_SEMPLICE` o `LAUREANDO`) dal proprio mazzo, mentre con type = `ALL` questo controllo viene sempre passato.
+- Solo carte del tipo specificato (type) possono essere giocate: supponendo di star giocando a seguito di un effetto come `[GIOCA, IO, STUDENTE]` sarebbe possibile giocare solamente una carta `STUDENTE` (quindi `MATRICOLA`, `STUDENTE_SEMPLICE` o `LAUREANDO`) dal proprio mazzo, mentre con type = `ALL` questo controllo viene sempre passato.
 - Le carte di tipo `ISTANTANEA` non possono essere giocate durante il proprio turno.
 - Le carte con tipo target di un effetto IMPEDIRE attivo sul giocatore non possono essere giocate.
 

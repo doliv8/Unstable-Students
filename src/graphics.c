@@ -64,7 +64,7 @@ void build_card(freeable_multiline_textT *multiline, cartaT *card) {
 	format_effects(&effects_lines, card);
 
 	// add all lines now
-	// apend upper border
+	// append upper border
 	multiline_addline(multiline, strdup_checked(h_border));
 	// append type
 	multiline_addline(multiline, center_boxed_string(fmt_type, len_type, v_border, CARD_CONTENT_WIDTH));
