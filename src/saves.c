@@ -50,7 +50,7 @@ char *get_save_path(const char *save_name) {
 }
 
 char *ask_save_name(bool new) {
-	char save_name[SAVE_NAME_LEN];
+	char save_name[SAVE_NAME_LEN+1];
 
 	do {
 		if (new)
