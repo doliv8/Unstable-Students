@@ -12,7 +12,7 @@
 #define ENDROUND_MAX_CARDS 5
 #define WIN_STUDENTS_COUNT 6
 
-#define SAVE_NAME_LEN 256
+#define SAVE_NAME_LEN 255
 
 #define SAVES_DIRECTORY "saves/"
 #define FILE_SAVES_CACHE "cache.txt"

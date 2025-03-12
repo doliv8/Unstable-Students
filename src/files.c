@@ -251,7 +251,7 @@ FILE *open_log_append() {
 }
 
 void load_saves_cache(freeable_multiline_textT *saves) {
-	char save_name[SAVE_NAME_LEN];
+	char save_name[SAVE_NAME_LEN+1];
 	FILE *fp = fopen(SAVES_DIRECTORY FILE_SAVES_CACHE, "r");
 	if (fp == NULL) {
 		// either the cache file doesn't exist or the whole SAVES_DIRECTORY doesn't exist.
