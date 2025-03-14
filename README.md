@@ -206,16 +206,29 @@ In questa sezione del `README.md` e nel codice (variabili e commenti) faccio rif
 Le carte giocabili vengono contate tramite la funzione `count_playable_cards`, che considera vari casi, di seguito spiegati:
 - Solo carte del tipo specificato (type) possono essere giocate: supponendo di star giocando a seguito di un effetto come `[GIOCA, IO, STUDENTE]` sarebbe possibile giocare solamente una carta `STUDENTE` (quindi `MATRICOLA`, `STUDENTE_SEMPLICE` o `LAUREANDO`) dal proprio mazzo, mentre con type = `ALL` questo controllo viene sempre passato.
 - Le carte di tipo `ISTANTANEA` non possono essere giocate durante il proprio turno.
-- Le carte con tipo target di un effetto IMPEDIRE attivo sul giocatore non possono essere giocate.
+- Le carte con tipo target di un effetto `IMPEDIRE` attivo sul giocatore non possono essere giocate.
 
 ### Giocare una carta
 La funzione `play_card`, che si occupa per l'appunto di permettere al giocatore corrente di scegliere una carta del suo mazzo da giocare.\
-Se non ci sono carte giocabili secondo quanto descritto in [Carte Giocabili](#carte-giocabili) la funzione termina senza chiedere alcuna interazione all'utente in quanto non è possibile giocare alcuna carta.\
-...\
-In caso di carta duplicata già presente nell'aula del target chiedo conferma di voler giocare comunque tale carta sul target all'utente e in caso positivo la carta andrà persa (scartata) e l'azione di play si conclude, mentre in caso negativo l'utente potrà scegliere una nuova carta o un nuovo target su cui giocarla (l'azione di play non si considera conclusa).
+Se non ci sono carte giocabili secondo quanto descritto in [Carte Giocabili](#carte-giocabili) la fase di giocata di una carta termina senza chiedere alcuna interazione all'utente in quanto non è possibile giocare alcuna carta.\
+Successivamente, una volta accertato che il giocatore abbia delle carte che può giocare nel sul mazzo, gli viene richiesto (in base al tipo della carta da giocare), quale sceglie fra le carte del suo mazzo.\
+Se su tale carta vi è un effetto `IMPEDIRE` attivo sul giocatore corrente, tale carta non potrà essere giocata e verrà chiesto al giocatore di sceglierne un'altra.
 
+In base al tipo di carta si svolgeranno azioni diverse:
+- Bonus/Malus: si chiede al giocatore corrente su quale giocatore target vuole applicare la carta (lo stesso è compreso fra le scelte possibili) e tale giocatore (se non è lo stesso giocatore che tira la carta) avrà la possibilità di [difendersi](#difendersi-da-una-carta) dal piazzamento della carta Bonus/Malus (se nel suo mazzo ha a disposizione carte con l'effetto `IMPEDIRE` che glielo permettano)
+- Studente: l'unico possibile target di tali carte è il giocatore corrente stesso
+- Magia: il target della carta è definito dagli effetti descritti nella carta stessa
+
+In caso di carta duplicata già presente nell'aula del target viene chiesta conferma di voler giocare comunque tale carta sul target all'utente e in caso positivo la carta andrà persa (scartata) e l'azione di play si conclude, mentre in caso negativo l'utente potrà scegliere una nuova carta o un nuovo target su cui giocarla (l'azione di play non si considera conclusa).
+
+Giocando una carta `BONUS`/`MALUS` o `STUDENTE`, se il target non si è difeso, verrà inserita nella sua aula la carta giocata, attivando eventuali effetti di ingresso nell'aula (`SUBITO`).
+
+Al giocare di una carta `MAGIA`, questa verrà prima rimossa dalla mano del giocatore corrente, poi ne verranno applicati gli effetti, e successivamente verrà spostata nel mazzo degli scarti. Questo per evitare particolari edge case (si immagini giocare una carta `MAGIA` che impone di eliminare una carta dal proprio mazzo e si scegliesse la carta stessa: senza l'aggiunta di altri check ne conseguirebbe un doppio inserimento nel mazzo degli scarti).
+
+### Applicazione degli effetti
 
 TODO: scarta io choice
+
 
 
 ### Difendersi da una carta
@@ -226,11 +239,12 @@ La logica del sistema di difesa è gestita dalla funzione `target_defends` (che 
 
 Nell'applicare gli effetti con target giocatori `VOI` o `TUTTI`, prima di iniziare ad applicare l'effetto, viene domandato a ciascun giocatore vittima (eccetto colui che gioca la carta attaccante) che ne ha la possibilità se vuole bloccare l'attacco prima che questo inizi e difendere, di fatto, tutte le vittime.
 
+Difendendosi dalla carta attaccante questa farà una diversa fine in base al suo tipo:
+- `LAUREANDO`: la carta resterà all'interno dell'aula del giocatore attaccante, ma gli effetti saranno fermati
+- `MAGIA`: la carta finirà (come normalmente) negli scarti e gli effetti saranno fermati
+- `BONUS`/`MALUS`: la carta finirà negli scarti
 
 ...
-
-Le carte Bonus/Malus possono essere giocate sia su sé stessi che sugli altri giocatori, mentre le carte STUDENTE solo su sé stessi.
-
 
 
 <br>
