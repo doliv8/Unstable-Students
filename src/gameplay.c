@@ -444,7 +444,7 @@ bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
 	}
 
 	if (type != ALL)
-		asprintf_s(&playable_prompt, "Scegli la carta %s che vuoi giocare.", tipo_cartaT_str(type));
+		asprintf_ss(&playable_prompt, "Scegli la carta %s%s" ANSI_RESET " che vuoi giocare.", tipo_cartaT_color(type), tipo_cartaT_str(type));
 	else
 		playable_prompt = strdup_checked("Scegli la carta che vuoi giocare.");
 
@@ -453,28 +453,30 @@ bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
 	);
 	printf("Hai scelto di giocare: %s\n", card->name);
 
-	switch (card->tipo) {
-		case ISTANTANEA: {
-			printf("Non puoi giocare una carta %s durante il tuo turno!\n", tipo_cartaT_str(ISTANTANEA));
-			break;
-		}
-		case BONUS:
-		case MALUS:
-		case MATRICOLA:
-		case STUDENTE_SEMPLICE:
-		case LAUREANDO: {
-			// check for active IMPEDIRE effect on this card type
-			if (has_bonusmalus_target(thrower, IMPEDIRE, card)) {
-				printf("Fin quando avrai l'effetto %s attivo, non puoi usare carte %s!\n",
-					azioneT_str(IMPEDIRE),
-					tipo_cartaT_str(card->tipo)
-				);
-				log_sss(game_ctx, "%s ha provato a giocare %s ma ha l'effetto %s attivo su carte tale tipo di carta.",
-					thrower->name,
-					card->name,
-					azioneT_str(IMPEDIRE)
-				);
-			} else {
+	// check for active IMPEDIRE effect on this card type
+	if (has_bonusmalus_target(thrower, IMPEDIRE, card)) {
+		printf("Fin quando avrai l'effetto %s attivo, non puoi usare carte %s%s" ANSI_RESET "!\n",
+			azioneT_str(IMPEDIRE),
+			tipo_cartaT_color(card->tipo),
+			tipo_cartaT_str(card->tipo)
+		);
+		log_ssss(game_ctx, "%s ha provato a giocare '%s' ma ha l'effetto %s attivo su carte %s.",
+			thrower->name,
+			card->name,
+			azioneT_str(IMPEDIRE),
+			tipo_cartaT_str(card->tipo)
+		);
+	} else {
+		switch (card->tipo) {
+			case ISTANTANEA: {
+				printf("Non puoi giocare una carta %s durante il tuo turno!\n", tipo_cartaT_str(ISTANTANEA));
+				break;
+			}
+			case BONUS:
+			case MALUS:
+			case MATRICOLA:
+			case STUDENTE_SEMPLICE:
+			case LAUREANDO: {
 				// BONUS and MALUS can be placed both in own and other player's bonusmalus
 				if (match_card_type(card, BONUS) || match_card_type(card, MALUS)) {
 					asprintf_s(&player_prompt, "Scegli un giocatore al quale applicare questa carta %s.", tipo_cartaT_str(card->tipo));
@@ -482,10 +484,12 @@ bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
 					free_wrap(player_prompt);
 				}
 				if (can_join_aula(game_ctx, target, card)) {
-					// TODO: check for MAI
 					log_sss(game_ctx, "%s gioca '%s' su %s.", thrower->name, card->name, target->name);
 					unlink_card(&thrower->carte, card);
-					join_aula(game_ctx, target, card);
+					if (!target_defends(game_ctx, target, card))
+						join_aula(game_ctx, target, card);
+					else
+						dispose_card(game_ctx, card);
 					played = true;
 				} else {
 					if (target == thrower)
@@ -504,20 +508,21 @@ bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
 						played = true;
 					}
 				}
+				break;
 			}
-			break;
-		}
-		case MAGIA: {
-			// always quando = SUBITO, no additional checks needed
-			unlink_card(&thrower->carte, card);
-			apply_effects(game_ctx, card, SUBITO);
-			dispose_card(game_ctx, card);
-			played = true;
-		}
-		case ALL:
-		case STUDENTE: {
-			// this code shouldn't be reachable
-			break;
+			case MAGIA: {
+				// always quando = SUBITO, no additional checks needed
+				log_ss(game_ctx, "%s gioca '%s'.", thrower->name, card->name);
+				unlink_card(&thrower->carte, card);
+				apply_effects(game_ctx, card, SUBITO);
+				dispose_card(game_ctx, card);
+				played = true;
+			}
+			case ALL:
+			case STUDENTE: {
+				// this code shouldn't be reachable
+				break;
+			}
 		}
 	}
 
