@@ -93,5 +93,6 @@ ANSI_RESET "                                    with " ANSI_RED "<3" ANSI_RESET 
 #define ANSI_BG_WHITE "\033[47m"
 
 #define PRETTY_USERNAME ANSI_UNDERLINE "%s" ANSI_RESET
+#define COLORED_CARD_TYPE "%s%s" ANSI_RESET
 
 #endif // CONSTANTS_H
