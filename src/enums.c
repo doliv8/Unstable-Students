@@ -40,8 +40,8 @@ const char *tipo_cartaT_str(tipo_cartaT tipo) {
 
 const char *tipo_cartaT_color(tipo_cartaT tipo) {
 	static const char *mapping[] = {
-		[ALL] = ANSI_RESET,
-		[STUDENTE] = ANSI_RESET,
+		[ALL] = ANSI_BOLD,
+		[STUDENTE] = ANSI_BOLD,
 		[MATRICOLA] = ANSI_CYAN,
 		[STUDENTE_SEMPLICE] = ANSI_CYAN,
 		[LAUREANDO] = ANSI_YELLOW,

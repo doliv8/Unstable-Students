@@ -108,8 +108,9 @@ bool target_defends(game_contextT *game_ctx, giocatoreT *target, cartaT *attack_
 	}
 
 	if (defends) { // user can and wants to defend from the attack
-		asprintf_sss(&prompt, "[%s] Scegli con quale carta %s difenderti dall'attacco di " PRETTY_USERNAME ".",
+		asprintf_ssss(&prompt, "[%s] Scegli con quale carta %s%s" ANSI_RESET " difenderti dall'attacco di " PRETTY_USERNAME ".",
 			target->name,
+			tipo_cartaT_color(ISTANTANEA),
 			tipo_cartaT_str(ISTANTANEA),
 			attacker->name
 		);
@@ -386,7 +387,7 @@ void discard_card(game_contextT* game_ctx, cartaT **cards, tipo_cartaT type, con
 		log_ss(game_ctx, "%s ha scartato '%s'.", game_ctx->curr_player->name, card->name);
 	}
 	else {
-		printf("Avresti dovuto scartare una carta %s, ma non ne hai!\n", tipo_cartaT_str(type));
+		printf("Avresti dovuto scartare una carta %s%s" ANSI_RESET ", ma non ne hai!\n", tipo_cartaT_color(type), tipo_cartaT_str(type));
 		log_ss(game_ctx, "%s avrebbe dovuto scartare una carta %s, ma non ne aveva.", game_ctx->curr_player->name, tipo_cartaT_str(type));
 	}
 }
@@ -469,7 +470,10 @@ bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
 	} else {
 		switch (card->tipo) {
 			case ISTANTANEA: {
-				printf("Non puoi giocare una carta %s durante il tuo turno!\n", tipo_cartaT_str(ISTANTANEA));
+				printf("Non puoi giocare una carta %s%s" ANSI_RESET " durante il tuo turno!\n",
+					tipo_cartaT_color(ISTANTANEA),
+					tipo_cartaT_str(ISTANTANEA)
+				);
 				break;
 			}
 			case BONUS:
@@ -486,7 +490,7 @@ bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
 				if (can_join_aula(game_ctx, target, card)) {
 					log_sss(game_ctx, "%s gioca '%s' su %s.", thrower->name, card->name, target->name);
 					unlink_card(&thrower->carte, card);
-					if (!target_defends(game_ctx, target, card))
+					if (target == thrower || !target_defends(game_ctx, target, card)) // can't defended from self thrown cards
 						join_aula(game_ctx, target, card);
 					else
 						dispose_card(game_ctx, card);
@@ -597,10 +601,11 @@ void apply_effect_scarta_target(game_contextT *game_ctx, giocatoreT *target, eff
 		discard_card(game_ctx, &game_ctx->curr_player->carte, effect->target_carta, title);
 		free_wrap(title);
 	} else { // target is another player, random card extraction is used
-		printf(PRETTY_USERNAME " ti fa scartare una carta (%s) dalla mano, " PRETTY_USERNAME "!\n",
+		printf("[%s] " PRETTY_USERNAME " ti fa scartare una carta " COLORED_CARD_TYPE " dalla mano!\n",
+			target->name,
 			game_ctx->curr_player->name,
-			tipo_cartaT_str(effect->target_carta),
-			target->name
+			tipo_cartaT_color(effect->target_carta),
+			tipo_cartaT_str(effect->target_carta)
 		);
 		discarded_card = pick_random_card_restricted(target->carte, effect->target_carta);
 		if (discarded_card != NULL) {
@@ -614,8 +619,9 @@ void apply_effect_scarta_target(game_contextT *game_ctx, giocatoreT *target, eff
 			);
 		}
 		else {
-			printf(PRETTY_USERNAME " non aveva carte (%s) da scartare nella sua mano!\n",
+			printf(PRETTY_USERNAME " non aveva carte %s%s" ANSI_RESET " da scartare nella sua mano!\n",
 				target->name,
+				tipo_cartaT_color(effect->target_carta),
 				tipo_cartaT_str(effect->target_carta)
 			);
 			log_sss(game_ctx, "%s doveva scartare una carta %s a causa di %s, ma non ne aveva.",
@@ -905,7 +911,8 @@ void apply_effect_prendi(game_contextT *game_ctx, effettoT *effect, giocatoreT *
 	cartaT *stolen_card;
 
 	if (*target_tu == NULL) { // check if target tu was already asked in previous TU effects of the same card
-		asprintf_s(&pick_player_prompt, "Scegli il giocatore al quale vuoi rubare una carta %s dal mazzo:",
+		asprintf_ss(&pick_player_prompt, "Scegli il giocatore al quale vuoi rubare una carta " COLORED_CARD_TYPE " dal mazzo:",
+			tipo_cartaT_color(effect->target_carta),
 			tipo_cartaT_str(effect->target_carta)
 		);
 		*target_tu = pick_player(game_ctx, pick_player_prompt, false, false);
@@ -922,7 +929,11 @@ void apply_effect_prendi(game_contextT *game_ctx, effettoT *effect, giocatoreT *
 		push_card(&game_ctx->curr_player->carte, stolen_card); // add extracted card to thrower's hand
 	}
 	else
-		printf(PRETTY_USERNAME " non aveva carte da rubare nella sua mano!\n", target->name);
+		printf(PRETTY_USERNAME " non aveva carte " COLORED_CARD_TYPE " da rubare nella sua mano!\n",
+			tipo_cartaT_color(effect->target_carta),
+			tipo_cartaT_str(effect->target_carta),
+			target->name
+		);
 }
 
 void apply_effect_ruba(game_contextT *game_ctx, effettoT *effect, giocatoreT **target_tu) {
@@ -933,7 +944,8 @@ void apply_effect_ruba(game_contextT *game_ctx, effettoT *effect, giocatoreT **t
 	bool can_steal = false, stolen = false;
 
 	if (*target_tu == NULL) { // check if target tu was already asked in previous TU effects of the same card
-		asprintf_s(&pick_player_prompt, "Scegli il giocatore al quale vuoi rubare una carta %s:",
+		asprintf_ss(&pick_player_prompt, "Scegli il giocatore al quale vuoi rubare una carta " COLORED_CARD_TYPE ":",
+			tipo_cartaT_color(effect->target_carta),
 			tipo_cartaT_str(effect->target_carta)
 		);
 		*target_tu = pick_player(game_ctx, pick_player_prompt, false, false);
@@ -941,8 +953,10 @@ void apply_effect_ruba(game_contextT *game_ctx, effettoT *effect, giocatoreT **t
 	}
 	target = *target_tu;
 
-	asprintf_ss(&pick_card_prompt, "Scegli la carta %s che vuoi rubare a " PRETTY_USERNAME ":",
-		tipo_cartaT_str(effect->target_carta), target->name
+	asprintf_sss(&pick_card_prompt, "Scegli la carta " COLORED_CARD_TYPE " che vuoi rubare a " PRETTY_USERNAME ":",
+		tipo_cartaT_color(effect->target_carta),
+		tipo_cartaT_str(effect->target_carta),
+		target->name
 	);
 	asprintf_ss(&pick_card_title, "Carte %s di %s", tipo_cartaT_str(effect->target_carta), target->name);
 
@@ -1048,8 +1062,8 @@ void apply_effects_now(game_contextT *game_ctx, cartaT *card) {
 	giocatoreT *target_tu = NULL;
 
 	if (card->opzionale) {
-		puts("Vuoi applicare gli effetti di questa carta?");
 		show_card(card);
+		printf("Vuoi applicare gli effetti di questa carta? ");
 		apply = ask_choice();
 	}
 
