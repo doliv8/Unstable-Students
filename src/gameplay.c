@@ -429,7 +429,6 @@ int count_playable_cards(game_contextT *game_ctx, tipo_cartaT type) {
  * @return false player couldn't play a card
  */
 bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
-	// TODO: implement this function
 	bool played = false;
 	cartaT *card;
 	giocatoreT *target, *thrower;
@@ -439,13 +438,19 @@ bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
 
 	// handle no playable cards or no cards at all check
 	if (count_playable_cards(game_ctx, type) == 0) {
-		puts("Avresti dovuto giocare una carta ma non ne puoi giocare neanche una!");
-		log_s(game_ctx, "%s avrebbe dovuto giocare una carta ma non ne aveva di giocabili.", thrower->name);
+		printf("Avresti dovuto giocare una carta " COLORED_CARD_TYPE " ma non ne puoi giocare neanche una!\n",
+			tipo_cartaT_color(type),
+			tipo_cartaT_str(type)
+		);
+		log_ss(game_ctx, "%s avrebbe dovuto giocare una carta %s ma non ne aveva di giocabili.", thrower->name, tipo_cartaT_str(type));
 		return false;
 	}
 
 	if (type != ALL)
-		asprintf_ss(&playable_prompt, "Scegli la carta %s%s" ANSI_RESET " che vuoi giocare.", tipo_cartaT_color(type), tipo_cartaT_str(type));
+		asprintf_ss(&playable_prompt, "Scegli la carta " COLORED_CARD_TYPE " che vuoi giocare.",
+			tipo_cartaT_color(type),
+			tipo_cartaT_str(type)
+		);
 	else
 		playable_prompt = strdup_checked("Scegli la carta che vuoi giocare.");
 
@@ -456,7 +461,7 @@ bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
 
 	// check for active IMPEDIRE effect on this card type
 	if (has_bonusmalus_target(thrower, IMPEDIRE, card)) {
-		printf("Fin quando avrai l'effetto %s attivo, non puoi usare carte %s%s" ANSI_RESET "!\n",
+		printf("Fin quando avrai l'effetto %s attivo, non puoi usare carte " COLORED_CARD_TYPE "!\n",
 			azioneT_str(IMPEDIRE),
 			tipo_cartaT_color(card->tipo),
 			tipo_cartaT_str(card->tipo)
@@ -470,7 +475,7 @@ bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
 	} else {
 		switch (card->tipo) {
 			case ISTANTANEA: {
-				printf("Non puoi giocare una carta %s%s" ANSI_RESET " durante il tuo turno!\n",
+				printf("Non puoi giocare una carta " COLORED_CARD_TYPE " durante il tuo turno!\n",
 					tipo_cartaT_color(ISTANTANEA),
 					tipo_cartaT_str(ISTANTANEA)
 				);
@@ -619,7 +624,7 @@ void apply_effect_scarta_target(game_contextT *game_ctx, giocatoreT *target, eff
 			);
 		}
 		else {
-			printf(PRETTY_USERNAME " non aveva carte %s%s" ANSI_RESET " da scartare nella sua mano!\n",
+			printf(PRETTY_USERNAME " non aveva carte " COLORED_CARD_TYPE "da scartare nella sua mano!\n",
 				target->name,
 				tipo_cartaT_color(effect->target_carta),
 				tipo_cartaT_str(effect->target_carta)
@@ -905,6 +910,7 @@ void join_aula(game_contextT *game_ctx, giocatoreT *player, cartaT *card) {
  * @param target_tu 
  */
 void apply_effect_prendi(game_contextT *game_ctx, effettoT *effect, giocatoreT **target_tu) {
+	// TODO: add logging
 	// allowed values: target player = TU and target card = ALL
 	char *pick_player_prompt;
 	giocatoreT* target;
@@ -937,6 +943,7 @@ void apply_effect_prendi(game_contextT *game_ctx, effettoT *effect, giocatoreT *
 }
 
 void apply_effect_ruba(game_contextT *game_ctx, effettoT *effect, giocatoreT **target_tu) {
+	// TODO: add logging
 	// allowed values: target player = TU and target card = STUDENTE | BONUS
 	char *pick_player_prompt, *pick_card_prompt, *pick_card_title;
 	cartaT *target_cards, *card;
@@ -986,7 +993,11 @@ void apply_effect_ruba(game_contextT *game_ctx, effettoT *effect, giocatoreT **t
 				puts("Non puoi rubare questa carta dato che ne hai una uguale sul campo.");
 		} while (!stolen);
 	} else
-		printf("%s non ha alcuna carta %s che puoi rubare!\n", target->name, tipo_cartaT_str(effect->target_carta));
+		printf("%s non ha alcuna carta " COLORED_CARD_TYPE " che puoi rubare!\n",
+			target->name,
+			tipo_cartaT_color(effect->target_carta),
+			tipo_cartaT_str(effect->target_carta)
+		);
 
 	free_wrap(pick_card_title);
 	free_wrap(pick_card_prompt);
