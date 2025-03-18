@@ -907,32 +907,37 @@ void apply_effect_prendi(game_contextT *game_ctx, effettoT *effect, giocatoreT *
 		);
 }
 
-void apply_effect_ruba(game_contextT *game_ctx, effettoT *effect, giocatoreT **target_tu) {
-	// TODO: add logging
-	// allowed values: target player = TU and target card = STUDENTE | BONUS
-	char *pick_player_prompt, *pick_card_prompt, *pick_card_title;
-	cartaT *target_cards, *card;
-	giocatoreT* target;
+/**
+ * @brief applies RUBA effect on the given target.
+ * this effect makes thrower pick which card to steal from targets's aula (aula + bonusmalus).
+ * 
+ * @param game_ctx 
+ * @param target player to activate the effect on
+ * @param effect RUBA effect
+ */
+void apply_effect_ruba_target(game_contextT *game_ctx, giocatoreT *target, effettoT *effect) {
+	char *prompt, *title;
 	bool can_steal = false, stolen = false;
+	cartaT *card, *target_cards = effect->target_carta == STUDENTE ? target->aula : target->bonus_malus;
 
-	if (*target_tu == NULL) { // check if target tu was already asked in previous TU effects of the same card
-		asprintf_ss(&pick_player_prompt, "Scegli il giocatore al quale vuoi rubare una carta " COLORED_CARD_TYPE ":",
-			tipo_cartaT_color(effect->target_carta),
-			tipo_cartaT_str(effect->target_carta)
-		);
-		*target_tu = pick_player(game_ctx, pick_player_prompt, false, false);
-		free_wrap(pick_player_prompt);
+	if (is_self(game_ctx, target)) { // cards like this shouldn't exist
+		puts("Non puoi rubare una carta a te stesso!");
+		return;
 	}
-	target = *target_tu;
 
-	asprintf_sss(&pick_card_prompt, "Scegli la carta " COLORED_CARD_TYPE " che vuoi rubare a " PRETTY_USERNAME ":",
+	printf("[%s] Devi rubare una carta " COLORED_CARD_TYPE " dall'aula di " PRETTY_USERNAME ".\n",
+		game_ctx->curr_player->name,
 		tipo_cartaT_color(effect->target_carta),
 		tipo_cartaT_str(effect->target_carta),
 		target->name
 	);
-	asprintf_ss(&pick_card_title, "Carte %s di %s", tipo_cartaT_str(effect->target_carta), target->name);
-
-	target_cards = effect->target_carta == STUDENTE ? target->aula : target->bonus_malus;
+	asprintf_ssss(&prompt, "[%s] Scegli la carta " COLORED_CARD_TYPE " che vuoi rubare a " PRETTY_USERNAME ".",
+		game_ctx->curr_player->name,
+		tipo_cartaT_color(effect->target_carta),
+		tipo_cartaT_str(effect->target_carta),
+		target->name
+	);
+	asprintf_ss(&title, "Carte %s di %s", tipo_cartaT_str(effect->target_carta), target->name);
 
 	// check if any target card can be stolen by curr_player first
 	for (card = target_cards; card != NULL && !can_steal; card = card->next) {
@@ -944,28 +949,32 @@ void apply_effect_ruba(game_contextT *game_ctx, effettoT *effect, giocatoreT **t
 
 	if (can_steal) {
 		do {
-			card = pick_card_restricted(target_cards, effect->target_carta,
-				pick_card_prompt, pick_card_title, ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET
-			);
+			card = pick_card_restricted(target_cards, effect->target_carta, prompt, title, ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET);
 
-			// TODO: check for MAI
 			if (can_join_aula(game_ctx, game_ctx->curr_player, card)) {
 				leave_aula(game_ctx, target, card, true);
 				join_aula(game_ctx, game_ctx->curr_player, card);
 				printf("Hai rubato: %s\n", card->name);
+				log_sss(game_ctx, "%s ha rubato '%s' a %s.", game_ctx->curr_player->name, card->name, target->name);
 				stolen = true;
 			} else
-				puts("Non puoi rubare questa carta dato che ne hai una uguale sul campo.");
+				printf("Non puoi rubare '%s' dato che ne hai una uguale nella tua aula.\n", card->name);
 		} while (!stolen);
-	} else
-		printf("%s non ha alcuna carta " COLORED_CARD_TYPE " che puoi rubare!\n",
+	} else {
+		printf(PRETTY_USERNAME " non ha alcuna carta " COLORED_CARD_TYPE " che puoi rubare!\n",
 			target->name,
 			tipo_cartaT_color(effect->target_carta),
 			tipo_cartaT_str(effect->target_carta)
 		);
+		log_sss(game_ctx, "%s avrebbe dovuto rubare una carta %s a %s, ma non ne aveva.",
+			game_ctx->curr_player->name,
+			tipo_cartaT_str(effect->target_carta),
+			target->name
+		);
+	}
 
-	free_wrap(pick_card_title);
-	free_wrap(pick_card_prompt);
+	free_wrap(title);
+	free_wrap(prompt);
 }
 
 /**
@@ -989,13 +998,13 @@ void apply_effect_target(game_contextT *game_ctx, effettoT *effect, giocatoreT *
 			break;
 		}
 		case ELIMINA: {
-			// allowed values: target player = * and target card = ALL | STUDENTE | MATRICOLA | STUDENTE_SEMPLICE | LAUREANDO | BONUS | MALUS
+			// allowed values: target player = * and target card = *
 			apply_effect_elimina_target(game_ctx, target, effect);
 			break;
 		}
 		case RUBA: {
-			// allowed values: target player = TU and target card = STUDENTE | BONUS
-			// apply_effect_ruba(game_ctx, effect, target_tu);
+			// allowed values: target player = * and target card = *
+			apply_effect_ruba_target(game_ctx, target, effect);
 			break;
 		}
 		case PESCA: {
