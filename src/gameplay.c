@@ -867,44 +867,45 @@ void join_aula(game_contextT *game_ctx, giocatoreT *player, cartaT *card) {
 }
 
 /**
- * @brief this effect lets you pick a target TU player and extracts a random card from the target player's hand;
- * that card gets removed from the target player's hand and put into the thrower player's hand.
+ * @brief applies PRENDI effect on the given target.
+ * this effect extracts and removes a random card from the target player's hand putting it into the thrower player's hand.
  * 
  * @param game_ctx 
- * @param effect 
- * @param target_tu 
+ * @param target player to activate the effect on
+ * @param effect PRENDI effect
  */
-void apply_effect_prendi(game_contextT *game_ctx, effettoT *effect, giocatoreT **target_tu) {
-	// TODO: add logging
-	// allowed values: target player = TU and target card = ALL
-	char *pick_player_prompt;
-	giocatoreT* target;
+void apply_effect_prendi_target(game_contextT *game_ctx, giocatoreT *target, effettoT *effect) {
 	cartaT *stolen_card;
 
-	if (*target_tu == NULL) { // check if target tu was already asked in previous TU effects of the same card
-		asprintf_ss(&pick_player_prompt, "Scegli il giocatore al quale vuoi rubare una carta " COLORED_CARD_TYPE " dal mazzo:",
-			tipo_cartaT_color(effect->target_carta),
-			tipo_cartaT_str(effect->target_carta)
-		);
-		*target_tu = pick_player(game_ctx, pick_player_prompt, false, false);
-		free_wrap(pick_player_prompt);
+	if (is_self(game_ctx, target)) { // cards like this shouldn't exist
+		puts("Non puoi rubare una carta a te stesso!");
+		return;
 	}
-	target = *target_tu;
 
-	// TODO: check for MAI usage
-
+	printf("[%s] " PRETTY_USERNAME " ti ruba una carta " COLORED_CARD_TYPE " dalla mano!\n",
+		target->name,
+		game_ctx->curr_player->name,
+		tipo_cartaT_color(effect->target_carta),
+		tipo_cartaT_str(effect->target_carta)
+	);
 	stolen_card = pick_random_card_restricted(target->carte, effect->target_carta);
 	if (stolen_card != NULL) {
-		printf("Hai rubato '%s' da " PRETTY_USERNAME "!\n", stolen_card->name, target->name);
 		unlink_card(&target->carte, stolen_card); // remove extracted card from target's hand
 		push_card(&game_ctx->curr_player->carte, stolen_card); // add extracted card to thrower's hand
-	}
-	else
+		printf("Hai rubato '%s' dalla mano di " PRETTY_USERNAME "!\n", stolen_card->name, target->name);
+		log_sss(game_ctx, "%s ha rubato '%s' dalla mano di %s.", game_ctx->curr_player->name, stolen_card->name, target->name);
+	} else {
 		printf(PRETTY_USERNAME " non aveva carte " COLORED_CARD_TYPE " da rubare nella sua mano!\n",
 			tipo_cartaT_color(effect->target_carta),
 			tipo_cartaT_str(effect->target_carta),
 			target->name
 		);
+		log_sss(game_ctx, "%s doveva rubare una carta %s dalla mano di %s, ma non ne aveva.",
+			game_ctx->curr_player->name,
+			tipo_cartaT_str(effect->target_carta),
+			target->name
+		);
+	}
 }
 
 /**
@@ -1013,8 +1014,8 @@ void apply_effect_target(game_contextT *game_ctx, effettoT *effect, giocatoreT *
 			break;
 		}
 		case PRENDI: {
-			// allowed values: target player = TU and target card = ALL
-			// apply_effect_prendi(game_ctx, effect, target_tu);
+			// allowed values: target player = * and target card = *
+			apply_effect_prendi_target(game_ctx, target, effect);
 			break;
 		}
 		case SCAMBIA: {

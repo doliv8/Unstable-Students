@@ -231,6 +231,7 @@ Al giocare di una carta `MAGIA`, questa verrà prima rimossa dalla mano del gioc
 - `SCARTA`: se il target è il giocatore corrente, può scegliere quale carta scartare dal suo mazzo, diversamente la carta viene estratta casualmente dal mazzo della vittima e scartata.
 - `GIOCA`: se il target è il giocatore corrente, esso gioca una carta dal suo mazzo, diversamente si crea un sotto-round all'interno del round nel quale il giocatore target dell'effetto gioca una carta del tipo specificato come se fosse il suo turno.
 - `RUBA`: effetto sensato solo con target diverso dal giocatore corrente. La carta che viene rubata viene spostata dall'aula del target all'aula del giocatore corrente, attivando eventuali effetti di uscita o entrata in aula.
+- `PRENDI`: effetto sensato solo con target diverso dal giocatore corrente. La carta che viene rubata viene spostata dalla mano del target alla mano del giocatore corrente.
 
 
 
