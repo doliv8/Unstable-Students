@@ -402,7 +402,7 @@ void dispose_card(game_contextT *game_ctx, cartaT *card) {
 		push_card(&game_ctx->mazzo_scarti, card); // put card into mazzo scarti
 }
 
-void discard_card(game_contextT* game_ctx, cartaT **cards, tipo_cartaT type, const char *title) {
+void discard_card(game_contextT *game_ctx, cartaT **cards, tipo_cartaT type, const char *title) {
 	cartaT *card = pick_card_restricted(*cards, type, "Scegli la carta che vuoi scartare.", title, ANSI_BOLD ANSI_RED "%s" ANSI_RESET);
 
 	if (card != NULL) {
@@ -412,7 +412,7 @@ void discard_card(game_contextT* game_ctx, cartaT **cards, tipo_cartaT type, con
 		log_ss(game_ctx, "%s ha scartato '%s'.", game_ctx->curr_player->name, card->name);
 	}
 	else {
-		printf("Avresti dovuto scartare una carta %s%s" ANSI_RESET ", ma non ne hai!\n", tipo_cartaT_color(type), tipo_cartaT_str(type));
+		printf("Avresti dovuto scartare una carta " COLORED_CARD_TYPE ", ma non ne hai!\n", tipo_cartaT_color(type), tipo_cartaT_str(type));
 		log_ss(game_ctx, "%s avrebbe dovuto scartare una carta %s, ma non ne aveva.", game_ctx->curr_player->name, tipo_cartaT_str(type));
 	}
 }
@@ -612,6 +612,7 @@ void apply_effect_scambia(game_contextT *game_ctx, giocatoreT **target_tu) {
 
 /**
  * @brief applies SCARTA effect on the given target.
+ * this effect makes targets discard a card from their hands.
  * 
  * @param game_ctx 
  * @param target player to activate the effect on
@@ -621,10 +622,11 @@ void apply_effect_scarta_target(game_contextT *game_ctx, giocatoreT *target, eff
 	char *title;
 	cartaT *discarded_card;
 
-	if (target == game_ctx->curr_player) { // target is self, picking which card to discard is allowed
-		printf("Devi scartare una carta (%s), " PRETTY_USERNAME "!\n",
-			tipo_cartaT_str(effect->target_carta),
-			game_ctx->curr_player->name
+	if (is_self(game_ctx, target)) { // target is self, picking which card to discard is allowed
+		printf("[%s] Devi scartare una carta " COLORED_CARD_TYPE " dal tuo mazzo!\n",
+			game_ctx->curr_player->name,
+			tipo_cartaT_color(effect->target_carta),
+			tipo_cartaT_str(effect->target_carta)
 		);
 
 		if (effect->target_carta == ALL)
@@ -646,90 +648,24 @@ void apply_effect_scarta_target(game_contextT *game_ctx, giocatoreT *target, eff
 			unlink_card(&target->carte, discarded_card);
 			dispose_card(game_ctx, discarded_card); // dispose discarded card
 			printf(PRETTY_USERNAME " ha scartato '%s'!\n", target->name, discarded_card->name);
-			log_sss(game_ctx, "%s ha scartato %s a causa di %s.",
+			log_sss(game_ctx, "%s ha scartato %s a causa dell'attacco di %s.",
 				target->name,
 				discarded_card->name,
 				game_ctx->curr_player->name
 			);
-		}
-		else {
-			printf(PRETTY_USERNAME " non aveva carte " COLORED_CARD_TYPE "da scartare nella sua mano!\n",
+		} else {
+			printf(PRETTY_USERNAME " non aveva carte " COLORED_CARD_TYPE " da scartare nella sua mano!\n",
 				target->name,
 				tipo_cartaT_color(effect->target_carta),
 				tipo_cartaT_str(effect->target_carta)
 			);
-			log_sss(game_ctx, "%s doveva scartare una carta %s a causa di %s, ma non ne aveva.",
+			log_sss(game_ctx, "%s doveva scartare una carta %s a causa dell'attacco di %s, ma non ne aveva.",
 				target->name,
 				tipo_cartaT_str(effect->target_carta),
 				game_ctx->curr_player->name
 			);
 		}
 	}
-}
-
-/**
- * @brief this effect makes targets discard a card from their hands.
- * allowed values: target player = * and target card = *
- * 
- * @param game_ctx 
- * @param card attacking card
- * @param effect SCARTA effect
- * @param target_tu pointer to target_tu variable, to use for target player = TU
- * @return true if effect was blocked
- * @return false if effect wasn't blocked
- */
-bool apply_effect_scarta(game_contextT *game_ctx, cartaT *card, effettoT *effect, giocatoreT **target_tu) {
-	char *pick_player_prompt;
-	giocatoreT *target;
-	bool blocked = false;
-
-	switch (effect->target_giocatori) {
-		case IO: {
-			apply_effect_scarta_target(game_ctx, game_ctx->curr_player, effect);
-			break;
-		}
-		case TU: {
-			if (*target_tu == NULL) { // check if target tu was already asked in previous TU effects for this card
-				asprintf_ss(&pick_player_prompt, "[%s]: Scegli il giocatore al quale vuoi far scartare una carta %s:",
-					game_ctx->curr_player->name,
-					tipo_cartaT_str(effect->target_carta)
-				);
-				*target_tu = pick_player(game_ctx, pick_player_prompt, false, false);
-				free_wrap(pick_player_prompt);
-			}
-			if (!target_defends(game_ctx, *target_tu, card, effect))
-				apply_effect_scarta_target(game_ctx, *target_tu, effect);
-			else
-				blocked = true;
-			break;
-		}
-		case VOI:
-		case TUTTI: {
-			if (effect->target_giocatori == VOI) {
-				printf("Tutti i giocatori (eccetto " PRETTY_USERNAME ") devono scartare una carta %s!\n",
-					game_ctx->curr_player->name,
-					tipo_cartaT_str(effect->target_carta)
-				);
-				target = game_ctx->curr_player->next; // start from next player as curr player is not included
-			} else {
-				printf("Tutti i giocatori devono scartare una carta %s!\n", tipo_cartaT_str(effect->target_carta));
-				target = game_ctx->curr_player; // start from curr player, as it is included
-			}
-			// ask every player (except thrower) if they want to defend
-			for (giocatoreT *defender = game_ctx->curr_player->next; defender != game_ctx->curr_player && !blocked; defender = defender->next)
-				if (target_defends(game_ctx, defender, card, effect))
-					blocked = true;
-			if (!blocked) { // no defense is used
-				// iterate and apply effect from target (included) to game_ctx->curr_player (not included)
-				do {
-					apply_effect_scarta_target(game_ctx, target, effect);
-					target = target->next;
-				} while (target != game_ctx->curr_player);
-			}
-			break;
-		}
-	}
-	return blocked;
 }
 
 /**
@@ -1012,8 +948,8 @@ void apply_effect_target(game_contextT *game_ctx, effettoT *effect, giocatoreT *
 			break;
 		}
 		case SCARTA: {
-			// mazzo allowed values: target player = IO | VOI | TUTTI and target card = ALL
-			// blocked = apply_effect_scarta(game_ctx, card, effect, target_tu);
+			// allowed values: target player = * and target card = *
+			apply_effect_scarta_target(game_ctx, target, effect);
 			break;
 		}
 		case ELIMINA: {
