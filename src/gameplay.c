@@ -99,6 +99,7 @@ bool target_defends(game_contextT *game_ctx, giocatoreT *target, cartaT *attack_
 	giocatoreT *attacker = game_ctx->curr_player;
 
 	if (player_can_defend(target, attack_card)) { // first check if target player can actually defend from the attack
+		// TODO: maybe add precise effect information like [Elimina -> Studente (Tutti)] joining card and effect with one asprintf_ss
 		printf("[%s] Puoi difenderti dall'attacco di '%s' da parte di " PRETTY_USERNAME ". Vuoi difenderti? ",
 			target->name,
 			attack_card->name,
@@ -108,7 +109,7 @@ bool target_defends(game_contextT *game_ctx, giocatoreT *target, cartaT *attack_
 	}
 
 	if (defends) { // user can and wants to defend from the attack
-		asprintf_ssss(&prompt, "[%s] Scegli con quale carta %s%s" ANSI_RESET " difenderti dall'attacco di " PRETTY_USERNAME ".",
+		asprintf_ssss(&prompt, "[%s] Scegli con quale carta " COLORED_CARD_TYPE " difenderti dall'attacco di " PRETTY_USERNAME ".",
 			target->name,
 			tipo_cartaT_color(ISTANTANEA),
 			tipo_cartaT_str(ISTANTANEA),
@@ -230,15 +231,18 @@ giocatoreT *pick_player(game_contextT *game_ctx, const char *prompt, bool allow_
  * @param title_fmt formatter for the title of the cards list box (visible length must be 0)
  * @return cartaT* pointer to picked card or NULL if there's no card to pick
  */
-cartaT *pick_card_restricted(cartaT *head, tipo_cartaT type, const char* prompt, const char *title, const char* title_fmt) {
+cartaT *pick_card_restricted(cartaT *head, tipo_cartaT type, const char *prompt, const char *title, const char *title_fmt) {
 	cartaT *card;
-	int n_cards = count_cards_restricted(head, type), chosen_idx;
+	int chosen_idx, n_cards = count_cards_restricted(head, type);
 
 	show_card_group_restricted(head, title, title_fmt, type);
 
 	// handle no cards check
 	if (n_cards == 0) {
-		puts("Non ci sono carte da scegliere!");
+		printf("Non ci sono carte " COLORED_CARD_TYPE " da scegliere!\n",
+			tipo_cartaT_color(type),
+			tipo_cartaT_str(type)
+		);
 		return NULL;
 	}
 
@@ -308,9 +312,16 @@ cartaT *pick_aula_card(game_contextT *game_ctx, giocatoreT *target, tipo_cartaT 
 
 	if (n_aula + n_bonusmalus == 0) {
 		if (is_self(game_ctx, target))
-			printf("Non ci sono carte %s da scegliere nella tua aula, %s!\n", tipo_cartaT_str(type), game_ctx->curr_player->name);
+			printf("[%s] Non ci sono carte " COLORED_CARD_TYPE " da scegliere nella tua aula!\n",
+				game_ctx->curr_player->name,
+				tipo_cartaT_color(type),
+				tipo_cartaT_str(type)
+			);
 		else
-			printf("Non ci sono carte %s da scegliere nell'aula di %s!\n", tipo_cartaT_str(type), target->name);
+			printf("Non ci sono carte " COLORED_CARD_TYPE " da scegliere nell'aula di " PRETTY_USERNAME "!\n",
+				tipo_cartaT_color(type),
+				tipo_cartaT_str(type),
+				target->name);
 		return NULL;
 	}
 
@@ -345,13 +356,15 @@ cartaT *pick_aula_card(game_contextT *game_ctx, giocatoreT *target, tipo_cartaT 
 			show_card_group(target->bonus_malus, bonusmalus_title, ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET); // show bonus/malus
 
 			if (is_self(game_ctx, target))
-				printf("[%s] Vuoi scegliere una carta %s dalla tua aula studenti o dai tuoi bonus/malus?\n",
+				printf("[%s] Vuoi scegliere una carta " COLORED_CARD_TYPE " dalla tua aula studenti o dai tuoi Bonus/Malus?\n",
 					game_ctx->curr_player->name,
+					tipo_cartaT_color(type),
 					tipo_cartaT_str(type)
 				);
 			else
-				printf("[%s] Vuoi scegliere una carta %s dall'aula studenti o dai bonus/malus di %s?\n",
+				printf("[%s] Vuoi scegliere una carta " COLORED_CARD_TYPE " dall'aula studenti o dai Bonus/Malus di " PRETTY_USERNAME "?\n",
 					game_ctx->curr_player->name,
+					tipo_cartaT_color(type),
 					tipo_cartaT_str(type),
 					target->name
 				);
@@ -715,9 +728,15 @@ void apply_effect_elimina_target(game_contextT *game_ctx, giocatoreT *target, ef
 	cartaT *deleted;
 
 	if (is_self(game_ctx, target)) {
-		printf("[%s] Devi eliminare una carta (%s) dalla tua aula.\n", game_ctx->curr_player->name, tipo_cartaT_str(effect->target_carta));
-		asprintf_ss(&prompt, "[%s] Scegli la carta (%s) che vuoi eliminare dalla tua aula.",
-			game_ctx->curr_player->name, tipo_cartaT_str(effect->target_carta)
+		printf("[%s] Devi eliminare una carta " COLORED_CARD_TYPE " dalla tua aula.\n",
+			game_ctx->curr_player->name,
+			tipo_cartaT_color(effect->target_carta),
+			tipo_cartaT_str(effect->target_carta)
+		);
+		asprintf_sss(&prompt, "[%s] Scegli la carta " COLORED_CARD_TYPE " che vuoi eliminare dalla tua aula.",
+			game_ctx->curr_player->name,
+			tipo_cartaT_color(effect->target_carta),
+			tipo_cartaT_str(effect->target_carta)
 		);
 		deleted = pick_aula_card(game_ctx, game_ctx->curr_player, effect->target_carta, prompt);
 		if (deleted != NULL) {
@@ -725,15 +744,25 @@ void apply_effect_elimina_target(game_contextT *game_ctx, giocatoreT *target, ef
 			log_ss(game_ctx, "%s Ha scelto di eliminare '%s' dalla sua aula.", game_ctx->curr_player->name, deleted->name);
 		}
 	} else {
-		printf("[%s] Devi eliminare una carta (%s) dall'aula di %s.\n",
-			game_ctx->curr_player->name, tipo_cartaT_str(effect->target_carta), target->name
+		printf("[%s] Devi eliminare una carta " COLORED_CARD_TYPE " dall'aula di %s.\n",
+			game_ctx->curr_player->name,
+			tipo_cartaT_color(effect->target_carta),
+			tipo_cartaT_str(effect->target_carta),
+			target->name
 		);
-		asprintf_sss(&prompt, "[%s] Scegli la carta (%s) che vuoi eliminare dall'aula di %s.",
-			game_ctx->curr_player->name, tipo_cartaT_str(effect->target_carta), target->name
+		asprintf_ssss(&prompt, "[%s] Scegli la carta " COLORED_CARD_TYPE " che vuoi eliminare dall'aula di %s.",
+			game_ctx->curr_player->name,
+			tipo_cartaT_color(effect->target_carta),
+			tipo_cartaT_str(effect->target_carta),
+			target->name
 		);
 		deleted = pick_aula_card(game_ctx, target, effect->target_carta, prompt);
 		if (deleted != NULL) {
-			printf("%s ha eliminato '%s' dall'aula di %s!\n", game_ctx->curr_player->name, deleted->name, target->name);
+			printf(PRETTY_USERNAME " ha eliminato '%s' dall'aula di " PRETTY_USERNAME "!\n",
+				game_ctx->curr_player->name,
+				deleted->name,
+				target->name
+			);
 			log_sss(game_ctx, "%s ha eliminato '%s' dall'aula di %s.", game_ctx->curr_player->name, deleted->name, target->name);
 		}
 	}
@@ -741,6 +770,11 @@ void apply_effect_elimina_target(game_contextT *game_ctx, giocatoreT *target, ef
 	if (deleted != NULL) { // check if a card could be selected
 		leave_aula(game_ctx, target, deleted, true);
 		dispose_card(game_ctx, deleted);
+	} else {
+		log_ss(game_ctx, "%s avrebbe dovuto eliminare una carta %s dalla sua aula, ma non ne aveva.",
+			target->name,
+			tipo_cartaT_str(effect->target_carta)
+		);
 	}
 
 	free_wrap(prompt);
@@ -768,8 +802,9 @@ bool apply_effect_elimina(game_contextT *game_ctx, cartaT *card, effettoT *effec
 			break;
 		case TU: {
 			if (*target_tu == NULL) { // check if target tu was already asked in previous TU effects for this card
-				asprintf_ss(&pick_player_prompt, "[%s]: Scegli il giocatore al quale vuoi eliminare una carta %s.",
+				asprintf_sss(&pick_player_prompt, "[%s]: Scegli il giocatore al quale vuoi eliminare una carta " COLORED_CARD_TYPE ".",
 					game_ctx->curr_player->name,
+					tipo_cartaT_color(effect->target_carta),
 					tipo_cartaT_str(effect->target_carta)
 				);
 				*target_tu = pick_player(game_ctx, pick_player_prompt, false, false);
