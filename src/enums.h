@@ -49,5 +49,6 @@ const char *target_giocatoriT_str(target_giocatoriT target);
 const char *tipo_cartaT_str(tipo_cartaT tipo);
 const char *tipo_cartaT_color(tipo_cartaT tipo);
 const char *azioneT_str(azioneT azione);
+const char *azioneT_verb_str(azioneT azione);
 
 #endif

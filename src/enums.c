@@ -69,3 +69,16 @@ const char *azioneT_str(azioneT azione) {
 	};
 	return mapping[azione];
 }
+
+const char *azioneT_verb_str(azioneT azione) {
+	static const char *mapping[] = {
+		[GIOCA] = "fare giocare",
+		[SCARTA] = "fare scartare dal mazzo",
+		[PESCA] = "fare pescare",
+		[ELIMINA] = "eliminare dall'aula",
+		[RUBA] = "rubare dall'aula",
+		[PRENDI] = "rubare dal mazzo"
+		// no INGEGNERE | IMPEDIRE | MOSTRA | BLOCCA | SCAMBIA
+	};
+	return mapping[azione];
+}

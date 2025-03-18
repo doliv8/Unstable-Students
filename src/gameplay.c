@@ -734,6 +734,7 @@ bool apply_effect_scarta(game_contextT *game_ctx, cartaT *card, effettoT *effect
 
 /**
  * @brief applies ELIMINA effect on the given target.
+ * this effect makes thrower pick which card to delete from targets's aula (aula + bonusmalus).
  * 
  * @param game_ctx 
  * @param target player to activate the effect on
@@ -757,7 +758,7 @@ void apply_effect_elimina_target(game_contextT *game_ctx, giocatoreT *target, ef
 		deleted = pick_aula_card(game_ctx, game_ctx->curr_player, effect->target_carta, prompt);
 		if (deleted != NULL) {
 			printf("[%s] Hai scelto di eliminare '%s' dalla tua aula!\n", game_ctx->curr_player->name, deleted->name);
-			log_ss(game_ctx, "%s Ha scelto di eliminare '%s' dalla sua aula.", game_ctx->curr_player->name, deleted->name);
+			log_ss(game_ctx, "%s ha scelto di eliminare '%s' dalla sua aula.", game_ctx->curr_player->name, deleted->name);
 		} else {
 			log_ss(game_ctx, "%s avrebbe dovuto eliminare una carta %s dalla sua aula, ma non ne aveva.",
 				target->name,
@@ -800,77 +801,6 @@ void apply_effect_elimina_target(game_contextT *game_ctx, giocatoreT *target, ef
 	}
 
 	free_wrap(prompt);
-}
-
-/**
- * @brief this effect makes thrower pick which card to delete from targets's aula (aula + bonusmalus).
- * allowed values: target player = * and target card = ALL | STUDENTE | MATRICOLA | STUDENTE_SEMPLICE | LAUREANDO | BONUS | MALUS
- * 
- * @param game_ctx 
- * @param card attacking card
- * @param effect ELIMINA effect
- * @param target_tu pointer to target_tu variable, to use for target player = TU
- * @return true if effect was blocked
- * @return false if effect wasn't blocked
- */
-bool apply_effect_elimina(game_contextT *game_ctx, cartaT *card, effettoT *effect, giocatoreT **target_tu) {
-	char *pick_player_prompt;
-	giocatoreT *target;
-	bool blocked = false;
-
-	switch (effect->target_giocatori) {
-		case IO:
-			apply_effect_elimina_target(game_ctx, game_ctx->curr_player, effect);
-			break;
-		case TU: {
-			if (*target_tu == NULL) { // check if target tu was already asked in previous TU effects for this card
-				asprintf_sss(&pick_player_prompt, "[%s]: Scegli il giocatore al quale vuoi eliminare una carta " COLORED_CARD_TYPE ".",
-					game_ctx->curr_player->name,
-					tipo_cartaT_color(effect->target_carta),
-					tipo_cartaT_str(effect->target_carta)
-				);
-				*target_tu = pick_player(game_ctx, pick_player_prompt, false, false);
-				free_wrap(pick_player_prompt);
-			}
-			if (!target_defends(game_ctx, *target_tu, card, effect))
-				apply_effect_elimina_target(game_ctx, *target_tu, effect);
-			else
-				blocked = true;
-			break;
-		}
-		case VOI:
-		case TUTTI: {
-			if (effect->target_giocatori == VOI) {
-				printf(PRETTY_USERNAME " deve eliminare dall'aula una carta " COLORED_CARD_TYPE " a tutti i giocatori (eccetto " PRETTY_USERNAME ")!\n",
-					game_ctx->curr_player->name,
-					tipo_cartaT_color(effect->target_carta),
-					tipo_cartaT_str(effect->target_carta),
-					game_ctx->curr_player->name
-				);
-				target = game_ctx->curr_player->next; // start from next player if curr player is not included
-			} else {
-				printf(PRETTY_USERNAME " deve eliminare dall'aula una carta " COLORED_CARD_TYPE " a tutti i giocatori!\n",
-					game_ctx->curr_player->name,
-					tipo_cartaT_color(effect->target_carta),
-					tipo_cartaT_str(effect->target_carta)
-				);
-				target = game_ctx->curr_player; // start from curr player, as it is included
-			}
-			// ask every player (except thrower) if they want to defend
-			for (giocatoreT *defender = game_ctx->curr_player->next; !is_self(game_ctx, defender) && !blocked; defender = defender->next)
-				if (target_defends(game_ctx, defender, card, effect))
-					blocked = true;
-			if (!blocked) { // no defense is used
-				// iterate and apply effect from target (included) to game_ctx->curr_player (not included)
-				do {
-					apply_effect_elimina_target(game_ctx, target, effect);
-					target = target->next;
-				} while (!is_self(game_ctx, target));
-			}
-			break;
-		}
-	}
-	return blocked;
 }
 
 void apply_effect_gioca(game_contextT *game_ctx, effettoT *effect) {
@@ -1067,51 +997,48 @@ void apply_effect_ruba(game_contextT *game_ctx, effettoT *effect, giocatoreT **t
 }
 
 /**
- * @brief 
+ * @brief this function just calls the given effect with the specified target
  * 
  * @param game_ctx 
  * @param effect 
- * @param target_tu 
- * @return true if effect was blocked
- * @return false if effect wasn't blocked
+ * @param target 
  */
-bool apply_effect(game_contextT *game_ctx, cartaT *card, effettoT *effect, giocatoreT **target_tu) {
+void apply_effect_target(game_contextT *game_ctx, effettoT *effect, giocatoreT *target) {
 	// TODO: apply ALL actual effects
-	bool blocked = false;
 	switch (effect->azione) {
 		case GIOCA: {
 			// mazzo allowed values: target player = IO and target card = ALL
-			apply_effect_gioca(game_ctx, effect);
+			// apply_effect_gioca(game_ctx, effect);
 			break;
 		}
 		case SCARTA: {
 			// mazzo allowed values: target player = IO | VOI | TUTTI and target card = ALL
-			blocked = apply_effect_scarta(game_ctx, card, effect, target_tu);
+			// blocked = apply_effect_scarta(game_ctx, card, effect, target_tu);
 			break;
 		}
 		case ELIMINA: {
-			// allowed values: target player = IO | TU | TUTTI and target card = ALL | STUDENTE | BONUS | MALUS
-			blocked = apply_effect_elimina(game_ctx, card, effect, target_tu);
+			// allowed values: target player = * and target card = ALL | STUDENTE | MATRICOLA | STUDENTE_SEMPLICE | LAUREANDO | BONUS | MALUS
+			apply_effect_elimina_target(game_ctx, target, effect);
 			break;
 		}
 		case RUBA: {
 			// allowed values: target player = TU and target card = STUDENTE | BONUS
-			apply_effect_ruba(game_ctx, effect, target_tu);
+			// apply_effect_ruba(game_ctx, effect, target_tu);
 			break;
 		}
 		case PESCA: {
 			// allowed values: target player = IO and target card = ALL
-			draw_card(game_ctx);
+			// draw_card(game_ctx);
 			break;
 		}
 		case PRENDI: {
 			// allowed values: target player = TU and target card = ALL
-			apply_effect_prendi(game_ctx, effect, target_tu);
+			// apply_effect_prendi(game_ctx, effect, target_tu);
 			break;
 		}
 		case SCAMBIA: {
 			// allowed values: target player = TU and target card = ALL
-			apply_effect_scambia(game_ctx, target_tu);
+			// apply_effect_scambia(game_ctx, target_tu);
 			break;
 		}
 		case BLOCCA:
@@ -1119,6 +1046,97 @@ bool apply_effect(game_contextT *game_ctx, cartaT *card, effettoT *effect, gioca
 		case IMPEDIRE:
 		case INGEGNERE: {
 			// no action needs to be performed
+			break;
+		}
+	}
+}
+
+/**
+ * @brief 
+ * 
+ * @param game_ctx 
+ * @param card attacking card
+ * @param effect effect to apply
+ * @param target_tu pointer to target_tu variable, to use for target player = TU
+ * @return true if effect was blocked
+ * @return false if effect wasn't blocked
+ */
+bool apply_effect(game_contextT *game_ctx, cartaT *card, effettoT *effect, giocatoreT **target_tu) {
+	char *pick_player_prompt;
+	giocatoreT *target;
+	bool blocked = false;
+
+	switch (effect->target_giocatori) {
+		case IO: {
+			// can't defend from self thrown cards so just apply the effect
+			apply_effect_target(game_ctx, effect, game_ctx->curr_player);
+			break;
+		}
+		case TU: {
+			if (*target_tu == NULL) { // check if target tu was already asked in previous TU effects for this card
+				// two different cases for messages (SCAMBIA didn't respect same phrase composition as other actions)
+				if (effect->azione == SCAMBIA)
+					asprintf_s(&pick_player_prompt, "[%s]: Scegli il giocatore col quale vuoi scambiare il tuo mazzo.",
+						game_ctx->curr_player->name
+					);
+				else
+					asprintf_ssss(&pick_player_prompt, "[%s]: Scegli il giocatore al quale vuoi %s una carta " COLORED_CARD_TYPE ".",
+						game_ctx->curr_player->name,
+						azioneT_verb_str(effect->azione),
+						tipo_cartaT_color(effect->target_carta),
+						tipo_cartaT_str(effect->target_carta)
+					);
+				*target_tu = pick_player(game_ctx, pick_player_prompt, false, false);
+				free_wrap(pick_player_prompt);
+			}
+			if (!target_defends(game_ctx, *target_tu, card, effect))
+				apply_effect_target(game_ctx, effect, *target_tu);
+			else
+				blocked = true;
+			break;
+		}
+		case VOI:
+		case TUTTI: {
+			// there are 4 cases: VOI + SCAMBIA action, TUTTI + SCAMBIA action, VOI + generic action, TUTTI + generic action
+			if (effect->target_giocatori == VOI) {
+				if (effect->azione == SCAMBIA)
+					printf(PRETTY_USERNAME " deve scambiare il suo mazzo con tutti i giocatori (eccetto " PRETTY_USERNAME ")!\n",
+						game_ctx->curr_player->name,
+						game_ctx->curr_player->name
+					);
+				else
+					printf(PRETTY_USERNAME " deve %s una carta " COLORED_CARD_TYPE " a tutti i giocatori (eccetto " PRETTY_USERNAME ")!\n",
+						game_ctx->curr_player->name,
+						azioneT_verb_str(effect->azione),
+						tipo_cartaT_color(effect->target_carta),
+						tipo_cartaT_str(effect->target_carta),
+						game_ctx->curr_player->name
+					);
+				target = game_ctx->curr_player->next; // start from next player if curr player is not included
+			} else { // TUTTI
+				if (effect->azione == SCAMBIA)
+					printf(PRETTY_USERNAME " deve scambiare il suo mazzo con tutti i giocatori!\n", game_ctx->curr_player->name);
+				else
+					printf(PRETTY_USERNAME " deve %s una carta " COLORED_CARD_TYPE " a tutti i giocatori!\n",
+						game_ctx->curr_player->name,
+						"eliminare dall'aula",
+						tipo_cartaT_color(effect->target_carta),
+						tipo_cartaT_str(effect->target_carta)
+					);
+				target = game_ctx->curr_player; // start from curr player, as it is included
+			}
+
+			// ask every player (except thrower) if they want to defend
+			for (giocatoreT *defender = game_ctx->curr_player->next; !is_self(game_ctx, defender) && !blocked; defender = defender->next)
+				if (target_defends(game_ctx, defender, card, effect))
+					blocked = true;
+			if (!blocked) { // no defense is used
+				// iterate and apply effect from target (included) to game_ctx->curr_player (not included)
+				do {
+					apply_effect_target(game_ctx, effect, target);
+					target = target->next;
+				} while (!is_self(game_ctx, target));
+			}
 			break;
 		}
 	}
