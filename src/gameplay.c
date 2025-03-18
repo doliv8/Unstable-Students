@@ -94,22 +94,29 @@ bool player_can_defend(giocatoreT *target, cartaT *attack_card) {
  * @return false if the attack wasn't blocked by target
  */
 bool target_defends(game_contextT *game_ctx, giocatoreT *target, cartaT *attack_card, effettoT *attack_effect) {
-	char *prompt, *attack_description, *effect_description;
+	char *prompt, *effect_description, *attack_description, *attack_description_fmt;
 	bool valid_defense = false, defends = false;
 	cartaT *defense_card = NULL;
 	giocatoreT *attacker = game_ctx->curr_player;
 
-	if (attack_effect == CARD_PLACEMENT)
-		asprintf_s(&attack_description, "dal piazzamento di '%s' nei Bonus/Malus", attack_card->name);
+	if (attack_effect == CARD_PLACEMENT) {
+		asprintf_ss(&attack_description, "dal piazzamento di '%s' nei %s", attack_card->name, tipo_cartaT_str(attack_card->tipo));
+		asprintf_sss(&attack_description_fmt, "dal piazzamento di '%s' nei " COLORED_CARD_TYPE,
+			attack_card->name,
+			tipo_cartaT_color(attack_card->tipo),
+			tipo_cartaT_str(attack_card->tipo)
+		);
+	}
 	else {
 		format_effect(&effect_description, attack_effect);
-		asprintf_ss(&attack_description, "dall'attacco " ANSI_BOLD "%s" ANSI_RESET " di '%s'", effect_description, attack_card->name);
+		asprintf_ss(&attack_description, "dall'attacco %s di '%s'", effect_description, attack_card->name);
+		asprintf_ss(&attack_description_fmt, "dall'attacco " ANSI_BOLD "%s" ANSI_RESET " di '%s'", effect_description, attack_card->name);
 	}
 
 	if (player_can_defend(target, attack_card)) { // first check if target player can actually defend from the attack
 		printf("[%s] Puoi difenderti %s da parte di " PRETTY_USERNAME ". Vuoi difenderti? ",
 			target->name,
-			attack_description,
+			attack_description_fmt,
 			attacker->name
 		);
 		defends = ask_choice(); // then ask if target wants to defend from the attack
@@ -131,7 +138,7 @@ bool target_defends(game_contextT *game_ctx, giocatoreT *target, cartaT *attack_
 		free_wrap(prompt);
 
 		printf(PRETTY_USERNAME " si difende %s da parte di " PRETTY_USERNAME " usando '%s'!\n",
-			target->name, attack_description, attacker->name, defense_card->name
+			target->name, attack_description_fmt, attacker->name, defense_card->name
 		);
 		log_ssss(game_ctx, "%s si difende %s da parte di %s usando '%s'.",
 			target->name, attack_description, attacker->name, defense_card->name
@@ -149,6 +156,7 @@ bool target_defends(game_contextT *game_ctx, giocatoreT *target, cartaT *attack_
 	if (attack_effect != CARD_PLACEMENT)
 		free_wrap(effect_description);
 	free_wrap(attack_description);
+	free_wrap(attack_description_fmt);
 
 	return defends;
 }
@@ -697,7 +705,7 @@ void apply_effect_elimina_target(game_contextT *game_ctx, giocatoreT *target, ef
 			log_ss(game_ctx, "%s ha scelto di eliminare '%s' dalla sua aula.", game_ctx->curr_player->name, deleted->name);
 		} else {
 			log_ss(game_ctx, "%s avrebbe dovuto eliminare una carta %s dalla sua aula, ma non ne aveva.",
-				target->name,
+				game_ctx->curr_player->name,
 				tipo_cartaT_str(effect->target_carta)
 			);
 		}
@@ -739,28 +747,56 @@ void apply_effect_elimina_target(game_contextT *game_ctx, giocatoreT *target, ef
 	free_wrap(prompt);
 }
 
-void apply_effect_gioca(game_contextT *game_ctx, effettoT *effect) {
-	// allowed values: target player = IO | TU | VOI | TUTTI and target card = ALL, STUDENTE, MATRICOLA, STUDENTE_SEMPLICE, LAUREANDO, BONUS, MALUS, MAGIA, ISTANTANEA
-
+/**
+ * @brief applies GIOCA effect on the given target.
+ * this effect makes target play a card.
+ * 
+ * @param game_ctx 
+ * @param target player to activate the effect on
+ * @param effect GIOCA effect
+ */
+void apply_effect_gioca_target(game_contextT *game_ctx, giocatoreT *target, effettoT *effect) {
 	giocatoreT *thrower = game_ctx->curr_player;
 
-	switch (effect->target_giocatori) {
-		case IO:
-			play_card(game_ctx, effect->target_carta);
-			break;
-			// TODO: keep working here
-		case VOI:
-		case TUTTI: {
-			if (effect->target_giocatori == VOI) {
-
-			}
-			do {
-
-			} while (game_ctx->curr_player != thrower);
-
-
-			break;
+	if (is_self(game_ctx, target)) {
+		printf("[%s] Devi giocare una carta " COLORED_CARD_TYPE " dal tuo mazzo.\n",
+			game_ctx->curr_player->name,
+			tipo_cartaT_color(effect->target_carta),
+			tipo_cartaT_str(effect->target_carta)
+		);
+		log_sss(game_ctx, "%s deve giocare una carta %s grazie all'effetto %s.",
+			game_ctx->curr_player->name,
+			tipo_cartaT_str(effect->target_carta),
+			azioneT_str(GIOCA)
+		);
+		if (!play_card(game_ctx, effect->target_carta)) {
+			log_ss(game_ctx, "%s avrebbe dovuto giocare una carta %s, ma non ne aveva.",
+				target->name,
+				tipo_cartaT_str(effect->target_carta)
+			);
 		}
+	} else {
+		printf("[%s] " PRETTY_USERNAME " ti fa giocare una carta " COLORED_CARD_TYPE " dal tuo mazzo.\n",
+			target->name,
+			thrower->name,
+			tipo_cartaT_color(effect->target_carta),
+			tipo_cartaT_str(effect->target_carta)
+		);
+		log_ssss(game_ctx, "%s deve giocare una carta %s grazie all'effetto %s di %s.",
+			target->name,
+			tipo_cartaT_str(effect->target_carta),
+			azioneT_str(GIOCA),
+			thrower->name
+		);
+
+		game_ctx->curr_player = target; // switch current player to the target player to create a sub-round for target to play a card
+		if (!play_card(game_ctx, effect->target_carta)) {
+			log_ss(game_ctx, "%s avrebbe dovuto giocare una carta %s, ma non ne aveva.",
+				target->name,
+				tipo_cartaT_str(effect->target_carta)
+			);
+		}
+		game_ctx->curr_player = thrower; // switch back to original card thrower player
 	}
 }
 
@@ -826,7 +862,7 @@ void join_aula(game_contextT *game_ctx, giocatoreT *player, cartaT *card) {
 		push_card(&player->aula, card);
 	else // is BONUS/MALUS
 		push_card(&player->bonus_malus, card);
-	log_sss(game_ctx, "Una carta %s entra nell'aula di %s: %s.", tipo_cartaT_str(card->tipo), player->name, card->name);
+	log_sss(game_ctx, "Una carta %s entra nell'aula di %s: '%s'.", tipo_cartaT_str(card->tipo), player->name, card->name);
 	apply_effects(game_ctx, card, SUBITO); // apply join effects
 }
 
@@ -943,8 +979,8 @@ void apply_effect_target(game_contextT *game_ctx, effettoT *effect, giocatoreT *
 	// TODO: apply ALL actual effects
 	switch (effect->azione) {
 		case GIOCA: {
-			// mazzo allowed values: target player = IO and target card = ALL
-			// apply_effect_gioca(game_ctx, effect);
+			// allowed values: target player = * and target card = *
+			apply_effect_gioca_target(game_ctx, target, effect);
 			break;
 		}
 		case SCARTA: {
