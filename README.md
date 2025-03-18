@@ -227,7 +227,8 @@ Al giocare di una carta `MAGIA`, questa verrà prima rimossa dalla mano del gioc
 
 ### Applicazione degli effetti
 
-TODO: scarta io choice
+- `ELIMINA`: il giocatore corrente sceglie quale carta vuole eliminare dall'aula del target. La carta che viene eliminata dall'aula del target attiva i suoi effetti di uscita dall'aula se con quando = `FINE`.
+- `SCARTA`: se il target è il giocatore corrente, può scegliere quale carta scartare dal suo mazzo, diversamente la carta viene estratta casualmente dal mazzo della vittima e scartata.
 
 
 
