@@ -29,6 +29,7 @@
 #define MAX_EFFECTS 6
 
 #define ONE_ELEMENT 1
+#define CARD_PLACEMENT NULL
 
 // "Slant" font
 #define MENU_ASCII_ART ANSI_YELLOW \

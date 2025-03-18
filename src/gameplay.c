@@ -89,20 +89,27 @@ bool player_can_defend(giocatoreT *target, cartaT *attack_card) {
  * @param game_ctx 
  * @param target player the attack_card is being played on
  * @param attack_card attacking card to defend from
+ * @param attack_effect attacking effect to defend from
  * @return true if the attak was blocked by target
  * @return false if the attack wasn't blocked by target
  */
-bool target_defends(game_contextT *game_ctx, giocatoreT *target, cartaT *attack_card) {
-	char *prompt;
+bool target_defends(game_contextT *game_ctx, giocatoreT *target, cartaT *attack_card, effettoT *attack_effect) {
+	char *prompt, *attack_description, *effect_description;
 	bool valid_defense = false, defends = false;
 	cartaT *defense_card = NULL;
 	giocatoreT *attacker = game_ctx->curr_player;
 
+	if (attack_effect == CARD_PLACEMENT)
+		asprintf_s(&attack_description, "dal piazzamento di '%s' nell'aula", attack_card->name);
+	else {
+		format_effect(&effect_description, attack_effect);
+		asprintf_ss(&attack_description, "dall'attacco " ANSI_BOLD "%s" ANSI_RESET " di '%s'", effect_description, attack_card->name);
+	}
+
 	if (player_can_defend(target, attack_card)) { // first check if target player can actually defend from the attack
-		// TODO: maybe add precise effect information like [Elimina -> Studente (Tutti)] joining card and effect with one asprintf_ss
-		printf("[%s] Puoi difenderti dall'attacco di '%s' da parte di " PRETTY_USERNAME ". Vuoi difenderti? ",
+		printf("[%s] Puoi difenderti %s da parte di " PRETTY_USERNAME ". Vuoi difenderti? ",
 			target->name,
-			attack_card->name,
+			attack_description,
 			attacker->name
 		);
 		defends = ask_choice(); // then ask if target wants to defend from the attack
@@ -123,11 +130,11 @@ bool target_defends(game_contextT *game_ctx, giocatoreT *target, cartaT *attack_
 		} while (!valid_defense);
 		free_wrap(prompt);
 
-		printf(PRETTY_USERNAME " si difende dall'attacco di '%s' da parte di " PRETTY_USERNAME " usando '%s'!\n",
-			target->name, attack_card->name, attacker->name, defense_card->name
+		printf(PRETTY_USERNAME " si difende %s da parte di " PRETTY_USERNAME " usando '%s'!\n",
+			target->name, attack_description, attacker->name, defense_card->name
 		);
-		log_ssss(game_ctx, "%s si difende dall'attacco di '%s' da parte di %s usando '%s'.",
-			target->name, attack_card->name, attacker->name, defense_card->name
+		log_ssss(game_ctx, "%s si difende %s da parte di %s usando '%s'.",
+			target->name, attack_description, attacker->name, defense_card->name
 		);
 
 		unlink_card(&target->carte, defense_card); // remove chosen defense card from target's hand
@@ -138,6 +145,11 @@ bool target_defends(game_contextT *game_ctx, giocatoreT *target, cartaT *attack_
 
 		dispose_card(game_ctx, defense_card); // dispose chosen defense card after its use ended
 	}
+
+	if (attack_effect != CARD_PLACEMENT)
+		free_wrap(effect_description);
+	free_wrap(attack_description);
+
 	return defends;
 }
 
@@ -508,7 +520,7 @@ bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
 				if (can_join_aula(game_ctx, target, card)) {
 					log_sss(game_ctx, "%s gioca '%s' su %s.", thrower->name, card->name, target->name);
 					unlink_card(&thrower->carte, card);
-					if (target == thrower || !target_defends(game_ctx, target, card)) // can't defended from self thrown cards
+					if (target == thrower || !target_defends(game_ctx, target, card, CARD_PLACEMENT)) // can't defended from self thrown cards
 						join_aula(game_ctx, target, card);
 					else
 						dispose_card(game_ctx, card);
@@ -681,7 +693,7 @@ bool apply_effect_scarta(game_contextT *game_ctx, cartaT *card, effettoT *effect
 				*target_tu = pick_player(game_ctx, pick_player_prompt, false, false);
 				free_wrap(pick_player_prompt);
 			}
-			if (!target_defends(game_ctx, *target_tu, card))
+			if (!target_defends(game_ctx, *target_tu, card, effect))
 				apply_effect_scarta_target(game_ctx, *target_tu, effect);
 			else
 				blocked = true;
@@ -701,7 +713,7 @@ bool apply_effect_scarta(game_contextT *game_ctx, cartaT *card, effettoT *effect
 			}
 			// ask every player (except thrower) if they want to defend
 			for (giocatoreT *defender = game_ctx->curr_player->next; defender != game_ctx->curr_player && !blocked; defender = defender->next)
-				if (target_defends(game_ctx, defender, card))
+				if (target_defends(game_ctx, defender, card, effect))
 					blocked = true;
 			if (!blocked) { // no defense is used
 				// iterate and apply effect from target (included) to game_ctx->curr_player (not included)
@@ -810,7 +822,7 @@ bool apply_effect_elimina(game_contextT *game_ctx, cartaT *card, effettoT *effec
 				*target_tu = pick_player(game_ctx, pick_player_prompt, false, false);
 				free_wrap(pick_player_prompt);
 			}
-			if (!target_defends(game_ctx, *target_tu, card))
+			if (!target_defends(game_ctx, *target_tu, card, effect))
 				apply_effect_elimina_target(game_ctx, *target_tu, effect);
 			else
 				blocked = true;
@@ -830,7 +842,7 @@ bool apply_effect_elimina(game_contextT *game_ctx, cartaT *card, effettoT *effec
 			}
 			// ask every player (except thrower) if they want to defend
 			for (giocatoreT *defender = game_ctx->curr_player->next; !is_self(game_ctx, defender) && !blocked; defender = defender->next)
-				if (target_defends(game_ctx, defender, card))
+				if (target_defends(game_ctx, defender, card, effect))
 					blocked = true;
 			if (!blocked) { // no defense is used
 				// iterate and apply effect from target (included) to game_ctx->curr_player (not included)

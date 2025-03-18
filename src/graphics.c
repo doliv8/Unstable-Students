@@ -9,6 +9,14 @@
 #include "string.h"
 #include "card.h"
 
+void format_effect(char **str, effettoT* effect) {
+	asprintf_sss(str, "%s -> %s (%s)",
+		azioneT_str(effect->azione),
+		tipo_cartaT_str(effect->target_carta),
+		target_giocatoriT_str(effect->target_giocatori)
+	);
+}
+
 void format_effects(freeable_multiline_textT *multiline, cartaT *card) {
 	char *line;
 	if (card->n_effetti != 0) {
@@ -26,11 +34,7 @@ void format_effects(freeable_multiline_textT *multiline, cartaT *card) {
 
 		// add actual effects
 		for (int i = 0; i < card->n_effetti; i++) {
-			asprintf_sss(&line, "%s -> %s (%s)",
-				azioneT_str(card->effetti[i].azione),
-				tipo_cartaT_str(card->effetti[i].target_carta),
-				target_giocatoriT_str(card->effetti[i].target_giocatori)
-			);
+			format_effect(&line, &card->effetti[i]);
 			multiline_addline(multiline, line);
 		}
 	} else {
