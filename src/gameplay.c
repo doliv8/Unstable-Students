@@ -425,7 +425,15 @@ void discard_card(game_contextT *game_ctx, cartaT **cards, tipo_cartaT type, con
 	}
 }
 
-void draw_card(game_contextT *game_ctx) {
+/**
+ * @brief makes current player draw a card from the mazzo pesca and if empty swaps it with mazzo scarti.
+ * 
+ * @param game_ctx 
+ * @return cartaT* the drawn card
+ */
+cartaT *draw_card(game_contextT *game_ctx) {
+	cartaT *drawn_card;
+
 	// shuffle and swap mazzo_scarti with mazzo_pesca if mazzo_pesca is empty
 	if (game_ctx->mazzo_pesca == NULL) {
 		game_ctx->mazzo_pesca = shuffle_cards(game_ctx->mazzo_scarti);
@@ -433,11 +441,12 @@ void draw_card(game_contextT *game_ctx) {
 		game_ctx->mazzo_scarti = NULL; // mazzo_scarti has been moved to mazzo_pesca (emptied)
 	}
 
-	cartaT *drawn_card = pop_card(&game_ctx->mazzo_pesca);
+	drawn_card = pop_card(&game_ctx->mazzo_pesca);
 	puts("Ecco la carta che hai pescato:");
 	show_card(drawn_card);
 	log_ss(game_ctx, "%s ha pescato '%s'.", game_ctx->curr_player->name, drawn_card->name);
 	push_card(&game_ctx->curr_player->carte, drawn_card);
+	return drawn_card;
 }
 
 int count_playable_cards(game_contextT *game_ctx, tipo_cartaT type) {
@@ -767,7 +776,7 @@ void apply_effect_gioca_target(game_contextT *game_ctx, giocatoreT *target, effe
 		log_sss(game_ctx, "%s deve giocare una carta %s grazie all'effetto %s.",
 			game_ctx->curr_player->name,
 			tipo_cartaT_str(effect->target_carta),
-			azioneT_str(GIOCA)
+			azioneT_str(effect->azione)
 		);
 		if (!play_card(game_ctx, effect->target_carta)) {
 			log_ss(game_ctx, "%s avrebbe dovuto giocare una carta %s, ma non ne aveva.",
@@ -785,7 +794,7 @@ void apply_effect_gioca_target(game_contextT *game_ctx, giocatoreT *target, effe
 		log_ssss(game_ctx, "%s deve giocare una carta %s grazie all'effetto %s di %s.",
 			target->name,
 			tipo_cartaT_str(effect->target_carta),
-			azioneT_str(GIOCA),
+			azioneT_str(effect->azione),
 			thrower->name
 		);
 
@@ -794,6 +803,87 @@ void apply_effect_gioca_target(game_contextT *game_ctx, giocatoreT *target, effe
 			log_ss(game_ctx, "%s avrebbe dovuto giocare una carta %s, ma non ne aveva.",
 				target->name,
 				tipo_cartaT_str(effect->target_carta)
+			);
+		}
+		game_ctx->curr_player = thrower; // switch back to original card thrower player
+	}
+}
+
+/**
+ * @brief applies PESCA effect on the given target.
+ * this effect makes target draw a card.
+ * 
+ * @param game_ctx 
+ * @param target player to activate the effect on
+ * @param effect PESCA effect
+ */
+void apply_effect_pesca_target(game_contextT *game_ctx, giocatoreT *target, effettoT *effect) {
+	cartaT *drawn_card;
+	giocatoreT *thrower = game_ctx->curr_player;
+
+	if (is_self(game_ctx, target)) {
+		printf("[%s] Devi pescare una carta " COLORED_CARD_TYPE ".\n",
+			game_ctx->curr_player->name,
+			tipo_cartaT_color(effect->target_carta),
+			tipo_cartaT_str(effect->target_carta)
+		);
+		log_sss(game_ctx, "%s deve pescare una carta %s grazie all'effetto %s.",
+			game_ctx->curr_player->name,
+			tipo_cartaT_str(effect->target_carta),
+			azioneT_str(effect->azione)
+		);
+		drawn_card = draw_card(game_ctx);
+		if (!match_card_type(drawn_card, effect->target_carta)) {
+			// dispose card as it is not of the specified type
+			unlink_card(&game_ctx->curr_player->carte, drawn_card); // remove drawn card from hand
+			dispose_card(game_ctx, drawn_card);
+			printf("[%s] Avresti dovuto pescare una carta " COLORED_CARD_TYPE " ma hai pescato '%s' (" COLORED_CARD_TYPE "), che viene quindi scartata!\n",
+				game_ctx->curr_player->name,
+				tipo_cartaT_color(effect->target_carta),
+				tipo_cartaT_str(effect->target_carta),
+				drawn_card->name,
+				tipo_cartaT_color(drawn_card->tipo),
+				tipo_cartaT_str(drawn_card->tipo)
+			);
+			log_ssss(game_ctx, "%s avrebbe dovuto pescare una carta %s, ma ha pescato '%s' (%s), scartandola.",
+				target->name,
+				tipo_cartaT_str(effect->target_carta),
+				drawn_card->name,
+				tipo_cartaT_str(drawn_card->tipo)
+			);
+		}
+	} else {
+		printf("[%s] " PRETTY_USERNAME " ti fa pescare una carta " COLORED_CARD_TYPE ".\n",
+			target->name,
+			thrower->name,
+			tipo_cartaT_color(effect->target_carta),
+			tipo_cartaT_str(effect->target_carta)
+		);
+		log_ssss(game_ctx, "%s deve pescare una carta %s grazie all'effetto %s di %s.",
+			target->name,
+			tipo_cartaT_str(effect->target_carta),
+			azioneT_str(effect->azione),
+			thrower->name
+		);
+		game_ctx->curr_player = target; // switch current player to the target player to create a sub-round for target to draw a card
+		drawn_card = draw_card(game_ctx);
+		if (!match_card_type(drawn_card, effect->target_carta)) {
+			// dispose card as it is not of the specified type
+			unlink_card(&game_ctx->curr_player->carte, drawn_card); // remove drawn card from hand
+			dispose_card(game_ctx, drawn_card);
+			printf(PRETTY_USERNAME " avrebbe dovuto pescare una carta " COLORED_CARD_TYPE " ma ha pescato '%s' (" COLORED_CARD_TYPE "), che viene quindi scartata!\n",
+				game_ctx->curr_player->name,
+				tipo_cartaT_color(effect->target_carta),
+				tipo_cartaT_str(effect->target_carta),
+				drawn_card->name,
+				tipo_cartaT_color(drawn_card->tipo),
+				tipo_cartaT_str(drawn_card->tipo)
+			);
+			log_ssss(game_ctx, "%s avrebbe dovuto pescare una carta %s, ma ha pescato '%s' (%s), scartandola.",
+				target->name,
+				tipo_cartaT_str(effect->target_carta),
+				drawn_card->name,
+				tipo_cartaT_str(drawn_card->tipo)
 			);
 		}
 		game_ctx->curr_player = thrower; // switch back to original card thrower player
@@ -1009,8 +1099,8 @@ void apply_effect_target(game_contextT *game_ctx, effettoT *effect, giocatoreT *
 			break;
 		}
 		case PESCA: {
-			// allowed values: target player = IO and target card = ALL
-			// draw_card(game_ctx);
+			// allowed values: target player = * and target card = *
+			apply_effect_pesca_target(game_ctx, target, effect);
 			break;
 		}
 		case PRENDI: {
@@ -1136,6 +1226,10 @@ void apply_effects_now(game_contextT *game_ctx, cartaT *card) {
 	giocatoreT *target_tu = NULL;
 
 	if (card->opzionale) {
+		printf("Puoi attivare gli effetti opzionali di questa carta " COLORED_CARD_TYPE ":\n",
+			tipo_cartaT_color(card->tipo),
+			tipo_cartaT_str(card->tipo)
+		);
 		show_card(card);
 		printf("Vuoi applicare gli effetti di questa carta? ");
 		apply = ask_choice();
