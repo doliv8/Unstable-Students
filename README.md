@@ -238,8 +238,7 @@ Per l'applicazione degli effetti ho adottato un flow di selezione col seguente o
 - `RUBA`: effetto sensato solo con target diverso dal giocatore corrente. La carta che viene rubata viene spostata dall'aula del target all'aula del giocatore corrente, attivando eventuali effetti di uscita o entrata in aula.
 - `PRENDI`: effetto sensato solo con target diverso dal giocatore corrente. La carta che viene rubata viene spostata dalla mano del target alla mano del giocatore corrente.
 - `PESCA`: il giocatore target pesca una carta dal mazzo di pesca. Se il tipo di carta target dell'effetto è diverso da `ALL`, avviene prima la pesca di una carta come usuale ma successivamente, se la carta pescata non è del tipo specificato, questa viene automaticamente scartata e la pesca si conclude.
-...
-
+- `SCAMBIA`: il mazzo (mano) del giocatore target viene scambiato con quello del giocatore corrente. L'unico target carte sensato è `ALL`.
 
 
 ### Difendersi da una carta

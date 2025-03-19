@@ -606,28 +606,6 @@ int choice_action_menu() {
 }
 
 /**
- * @brief this effect makes thrower swap their hand with a player of they pick.
- * allowed values: target player = TU and target card = ALL
- * 
- * @param game_ctx 
- * @param target_tu SCAMBIA effect
- */
-void apply_effect_scambia(game_contextT *game_ctx, giocatoreT **target_tu) {
-	giocatoreT *target;
-
-	if (*target_tu == NULL)
-		*target_tu = pick_player(game_ctx, "Scegli il giocatore col quale scambiare la tua mano:", false, false);
-	target = *target_tu;
-
-	printf("Hai scelto di scambiare il tuo mazzo con quello di " PRETTY_USERNAME "!\n", target->name);
-	log_ss(game_ctx, "%s scambia il suo mazzo con quello di %s.", game_ctx->curr_player->name, target->name);
-
-	cartaT *tmp = target->carte;
-	target->carte = game_ctx->curr_player->carte;
-	game_ctx->curr_player->carte = tmp;
-}
-
-/**
  * @brief applies SCARTA effect on the given target.
  * this effect makes targets discard a card from their hands.
  * 
@@ -1069,6 +1047,30 @@ void apply_effect_ruba_target(game_contextT *game_ctx, giocatoreT *target, effet
 }
 
 /**
+ * @brief applies SCAMBIA effect on the given target.
+ * this effect swaps thrower and target player's hands.
+ * 
+ * @param game_ctx 
+ * @param target player to activate the effect on
+ * @param effect SCAMBIA effect
+ */
+void apply_effect_scambia_target(game_contextT *game_ctx, giocatoreT *target, effettoT *effect) {
+	cartaT *thrower_cards = game_ctx->curr_player->carte;
+
+	if (is_self(game_ctx, target)) {
+		puts("Hai scambiato la mano con te stesso!");
+		// no need to actually do anything :)
+		return;
+	}
+
+	printf(PRETTY_USERNAME " ha scambiato la sua mano con quella di " PRETTY_USERNAME "!\n", game_ctx->curr_player->name, target->name);
+	log_ss(game_ctx, "%s scambia il suo mazzo con quello di %s.", game_ctx->curr_player->name, target->name);
+
+	// swap hands
+	game_ctx->curr_player->carte = target->carte;
+	target->carte = thrower_cards;
+}
+/**
  * @brief this function just calls the given effect with the specified target
  * 
  * @param game_ctx 
@@ -1109,8 +1111,8 @@ void apply_effect_target(game_contextT *game_ctx, effettoT *effect, giocatoreT *
 			break;
 		}
 		case SCAMBIA: {
-			// allowed values: target player = TU and target card = ALL
-			// apply_effect_scambia(game_ctx, target_tu);
+			// allowed values: target player = * and target card = ALL
+			apply_effect_scambia_target(game_ctx, target, effect);
 			break;
 		}
 		case BLOCCA:
