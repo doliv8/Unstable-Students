@@ -227,11 +227,18 @@ Al giocare di una carta `MAGIA`, questa verrà prima rimossa dalla mano del gioc
 
 ### Applicazione degli effetti
 
+Per l'applicazione degli effetti ho adottato un flow di selezione col seguente ordine:
+* `apply_effects` chiama `apply_effects_now` se il `quando` fornito corrisponde
+* `apply_effects_now` verifica se gli effetti della carta che si vogliono applicare sono opzionali, e in tal caso chiede all'utente se vuole applicarli o meno. In caso positivo si procede a chiamare `apply_effect` per ciascun effetto appartenente alla carta, tendendo conto del valore di ritorno di tale funzione, che sarà `true` se l'effetto è stato bloccato dalla difesa della vittima. Se gli effetti vengono bloccati da una difesa le carte `BONUS` e `MALUS` finiscono dritte negli scarti.
+* `apply_effect` ...
+
 - `ELIMINA`: il giocatore corrente sceglie quale carta vuole eliminare dall'aula del target. La carta che viene eliminata dall'aula del target attiva i suoi effetti di uscita dall'aula se con quando = `FINE`.
 - `SCARTA`: se il target è il giocatore corrente, può scegliere quale carta scartare dal suo mazzo, diversamente la carta viene estratta casualmente dal mazzo della vittima e scartata.
 - `GIOCA`: se il target è il giocatore corrente, esso gioca una carta dal suo mazzo, diversamente si crea un sotto-round all'interno del round nel quale il giocatore target dell'effetto gioca una carta del tipo specificato come se fosse il suo turno.
 - `RUBA`: effetto sensato solo con target diverso dal giocatore corrente. La carta che viene rubata viene spostata dall'aula del target all'aula del giocatore corrente, attivando eventuali effetti di uscita o entrata in aula.
 - `PRENDI`: effetto sensato solo con target diverso dal giocatore corrente. La carta che viene rubata viene spostata dalla mano del target alla mano del giocatore corrente.
+- `PESCA`: il giocatore target pesca una carta dal mazzo di pesca. Se il tipo di carta target dell'effetto è diverso da `ALL`, avviene prima la pesca di una carta come usuale ma successivamente, se la carta pescata non è del tipo specificato, questa viene automaticamente scartata e la pesca si conclude.
+...
 
 
 
