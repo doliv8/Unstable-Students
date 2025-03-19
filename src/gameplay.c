@@ -197,7 +197,7 @@ void view_own(game_contextT *game_ctx) {
  * @param game_ctx 
  */
 void view_others(game_contextT *game_ctx) {
-	giocatoreT *target = pick_player(game_ctx, "Scegli il giocatore del quale vuoi vedere lo stato:", false, true);
+	giocatoreT *target = pick_player(game_ctx, "Scegli il giocatore del quale vuoi vedere lo stato:", !ALLOW_SELF, ALLOW_ALL);
 	if (target == NULL) { // picked option is ALL
 		// start from next player based on turns
 		for (giocatoreT *player = game_ctx->curr_player->next; player != game_ctx->curr_player; player = player->next)
@@ -535,7 +535,7 @@ bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
 						tipo_cartaT_color(card->tipo),
 						tipo_cartaT_str(card->tipo)
 					);
-					target = pick_player(game_ctx, player_prompt, true, false);
+					target = pick_player(game_ctx, player_prompt, ALLOW_SELF, !ALLOW_ALL);
 					free_wrap(player_prompt);
 				}
 				if (can_join_aula(game_ctx, target, card)) {
@@ -727,7 +727,7 @@ void apply_effect_elimina_target(game_contextT *game_ctx, giocatoreT *target, ef
 	}
 
 	if (deleted != NULL) { // check if a card could be selected
-		leave_aula(game_ctx, target, deleted, true);
+		leave_aula(game_ctx, target, deleted, DISPATCH_EFFECTS);
 		dispose_card(game_ctx, deleted);
 	}
 
@@ -1021,7 +1021,7 @@ void apply_effect_ruba_target(game_contextT *game_ctx, giocatoreT *target, effet
 			card = pick_card_restricted(target_cards, effect->target_carta, prompt, title, ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET);
 
 			if (can_join_aula(game_ctx, game_ctx->curr_player, card)) {
-				leave_aula(game_ctx, target, card, true);
+				leave_aula(game_ctx, target, card, DISPATCH_EFFECTS);
 				join_aula(game_ctx, game_ctx->curr_player, card);
 				printf("Hai rubato: %s\n", card->name);
 				log_sss(game_ctx, "%s ha rubato '%s' a %s.", game_ctx->curr_player->name, card->name, target->name);
@@ -1160,7 +1160,7 @@ bool apply_effect(game_contextT *game_ctx, cartaT *card, effettoT *effect, gioca
 						tipo_cartaT_color(effect->target_carta),
 						tipo_cartaT_str(effect->target_carta)
 					);
-				*target_tu = pick_player(game_ctx, pick_player_prompt, false, false);
+				*target_tu = pick_player(game_ctx, pick_player_prompt, !ALLOW_SELF, !ALLOW_ALL);
 				free_wrap(pick_player_prompt);
 			}
 			if (!target_defends(game_ctx, *target_tu, card, effect))
@@ -1250,7 +1250,7 @@ void apply_effects_now(game_contextT *game_ctx, cartaT *card) {
 		}
 	}
 	if (blocked && (match_card_type(card, BONUS) || match_card_type(card, MALUS))) { // if bonus/malus card gets blocked it gets disposed
-		leave_aula(game_ctx, game_ctx->curr_player, card, false); // remove card from aula without activating leaving effects
+		leave_aula(game_ctx, game_ctx->curr_player, card, !DISPATCH_EFFECTS); // remove card from aula without activating leaving effects
 		dispose_card(game_ctx, card);
 	}
 }

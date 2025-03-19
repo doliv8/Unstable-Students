@@ -30,6 +30,9 @@
 
 #define ONE_ELEMENT 1
 #define CARD_PLACEMENT NULL
+#define ALLOW_SELF true
+#define ALLOW_ALL true
+#define DISPATCH_EFFECTS true
 
 // "Slant" font
 #define MENU_ASCII_ART ANSI_YELLOW \
