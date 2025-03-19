@@ -1070,6 +1070,7 @@ void apply_effect_scambia_target(game_contextT *game_ctx, giocatoreT *target, ef
 	game_ctx->curr_player->carte = target->carte;
 	target->carte = thrower_cards;
 }
+
 /**
  * @brief this function just calls the given effect with the specified target
  * 
@@ -1078,7 +1079,6 @@ void apply_effect_scambia_target(game_contextT *game_ctx, giocatoreT *target, ef
  * @param target 
  */
 void apply_effect_target(game_contextT *game_ctx, effettoT *effect, giocatoreT *target) {
-	// TODO: apply ALL actual effects
 	switch (effect->azione) {
 		case GIOCA: {
 			// allowed values: target player = * and target card = *

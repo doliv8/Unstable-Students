@@ -228,9 +228,12 @@ Al giocare di una carta `MAGIA`, questa verrà prima rimossa dalla mano del gioc
 ### Applicazione degli effetti
 
 Per l'applicazione degli effetti ho adottato un flow di selezione col seguente ordine:
-* `apply_effects` chiama `apply_effects_now` se il `quando` fornito corrisponde
-* `apply_effects_now` verifica se gli effetti della carta che si vogliono applicare sono opzionali, e in tal caso chiede all'utente se vuole applicarli o meno. In caso positivo si procede a chiamare `apply_effect` per ciascun effetto appartenente alla carta, tendendo conto del valore di ritorno di tale funzione, che sarà `true` se l'effetto è stato bloccato dalla difesa della vittima. Se gli effetti vengono bloccati da una difesa le carte `BONUS` e `MALUS` finiscono dritte negli scarti.
-* `apply_effect` ...
+* `apply_effects` chiama `apply_effects_now` se il `quando` fornito corrisponde.
+* `apply_effects_now` verifica se gli effetti della carta che si vogliono applicare sono opzionali, e in tal caso chiede all'utente se vuole applicarli o meno. In caso positivo si procede a chiamare `apply_effect` per ciascun effetto appartenente alla carta, verificando se l'effetto è stato bloccato dalla difesa della vittima. Se gli effetti vengono bloccati da una difesa, le carte `BONUS` e `MALUS` finiscono dritte negli scarti.
+* `apply_effect` chiama la funzione `apply_effect_target` per ciascun giocatore target dell'effetto, dopo aver chiesto a tutti gli interessati (eccetto il giocatore corrente) che possono, se vogliono difendersi dall'effetto.
+* `apply_effect_target` semplicemente chiama l'apposita funzione `apply_effect_<nome azione>_target` sul target fornito.
+
+Ecco una breve descrizione delle azioni degli effetti:
 
 - `ELIMINA`: il giocatore corrente sceglie quale carta vuole eliminare dall'aula del target. La carta che viene eliminata dall'aula del target attiva i suoi effetti di uscita dall'aula se con quando = `FINE`.
 - `SCARTA`: se il target è il giocatore corrente, può scegliere quale carta scartare dal suo mazzo, diversamente la carta viene estratta casualmente dal mazzo della vittima e scartata.
