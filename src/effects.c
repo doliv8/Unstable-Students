@@ -111,7 +111,7 @@ void apply_effect_scarta_target(game_contextT *game_ctx, giocatoreT *target, eff
 			tipo_cartaT_color(effect->target_carta),
 			tipo_cartaT_str(effect->target_carta)
 		);
-		discarded_card = pick_random_card_restricted(target->carte, effect->target_carta);
+		discarded_card = pick_random_card(target->carte, effect->target_carta);
 		if (discarded_card != NULL) {
 			unlink_card(&target->carte, discarded_card);
 			dispose_card(game_ctx, discarded_card); // dispose discarded card
@@ -231,7 +231,7 @@ void apply_effect_ruba_target(game_contextT *game_ctx, giocatoreT *target, effet
 
 	if (can_steal) {
 		do {
-			card = pick_card_restricted(target_cards, effect->target_carta, prompt, title, ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET);
+			card = pick_card(target_cards, effect->target_carta, prompt, title, ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET);
 
 			if (can_join_aula(game_ctx, game_ctx->curr_player, card)) {
 				leave_aula(game_ctx, target, card, DISPATCH_EFFECTS);
@@ -281,7 +281,7 @@ void apply_effect_prendi_target(game_contextT *game_ctx, giocatoreT *target, eff
 		tipo_cartaT_color(effect->target_carta),
 		tipo_cartaT_str(effect->target_carta)
 	);
-	stolen_card = pick_random_card_restricted(target->carte, effect->target_carta);
+	stolen_card = pick_random_card(target->carte, effect->target_carta);
 	if (stolen_card != NULL) {
 		unlink_card(&target->carte, stolen_card); // remove extracted card from target's hand
 		push_card(&game_ctx->curr_player->carte, stolen_card); // add extracted card to thrower's hand

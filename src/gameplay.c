@@ -134,7 +134,7 @@ bool target_defends(game_contextT *game_ctx, giocatoreT *target, cartaT *attack_
 		);
 		// ask target which defense card wants to use from his hand (only ISTANTANEA cards)
 		do {
-			defense_card = pick_card_restricted(target->carte, ISTANTANEA, prompt, "Istantanee nella tua mano", ANSI_BLUE "%s" ANSI_RESET);
+			defense_card = pick_card(target->carte, ISTANTANEA, prompt, "Istantanee nella tua mano", ANSI_BLUE "%s" ANSI_RESET);
 			if (card_can_block(target, defense_card, attack_card)) // verify picked defense card can defend from the attack card
 				valid_defense = true;
 		} while (!valid_defense);
@@ -244,17 +244,17 @@ giocatoreT *pick_player(game_contextT *game_ctx, const char *prompt, bool allow_
 }
 
 /**
- * @brief prompts user to pick a card from the provided cards list with a restriction filter and returns the picked card
+ * @brief prompts user to pick a card from the provided cards list with a type restriction filter and returns the picked card
  * (still chained in the list).
  * 
  * @param head cards list
  * @param type card type user is allowed to pick
  * @param prompt text shown to the user while asked to pick the card
- * @param title title for the cards list box
- * @param title_fmt formatter for the title of the cards list box (visible length must be 0)
+ * @param title title of the group of cards (used to calculate visual length of title), can't contain colors
+ * @param title_fmt title format string (must always contain one and only one %s and no other formatters), can contain colors
  * @return cartaT* pointer to picked card or NULL if there's no card to pick
  */
-cartaT *pick_card_restricted(cartaT *head, tipo_cartaT type, const char *prompt, const char *title, const char *title_fmt) {
+cartaT *pick_card(cartaT *head, tipo_cartaT type, const char *prompt, const char *title, const char *title_fmt) {
 	cartaT *card;
 	int chosen_idx, n_cards = count_cards_restricted(head, type);
 
@@ -281,30 +281,15 @@ cartaT *pick_card_restricted(cartaT *head, tipo_cartaT type, const char *prompt,
 	return card_by_index_restricted(head, type, chosen_idx);
 }
 
-
-// TODO: remove this function and rename _restricted in pick_card
 /**
- * @brief prompts user to pick a card from the provided cards list and returns the picked card (still chained in the list).
- * 
- * @param head cards list
- * @param prompt text shown to the user while asked to pick the card
- * @param title title for the cards list box
- * @param title_fmt formatter for the title of the cards list box (visible length must be 0)
- * @return cartaT* pointer to picked card or NULL if there's no card to pick
- */
-cartaT *pick_card(cartaT *head, const char* prompt, const char *title, const char* title_fmt) {
-	return pick_card_restricted(head, ALL, prompt, title, title_fmt);
-}
-
-/**
- * @brief automatically picks a card from the provided cards list with a restriction filter and returns the picked card
+ * @brief automatically picks a card from the provided cards list with a type restriction filter and returns the picked card
  * (still chained in the list).
  * 
  * @param head cards list
- * @param type card type user is allowed to pick
- * @return cartaT* pointer to picked card or NULL if there's no card to pick
+ * @param type card type allowed to be extracted
+ * @return cartaT* pointer to picked card or NULL if there's no card to extract
  */
-cartaT *pick_random_card_restricted(cartaT *head, tipo_cartaT type) {
+cartaT *pick_random_card(cartaT *head, tipo_cartaT type) {
 	cartaT *card;
 	int n_cards = count_cards_restricted(head, type), chosen_idx;
 
@@ -312,7 +297,10 @@ cartaT *pick_random_card_restricted(cartaT *head, tipo_cartaT type) {
 		chosen_idx = rand_int(1, n_cards); // pick a 1-indexed index of the restricted cards
 		card = card_by_index_restricted(head, type, chosen_idx);
 	} else {
-		puts("Non ci sono carte da estrarre!");
+		printf("Non ci sono carte " COLORED_CARD_TYPE " da estrarre!\n",
+			tipo_cartaT_color(type),
+			tipo_cartaT_str(type)
+		);
 		card = NULL;
 	}
 	return card;
@@ -372,9 +360,9 @@ cartaT *pick_aula_card(game_contextT *game_ctx, giocatoreT *target, tipo_cartaT 
 	}
 
 	if (n_bonusmalus == 0) { // only aula has cards
-		card = pick_card_restricted(target->aula, type, prompt, aula_title, ANSI_BOLD ANSI_YELLOW "%s" ANSI_RESET);
+		card = pick_card(target->aula, type, prompt, aula_title, ANSI_BOLD ANSI_YELLOW "%s" ANSI_RESET);
 	} else if (n_aula == 0) { // only bonus/malus has cards
-		card = pick_card_restricted(target->bonus_malus, type, prompt, bonusmalus_title, ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET);
+		card = pick_card(target->bonus_malus, type, prompt, bonusmalus_title, ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET);
 	} else { // both aula and bonus/malus have cards and given type must be ALL
 		do {
 			show_card_group(target->aula, aula_title, ANSI_BOLD ANSI_YELLOW "%s" ANSI_RESET); // show aula
@@ -399,9 +387,9 @@ cartaT *pick_aula_card(game_contextT *game_ctx, giocatoreT *target, tipo_cartaT 
 		} while (chosen_idx < CHOICE_AULA || chosen_idx > CHOICE_BONUSMALUS);
 
 		if (chosen_idx == CHOICE_AULA)
-			card = pick_card_restricted(target->aula, type, prompt, aula_title, ANSI_BOLD ANSI_YELLOW "%s" ANSI_RESET);
+			card = pick_card(target->aula, type, prompt, aula_title, ANSI_BOLD ANSI_YELLOW "%s" ANSI_RESET);
 		else // choice was bonus/malus
-			card = pick_card_restricted(target->bonus_malus, type, prompt, bonusmalus_title, ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET);
+			card = pick_card(target->bonus_malus, type, prompt, bonusmalus_title, ANSI_BOLD ANSI_MAGENTA "%s" ANSI_RESET);
 	}
 	free_wrap(bonusmalus_title);
 	free_wrap(aula_title);
@@ -416,7 +404,7 @@ void dispose_card(game_contextT *game_ctx, cartaT *card) {
 }
 
 void discard_card(game_contextT *game_ctx, cartaT **cards, tipo_cartaT type, const char *title) {
-	cartaT *card = pick_card_restricted(*cards, type, "Scegli la carta che vuoi scartare.", title, ANSI_BOLD ANSI_RED "%s" ANSI_RESET);
+	cartaT *card = pick_card(*cards, type, "Scegli la carta che vuoi scartare.", title, ANSI_BOLD ANSI_RED "%s" ANSI_RESET);
 
 	if (card != NULL) {
 		unlink_card(cards, card);
@@ -501,7 +489,7 @@ bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
 	else
 		playable_prompt = strdup_checked("Scegli la carta che vuoi giocare.");
 
-	card = pick_card_restricted(thrower->carte, type, playable_prompt,
+	card = pick_card(thrower->carte, type, playable_prompt,
 		"La tua mano", ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET
 	);
 	printf("Hai scelto di giocare: %s\n", card->name);
