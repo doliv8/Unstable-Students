@@ -1356,7 +1356,8 @@ void play_round(game_contextT *game_ctx) {
  * @return false if current round player didn't win
  */
 bool check_win_condition(game_contextT *game_ctx) {
-	bool can_win = has_bonusmalus(game_ctx->curr_player, INGEGNERE); // cant win with ingegnerizzazione
+	bool can_win = !has_bonusmalus(game_ctx->curr_player, INGEGNERE); // cant win with ingegnerizzazione
+	// TODO: do MATRICOLA count?
 	int tot_students = count_cards_restricted(game_ctx->curr_player->aula, STUDENTE_SEMPLICE) +
 		count_cards_restricted(game_ctx->curr_player->aula, LAUREANDO);
 	return can_win && tot_students >= WIN_STUDENTS_COUNT;
@@ -1373,7 +1374,9 @@ void end_round(game_contextT *game_ctx) {
 	}
 
 	if (check_win_condition(game_ctx)) { // check if curr player won
-		printf("Congratulazioni " PRETTY_USERNAME ", hai vinto la partita!\n", game_ctx->curr_player->name);
+		printf(ANSI_CYAN "\nCongratulazioni " ANSI_RED ANSI_BOLD PRETTY_USERNAME ANSI_CYAN ", hai vinto la partita!\n\n" ANSI_RESET, game_ctx->curr_player->name);
+		puts(WIN_ASCII_ART);
+		log_s(game_ctx, "%s ha vinto la partita!", game_ctx->curr_player->name);
 		game_ctx->game_running = false; // stop game
 	} else { // no win, keep playing
 		printf("Round di " PRETTY_USERNAME " completato!\n", game_ctx->curr_player->name);

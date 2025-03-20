@@ -43,6 +43,18 @@
 "\\____/_/ /_/____/\\__/\\__,_/_.___/_/\\___/   /____/\\__/\\__,_/\\__,_/\\___/_/ /_/\\__/____/  \n" \
 ANSI_RESET "                                    with " ANSI_RED "<3" ANSI_RESET " by " ANSI_BOLD ANSI_CYAN "doliv" ANSI_RESET "\n"
 
+// "Jacky" font
+#define WIN_ASCII_ART ANSI_BOLD ANSI_GREEN \
+"        _____           _____       _______ \n" \
+"       / ___ \\         / ___ \\      \\     / \n" \
+"      / /   \\_)       / /   \\_)      \\   /  \n" \
+"     ( (  ____       ( (  ____        ) (   \n" \
+"     ( ( (__  )      ( ( (__  )       \\_/   \n" \
+"      \\ \\__/ /        \\ \\__/ /         _    \n" \
+"       \\____/          \\____/         (_)   \n" \
+"                                            \n" \
+ANSI_YELLOW " Grazie per aver giocato ad Unstable Students!" ANSI_RESET "\n"
+
 #define MENU_NEWGAME 1
 #define MENU_LOADSAVE 2
 #define MENU_QUIT 0

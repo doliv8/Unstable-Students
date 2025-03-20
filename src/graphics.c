@@ -145,12 +145,22 @@ bool show_cards_restricted(cartaT *head, tipo_cartaT type) {
 	return count > 0;
 }
 
+/**
+ * @brief calculate the max row width of the cards list of the given type
+ * 
+ * @param head cards list
+ * @param type type of cards to consider
+ * @return int maximum row width of the group of given cards
+ */
 int get_max_row_width_restricted(cartaT *head, tipo_cartaT type) {
-	int count = count_cards_restricted(head, type);
-	if (!count)
-		return CARD_WIDTH;
-	int max_row_count = count >= CARDS_PER_ROW ? CARDS_PER_ROW : count % CARDS_PER_ROW;
-	return CARDS_HORIZONTAL_SPACING + max_row_count * (CARD_WIDTH + CARDS_HORIZONTAL_SPACING);
+	int width, max_row_count, count = count_cards_restricted(head, type);
+	max_row_count = count >= CARDS_PER_ROW ? CARDS_PER_ROW : count % CARDS_PER_ROW; // max(CARDS_PER_ROW, count % CARDS_PER_ROW)
+
+	if (count == 0)
+		max_row_count = 1; // if no cards need to allocate 1 space anyway to fit "vuoto" placeholder
+	width = max_row_count * CARD_WIDTH + (max_row_count - 1) * CARDS_HORIZONTAL_SPACING; // width of cards + spacing between those cards
+
+	return CARDS_HORIZONTAL_SPACING + width + CARDS_HORIZONTAL_SPACING; // add spacing before and after the actual card boxes
 }
 
 void show_card_group_restricted(cartaT *group, const char *title, const char *title_fmt, tipo_cartaT type) {
