@@ -14,8 +14,8 @@ void view_others(game_contextT *game_ctx);
 // end actions
 
 giocatoreT *pick_player(game_contextT *game_ctx, const char *prompt, bool allow_self, bool allow_all);
-cartaT *pick_card_restricted(cartaT *head, tipo_cartaT type, const char *prompt, const char *title, const char *title_fmt);
-cartaT *pick_random_card_restricted(cartaT *head, tipo_cartaT type);
+cartaT *pick_card(cartaT *head, tipo_cartaT type, const char *prompt, const char *title, const char *title_fmt);
+cartaT *pick_random_card(cartaT *head, tipo_cartaT type);
 cartaT *pick_aula_card(game_contextT *game_ctx, giocatoreT *target, tipo_cartaT type, const char *prompt);
 
 void dispose_card(game_contextT *game_ctx, cartaT *card);
