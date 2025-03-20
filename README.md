@@ -8,17 +8,17 @@
 
 <br>
 
+*Progetto **AVANZATO senza modalità automatica/IA**.*
+
 ---
 
 <br>
 
 > ### **Table of Content**
->  1. [Spiegazione file sorgente](#spiegazione-file-sorgente)
->  1. [Descrizione e scopo strutture aggiuntive](#descrizione-e-scopo-strutture-aggiuntive)
->  1. [Descrizione flusso di gioco](#descrizione-flusso-di-gioco)
->  1. [Descrizione logica AI](#descrizione-logica-ai)
->      - [Scelta carte](#scelta-carte)
->      - [Strategia di gioco](#strategia-di-gioco)
+>  1. [Compilare ed eseguire il gioco](#compilare--eseguire-il-gioco)
+>  2. [Spiegazione file sorgente](#spiegazione-file-sorgente)
+>  3. [Descrizione e scopo strutture aggiuntive](#descrizione-e-scopo-strutture-aggiuntive)
+>  4. [Descrizione flusso di gioco](#descrizione-flusso-di-gioco)
 
 <br>
 
@@ -27,12 +27,13 @@ REPOSITORY STRUCTURE
 ·
 │
 │ GAME SAVES
-├── saves                       // directory contenente i salvataggi
+├── saves						// directory contenente i salvataggi
+│   ├── cache.txt				// cache dei nomi dei salvataggi
 │   ├── savegame.sav
 │   └── ···
 │
 │ SOURCE FILES
-├── src                      	// directory contenente l'intero source code del progetto
+├── src							// directory contenente l'intero source code del progetto
 │   ├── main.c
 │   ├── constants.h
 │   ├── structs.h
@@ -60,13 +61,57 @@ REPOSITORY STRUCTURE
 │   ├── utils.c
 │   └── utils.h
 │
+│ BUILD DIRECTORY
+├── build						// directory contenente il binario compilato e i file oggetto
+│   ├── unstable_students		// file eseguibile del gioco
+│   └── *.o
+│
+│ IMAGES
+├── imgs						// directory contenente le immagini utilizzate nel README.md
+│   ├── card_box.png
+│   ├── cards_group.png
+│   ├── game_konsole.png
+│   └── game_xterm.png
+│
 │ OTHER FILES
-├── README.md                   //relazione e documentazione
-└── .gitignore                  //file da ignorare
+├── README.md					// relazione e documentazione
+├── Makefile					// Makefile per la compilazione
+├── Specifiche_v2.0.pdf			// specifiche di riferimento per il progetto
+├── mazzo.txt					// file contenente l'intero mazzo di gioco (per le nuove partite)
+├── log.txt						// file di log del gioco
+└── .gitignore					// lista di file da ignorare (per git)
 ```
 
 <br>
 <br>
+
+## Compilare & eseguire il gioco
+
+...
+
+Per gestire la compilazione ho fatto uso di `make`, creando diversi target nel [Makefile](./Makefile):
+- `clean`: elimina il binario compilato e tutti i file oggetto creati durante la compilazione
+- `run`: compila e avvia il gioco
+- `gdb`: compila e avvia il gioco tramite il debugger `gdb`, utile per individuare punti e cause di crash
+- `valgrind`: compila e avvia il gioco tramite il tool `valgrind` per trovare memory leak e corruzzioni della memoria
+- `debug`: compila il gioco definendo l'identificatore `DEBUG` per la compilazione condizionale di alcune parti di codice atte a tracciare la gestione della memoria
+
+...
+
+Per avere una corretta visualizzazione della **TUI** (Terminal User Interface) del gioco è necessario eseguirlo su un terminale con almeno `146` colonne, diversamente i gruppi di carte più grandi non verrebbero rappresentati correttamente dato che andrebbero a capo rompendo la formattazione.
+> *Per usare il gioco su terminali più "piccoli" (con meno colonne) è sufficiente diminuire la costante `CARDS_PER_ROW` (attualmente impostata a `4`) nel [file delle costanti](src/constants.h).*
+
+Ecco due esempi di come dovrebbe essere visualizzata l'interfaccia del gioco in maniera corretta (su terminali da almeno `146` colonne):
+
+| ![Gioco su terminale Konsole](imgs/game_konsole.png) |
+|:--:|
+| *TUI del gioco su terminale Konsole* |
+
+| ![Gioco su terminale XTerm](imgs/game_xterm.png) |
+|:--:|
+| *TUI del gioco su terminale XTerm* |
+
+
 
 ## Spiegazione file sorgente
 > [!TIP]
@@ -198,7 +243,6 @@ In questa sezione del `README.md` e nel codice (variabili e commenti) faccio rif
 
 ...
 
-
 Nel menu di scelta dell'azione è possibile scegliere fra le seguenti opzioni:
 
 - `Gioca una carta dalla tua mano`: 
@@ -278,16 +322,4 @@ Difendendosi dalla carta attaccante questa farà una diversa fine in base al suo
 - `MAGIA`: la carta finirà (come normalmente) negli scarti e gli effetti saranno fermati
 - `BONUS`/`MALUS`: la carta finirà negli scarti
 
-...
-
-
-<br>
-
-## Descrizione logica AI
-> [!NOTE]
-> Questa sezione va compilata solo se si sta svolgendo il progetto AVANZATO.
-
-### Scelta carte...
-...
-### Strategia di gioco...
 ...
