@@ -23,22 +23,39 @@ bool is_self(game_contextT *game_ctx, giocatoreT *target) {
 
 // TODO: add switch_player to switch current player to target player
 
-bool has_bonusmalus_target(giocatoreT *player, azioneT effect_action, cartaT *target) {
+/**
+ * @brief checks if a player has a card with the given action in his bonus/malus cards
+ * 
+ * @param player player to run the check on
+ * @param effect_action effect action to look for
+ * @return true if player has a card with an effect_action effect
+ * @return false if player doesn't have a card with an effect_action effect
+ */
+bool has_bonusmalus(giocatoreT *player, azioneT effect_action) {
 	bool found = false;
 	for (cartaT *card = player->bonus_malus; card != NULL && !found; card = card->next) {
 		for (int i = 0; i < card->n_effetti && !found; i++) {
-			if (card->effetti[i].azione == effect_action && match_card_type(target, card->effetti[i].target_carta))
+			if (card->effetti[i].azione == effect_action)
 				found = true;
 		}
 	}
 	return found;
 }
 
-bool has_bonusmalus(giocatoreT *player, azioneT effect_action) {
+/**
+ * @brief checks if a player has a card with the given action targeting the given target card in his bonus/malus cards
+ * 
+ * @param player player to run the check on
+ * @param effect_action effect action to look for
+ * @param target card target to look for
+ * @return true if player has a card with an effect_action effect targeting target card
+ * @return false if player doesn't have a card with an effect_action effect targeting target card
+ */
+bool has_bonusmalus_target(giocatoreT *player, azioneT effect_action, cartaT *target) {
 	bool found = false;
 	for (cartaT *card = player->bonus_malus; card != NULL && !found; card = card->next) {
 		for (int i = 0; i < card->n_effetti && !found; i++) {
-			if (card->effetti[i].azione == effect_action)
+			if (card->effetti[i].azione == effect_action && match_card_type(target, card->effetti[i].target_carta))
 				found = true;
 		}
 	}
@@ -310,7 +327,7 @@ cartaT *pick_random_card(cartaT *head, tipo_cartaT type) {
  * @brief this function is similar to pick_card but specific to picking a card from a player's aula (bonus_malus + aula).
  * if specified type allows both BONUS/MALUS and STUDENT (is ALL) and there are cards both in bonus_malus and aula, asks
  * user if wants to pick from aula or bonus_malus and then calls actual pick_card on the chosen list. otherwise, pick_card
- * is directly called on the only available chosable list (bonus_malsu or aula).
+ * is directly called on the only available chosable list (bonus_malus or aula).
  * 
  * @param game_ctx 
  * @param target player to pick an aula card from
@@ -396,6 +413,12 @@ cartaT *pick_aula_card(game_contextT *game_ctx, giocatoreT *target, tipo_cartaT 
 	return card;
 }
 
+/**
+ * @brief puts the given card in aula studio if card is MATRICOLA-kind, or in mazzo scarti otherwise.
+ * 
+ * @param game_ctx 
+ * @param card card to dispose
+ */
 void dispose_card(game_contextT *game_ctx, cartaT *card) {
 	if (match_card_type(card, MATRICOLA))
 		push_card(&game_ctx->aula_studio, card); // put MATRICOLA into aula studio
@@ -403,6 +426,14 @@ void dispose_card(game_contextT *game_ctx, cartaT *card) {
 		push_card(&game_ctx->mazzo_scarti, card); // put card into mazzo scarti
 }
 
+/**
+ * @brief asks current player to discard a card of the specified kind from the given cards list
+ * 
+ * @param game_ctx 
+ * @param cards pointer to list of cards to discard from
+ * @param type type of card to discard
+ * @param title title shown while picking the card to discard
+ */
 void discard_card(game_contextT *game_ctx, cartaT **cards, tipo_cartaT type, const char *title) {
 	cartaT *card = pick_card(*cards, type, "Scegli la carta che vuoi scartare.", title, ANSI_BOLD ANSI_RED "%s" ANSI_RESET);
 
@@ -442,6 +473,13 @@ cartaT *draw_card(game_contextT *game_ctx) {
 	return drawn_card;
 }
 
+/**
+ * @brief calculates the amount of playable cards (of the specified type) from the hand of the current player
+ * 
+ * @param game_ctx 
+ * @param type type of cards
+ * @return int amount of playable cards
+ */
 int count_playable_cards(game_contextT *game_ctx, tipo_cartaT type) {
 	// TODO: re-read this and check it's working properly
 	int playable_cards = 0;
@@ -720,7 +758,8 @@ void apply_effect_target(game_contextT *game_ctx, effettoT *effect, giocatoreT *
 }
 
 /**
- * @brief 
+ * @brief obtains the target player(s) of the effect and asks each of them if they want to defend. if target is TU, makes user select
+ * the target_tu target for the current attack. calls apply_effect_target on each target. shows appropriate verbs for each action.
  * 
  * @param game_ctx 
  * @param card attacking card
@@ -812,7 +851,7 @@ bool apply_effect(game_contextT *game_ctx, cartaT *card, effettoT *effect, gioca
 }
 
 /**
- * @brief applies all effects of a card during current player's turn (also asks user if wants to apply the effects if they are opzional)
+ * @brief applies all effects of a card during current player's turn (also asks user if wants to apply the effects if they are optional)
  * 
  * @param game_ctx 
  * @param card card to apply effects from
@@ -857,16 +896,22 @@ void apply_effects_now(game_contextT *game_ctx, cartaT *card) {
  * @param quando time the card must match
  */
 void apply_effects(game_contextT *game_ctx, cartaT *card, quandoT quando) {
-	if (card->quando == quando)
+	if (card->quando == quando) {
+		log_sss(game_ctx, "Applicazione degli effetti di '%s' (%s) di %s.", card->name, quandoT_str(card->quando), game_ctx->curr_player);
 		apply_effects_now(game_ctx, card);
+	}
 }
 
-
+/**
+ * @brief this function applies start effects (quando = INIZIO) of aula cards of the current player.
+ * particular caution avoiding bugs, as described in the multiline comment.
+ * 
+ * @param game_ctx 
+ */
 void apply_start_effects(game_contextT *game_ctx) {
-	// TODO: add some logging in this function
 	giocatoreT *player = game_ctx->curr_player;
 	cartaT **aula_cards;
-	int n_cards = count_cards(player->bonus_malus) + count_cards(player->aula), idx;
+	int idx, n_cards = count_cards(player->bonus_malus) + count_cards(player->aula);
 
 	if (n_cards == 0) // no cards in aula, no need to apply any effect
 		return;
@@ -880,7 +925,7 @@ void apply_start_effects(game_contextT *game_ctx) {
 	idx = 0;
 	aula_cards = (cartaT**)malloc_checked(n_cards*sizeof(cartaT*));
 
-	// dump bonus/malus cards
+	// dump bonus/malus cards first
 	for (cartaT *card = player->bonus_malus; card != NULL; card = card->next, idx++)
 		aula_cards[idx] = card;
 	// dump aula cards
@@ -897,16 +942,39 @@ void apply_start_effects(game_contextT *game_ctx) {
 	free_wrap(aula_cards);
 }
 
+/**
+ * @brief checks if the game can end because the current round player won
+ * 
+ * @param game_ctx 
+ * @return true if current round player won
+ * @return false if current round player didn't win
+ */
+bool check_win_condition(game_contextT *game_ctx) {
+	bool can_win = !has_bonusmalus(game_ctx->curr_player, INGEGNERE); // cant win with ingegnerizzazione
+	int tot_students = count_cards_restricted(game_ctx->curr_player->aula, STUDENTE);
+	return can_win && tot_students >= WIN_STUDENTS_COUNT;
+}
+
+/**
+ * @brief first phase of the round
+ * 
+ * @param game_ctx 
+ */
 void begin_round(game_contextT *game_ctx) {
 	save_game(game_ctx);
 
 	show_round(game_ctx);
+
 	apply_start_effects(game_ctx);
 
 	draw_card(game_ctx);
-
 }
 
+/**
+ * @brief second phase of the round
+ * 
+ * @param game_ctx 
+ */
 void play_round(game_contextT *game_ctx) {
 	bool in_action = true;
 
@@ -943,18 +1011,10 @@ void play_round(game_contextT *game_ctx) {
 }
 
 /**
- * @brief checks if the game can end because the current round player won
+ * @brief third (and last) phase of the round
  * 
  * @param game_ctx 
- * @return true if current round player won
- * @return false if current round player didn't win
  */
-bool check_win_condition(game_contextT *game_ctx) {
-	bool can_win = !has_bonusmalus(game_ctx->curr_player, INGEGNERE); // cant win with ingegnerizzazione
-	int tot_students = count_cards_restricted(game_ctx->curr_player->aula, STUDENTE);
-	return can_win && tot_students >= WIN_STUDENTS_COUNT;
-}
-
 void end_round(game_contextT *game_ctx) {
 	if (!game_ctx->game_running)
 		return;
@@ -971,7 +1031,7 @@ void end_round(game_contextT *game_ctx) {
 		log_s(game_ctx, "%s ha vinto la partita!", game_ctx->curr_player->name);
 		game_ctx->game_running = false; // stop game
 	} else { // no win, keep playing
-		printf("Round di " PRETTY_USERNAME " completato!\n", game_ctx->curr_player->name);
+		printf("\nRound di " PRETTY_USERNAME " completato!\n", game_ctx->curr_player->name);
 		game_ctx->curr_player = game_ctx->curr_player->next; // next round its next player's turn
 		game_ctx->round_num++;
 	}

@@ -243,13 +243,21 @@ In questa sezione del `README.md` e nel codice (variabili e commenti) faccio rif
 
 ...
 
-Nel menu di scelta dell'azione è possibile scegliere fra le seguenti opzioni:
 
-- `Gioca una carta dalla tua mano`: 
-- `Pesca un'altra carta`: 
-- `Visualizza le tue carte`: 
-- `Visualizza lo stato degli altri giocatori`: 
-- `Esci dalla partita`: 
+Ho suddiviso il flusso del game loop (ciascun round) in 3 fasi:
+- begin (`begin_round`): salva la partita, mostra le informazioni del round attuale, applica gli effetti iniziali delle carte dell'aula e fa pescare una carta (dovuta da regolamento) al giocatore corrente.
+- play (`play_round`): mostra il [menu di azione](#menu-dazione) al giocatore.
+- end (`end_round`): vengono scartate le eventuali carte in eccesso dalla mano del giocatore corrente e viene effettuato il controllo per la sua vittoria, con conseguente fine o continuazione della partita.
+
+
+### Menu d'azione
+Nel menu di scelta d'azione è possibile scegliere fra le seguenti opzioni:
+
+- `Gioca una carta dalla tua mano`: permette al giocatore corrente di giocare una carta qualsiasi dal suo mazzo. Termina la fase d'azione se viene giocata una carta.
+- `Pesca un'altra carta`: fa pescare una carta al giocatore corrente. Termina la fase d'azione.
+- `Visualizza le tue carte`: mostra al giocatore corrente tutte le sue carte: mazzo, aula studenti, bonus/malus.
+- `Visualizza lo stato degli altri giocatori`: permette al giocatore corrente di visualizzare lo stato degli altri giocatori.
+- `Esci dalla partita`: chiede conferma ed esce dal gioco.
 
 
 ...
