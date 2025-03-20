@@ -253,7 +253,7 @@ char *center_boxed_string(const char *str, int str_len, const char *border, int 
 }
 
 /**
- * @brief prints a line with only the centered string in the specified width surrounded by left and right borders (not included in the width)
+ * @brief prints a line with only the centered string in the specified width surrounded left and right by borders (not included in the width)
  * 
  * @param str string to be printed center and boxed
  * @param str_len visual length of str

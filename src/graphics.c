@@ -163,6 +163,14 @@ int get_max_row_width_restricted(cartaT *head, tipo_cartaT type) {
 	return CARDS_HORIZONTAL_SPACING + width + CARDS_HORIZONTAL_SPACING; // add spacing before and after the actual card boxes
 }
 
+/**
+ * @brief displays a pretty-printed group of cards of the specified type to the terminal in a table
+ * 
+ * @param group list of cards to display
+ * @param title title of the group of cards (used to calculate visual length of title), can't contain colors
+ * @param title_fmt title format string (must always contain one and only one %s and no other formatters), can contain colors
+ * @param type type of cards to restrict display of
+ */
 void show_card_group_restricted(cartaT *group, const char *title, const char *title_fmt, tipo_cartaT type) {
 	char *fmt_title;
 	char *l_border = "[", *r_border = "]", *vuoto_msg = "\\\\ vuoto //";
@@ -172,13 +180,20 @@ void show_card_group_restricted(cartaT *group, const char *title, const char *ti
 	asprintf_s(&fmt_title, title_fmt, title);
 
 	puts(""); // spacing
-	print_centered_lr_boxed_string(fmt_title, strlen(title), l_border, r_border, max_group_row_width-borders_width);
+	print_centered_lr_boxed_string(fmt_title, strlen(title), l_border, r_border, max_group_row_width-borders_width); // show title header
 	if (!show_cards_restricted(group, type))
 		print_centered_lr_boxed_string(vuoto_msg, strlen(vuoto_msg), "", "\n", max_group_row_width);
 
 	free_wrap(fmt_title);
 }
 
+/**
+ * @brief displays a pretty-printed group of cards to the terminal in a table
+ * 
+ * @param group list of cards to display
+ * @param title title of the group of cards (used to calculate visual length of title), can't contain colors
+ * @param title_fmt title format string (must always contain one and only one %s and no other formatters), can contain colors
+ */
 void show_card_group(cartaT *group, const char *title, const char *title_fmt) {
 	show_card_group_restricted(group, title, title_fmt, ALL);
 }
@@ -211,10 +226,11 @@ void show_round(game_contextT *game_ctx) {
 	multiline_addline(&round_banner, center_boxed_string("", 0, v_border, ROUND_BANNER_CONTENT_WIDTH)); // spacing
 	multiline_addline(&round_banner, strdup_checked(h_border));
 
-	puts("");
+	puts(""); // spacing
+	// print the whole banner
 	for (int i = 0; i < round_banner.n_lines; i++)
 		puts(round_banner.lines[i]);
-	puts("");
+	puts(""); // spacing
 
 	free_wrap(player_turn_text);
 	free_wrap(round_num_text);
