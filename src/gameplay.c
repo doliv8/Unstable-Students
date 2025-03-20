@@ -951,9 +951,7 @@ void play_round(game_contextT *game_ctx) {
  */
 bool check_win_condition(game_contextT *game_ctx) {
 	bool can_win = !has_bonusmalus(game_ctx->curr_player, INGEGNERE); // cant win with ingegnerizzazione
-	// TODO: do MATRICOLA count?
-	int tot_students = count_cards_restricted(game_ctx->curr_player->aula, STUDENTE_SEMPLICE) +
-		count_cards_restricted(game_ctx->curr_player->aula, LAUREANDO);
+	int tot_students = count_cards_restricted(game_ctx->curr_player->aula, STUDENTE);
 	return can_win && tot_students >= WIN_STUDENTS_COUNT;
 }
 
