@@ -199,6 +199,15 @@ In questa sezione del `README.md` e nel codice (variabili e commenti) faccio rif
 ...
 
 
+Nel menu di scelta dell'azione è possibile scegliere fra le seguenti opzioni:
+
+- `Gioca una carta dalla tua mano`: 
+- `Pesca un'altra carta`: 
+- `Visualizza le tue carte`: 
+- `Visualizza lo stato degli altri giocatori`: 
+- `Esci dalla partita`: 
+
+
 ...
 
 
@@ -233,7 +242,7 @@ Per l'applicazione degli effetti ho adottato un flow di selezione col seguente o
 * `apply_effect` chiama la funzione `apply_effect_target` per ciascun giocatore target dell'effetto, dopo aver chiesto a tutti gli interessati (eccetto il giocatore corrente) che possono, se vogliono difendersi dall'effetto.
 * `apply_effect_target` semplicemente chiama l'apposita funzione `apply_effect_<nome azione>_target` sul target fornito.
 
-Ecco una breve descrizione delle azioni degli effetti:
+#### Ecco una breve descrizione delle azioni degli effetti applicabili:
 
 - `ELIMINA`: il giocatore corrente sceglie quale carta vuole eliminare dall'aula del target. La carta che viene eliminata dall'aula del target attiva i suoi effetti di uscita dall'aula se con quando = `FINE`.
 - `SCARTA`: se il target è il giocatore corrente, può scegliere quale carta scartare dal suo mazzo, diversamente la carta viene estratta casualmente dal mazzo della vittima e scartata.
@@ -243,6 +252,17 @@ Ecco una breve descrizione delle azioni degli effetti:
 - `PESCA`: il giocatore target pesca una carta dal mazzo di pesca. Se il tipo di carta target dell'effetto è diverso da `ALL`, avviene prima la pesca di una carta come usuale ma successivamente, se la carta pescata non è del tipo specificato, questa viene automaticamente scartata e la pesca si conclude.
 - `SCAMBIA`: il mazzo (mano) del giocatore target viene scambiato con quello del giocatore corrente. L'unico target carte sensato è `ALL`.
 
+### Effetti particolari
+
+Non tutti gli effetti rispettano il pattern di essere "applicabili" da un giocatore giocante ad un giocatore target al giocare della carta come quelli descritti in [applicazione degli effetti](#ecco-una-breve-descrizione-delle-azioni-degli-effetti-applicabili).
+
+Vi sono effetti che sono `SEMPRE` in essere una volta che la carta viene piazzata:
+
+- `MOSTRA`: quando una carta con questo effetto è nei Bonus/Malus di un giocatore, alla visualizzazione del suo stato da parte degli altri giocatori, oltre alle normali carte dell'aula (pubbliche), verranno mostrare anche le carte del suo mazzo (private).
+- `IMPEDIRE`: quando una carta con questo effetto è nei Bonus/Malus di un giocatore, non gli sarà possibile giocare carte del tipo specificato dall'effetto `IMPEDIRE`.
+- `INGEGNERE`: quando una carta con questo effetto è nei Bonus/Malus di un giocatore, non gli sarà possibile vincere la partita anche se dovesse raggiungere il numero di studenti per vincere la partita nella sua aula.
+
+Esiste inoltre un'altra azione degli effetti che si comporta ancora diversamente ed è alla base del sistema di difesa come descritto nella sezione relativa al [difendersi da una carta](#difendersi-da-una-carta): `BLOCCA`. Questa azione può essere presente solo in carte del tipo `ISTANTANEA` e permette di "rispondere" all'effetto di una carta del tipo specificato che si dovrebbe subire, bloccandolo.
 
 ### Difendersi da una carta
 Quando devono essere applicati (da parte del giocatore corrente) degli effetti che impattano gli altri giocatori (`TU`, `VOI`, `TUTTI`), questi ultimi hanno la possibilità di difendersi "rispondendo" alla giocata (ad un effetto che li colpirebbe) usando una carta di tipo `ISTANTANEA`. Ovviamente tale carta deve poter essere giocata dalla vittima (non ci devono essere effetti `IMPEDIRE` attivi sulle carte `ISTANTANEA` del giocatore vittima).\
