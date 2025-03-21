@@ -178,14 +178,14 @@ void apply_effect_gioca_target(game_contextT *game_ctx, giocatoreT *target, effe
 			thrower->name
 		);
 
-		game_ctx->curr_player = target; // switch current player to the target player to create a sub-round for target to play a card
+		switch_player(game_ctx, target); // switch current player to the target player to create a sub-round for target to play a card
 		if (!play_card(game_ctx, effect->target_carta)) {
 			log_ss(game_ctx, "%s avrebbe dovuto giocare una carta %s, ma non ne aveva.",
 				target->name,
 				tipo_cartaT_str(effect->target_carta)
 			);
 		}
-		game_ctx->curr_player = thrower; // switch back to original card thrower player
+		switch_player(game_ctx, thrower); // switch back to original card thrower player
 	}
 }
 
@@ -357,7 +357,7 @@ void apply_effect_pesca_target(game_contextT *game_ctx, giocatoreT *target, effe
 			azioneT_str(effect->azione),
 			thrower->name
 		);
-		game_ctx->curr_player = target; // switch current player to the target player to create a sub-round for target to draw a card
+		switch_player(game_ctx, target); // switch current player to the target player to create a sub-round for target to draw a card
 		drawn_card = draw_card(game_ctx);
 		if (!match_card_type(drawn_card, effect->target_carta)) {
 			// dispose card as it is not of the specified type
@@ -378,7 +378,7 @@ void apply_effect_pesca_target(game_contextT *game_ctx, giocatoreT *target, effe
 				tipo_cartaT_str(drawn_card->tipo)
 			);
 		}
-		game_ctx->curr_player = thrower; // switch back to original card thrower player
+		switch_player(game_ctx, thrower); // switch back to original card thrower player
 	}
 }
 

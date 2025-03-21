@@ -19,14 +19,30 @@
 #define SAVE_PATH_EXTENSION ".sav"
 #define FILE_MAZZO "mazzo.txt"
 #define FILE_LOG "log.txt"
+#define FILE_STATS "stats.bin"
 
+// action menu
 #define ACTION_PLAY_HAND 1
 #define ACTION_DRAW 2
 #define ACTION_VIEW_OWN 3
 #define ACTION_VIEW_OTHERS 4
 #define ACTION_QUIT 0
+// end action menu
+
+// main menu
+#define MENU_NEWGAME 1
+#define MENU_LOADSAVE 2
+#define MENU_STATS 3
+#define MENU_QUIT 0
+// end main menu
+
+// pick aula card menu
+#define CHOICE_AULA 1
+#define CHOICE_BONUSMALUS 2
+// end pick aula card menu
 
 #define MAX_EFFECTS 6
+#define CARDS_TYPE_COUNT 9
 
 #define ONE_ELEMENT 1
 #define CARD_PLACEMENT NULL
@@ -54,13 +70,6 @@ ANSI_RESET "                                    with " ANSI_RED "<3" ANSI_RESET 
 "       \\____/          \\____/         (_)   \n" \
 "                                            \n" \
 ANSI_YELLOW " Grazie per aver giocato ad Unstable Students!" ANSI_RESET "\n"
-
-#define MENU_NEWGAME 1
-#define MENU_LOADSAVE 2
-#define MENU_QUIT 0
-
-#define CHOICE_AULA 1
-#define CHOICE_BONUSMALUS 2
 
 #define CARD_WIDTH 34
 #define CARD_BORDER_WIDTH 1

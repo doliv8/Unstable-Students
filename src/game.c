@@ -54,6 +54,7 @@ game_contextT *new_game() {
 	cartaT *mazzo;
 	int n_cards;
 	char *save_name;
+	giocatoreT *curr_player;
 	game_contextT *game_ctx = (game_contextT*)calloc_checked(ONE_ELEMENT, sizeof(game_contextT));
 
 	init_logging(game_ctx);
@@ -70,12 +71,13 @@ game_contextT *new_game() {
 		game_ctx->n_players = get_int();
 	} while (game_ctx->n_players < MIN_PLAYERS || game_ctx->n_players > MAX_PLAYERS);
 
+	// TODO: check no colliding player names (must be distinct)
+
 	// create players
 	// game_ctx->curr_player serves as the linked-list head
-	giocatoreT* curr_player;
 	for (int i = 0; i < game_ctx->n_players; i++) {
 		if (game_ctx->curr_player == NULL)
-			curr_player = game_ctx->curr_player = new_player();
+			curr_player = game_ctx->curr_player = new_player(); // set linked list head
 		else
 			curr_player = curr_player->next = new_player();
 	}
@@ -119,12 +121,27 @@ void clear_players(giocatoreT *head, giocatoreT *p) {
 }
 
 /**
- * @brief perform cleanup of the entire game, freeing players and every deck of cards
+ * @brief recursive function to clear a player_statsT* circular linked list
+ * 
+ * @param head pointer to the head of the circular linked list
+ * @param p pointer to the node of the circular linked list to clear
+ */
+void clear_stats(player_statsT *head, player_statsT *stats) {
+	// check for base case to recurse or not
+	if (stats->next != head)
+		clear_stats(head, stats->next);
+	// free node 
+	free_wrap(stats);
+}
+
+/**
+ * @brief perform cleanup of the entire game, freeing players, stats and every deck of cards
  * 
  * @param game_ctx 
  */
 void clear_game(game_contextT *game_ctx) {
 	clear_players(game_ctx->curr_player, game_ctx->curr_player);
+	clear_stats(game_ctx->curr_stats, game_ctx->curr_stats);
 
 	if (game_ctx->aula_studio != NULL)
 		clear_cards(game_ctx->aula_studio);
