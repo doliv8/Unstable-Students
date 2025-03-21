@@ -181,8 +181,9 @@ Ciò che contiene questa struttura è:
 - un puntatore alla testa ciascuna lista concatenata di carte: pesca, scarti e aula studio.
 - un intero rappresentante la quantità di giocatori che stanno partecipando alla partita.
 - un intero rappresentante il numero del round al quale lo stato della partita si trova.
-- un booleano rappresentante che il gioco è in esecuzione (o in conclusione, solo quando un giocatore vince e la partita termina, oppure si esce dalla partita con il tasto 0 del menu di gioco).
+- un booleano rappresentante se il gioco è in esecuzione (o in conclusione, solo quando un giocatore vince e la partita termina, oppure si esce dalla partita con il tasto 0 del menu d'azione).
 - un puntatore a FILE (file stream) relativo al file di log, aperto prima di iniziare a giocare e chiuso quando si esce dal gioco.
+TODO: update here
 
 L'utilizzo che faccio di questa struttura è semplice e lineare: la alloco sullo heap all'avvio del gioco (tramite le funzioni `new_game` o `load_game`) e ne passo il puntatore alle diverse funzioni del game-loop (`begin_round`, `play_round`, `end_round`) che la passeranno a loro volta ad altre funzioni che implementano la logica di gioco; alla fine dell'esecuzione del gioco (uscita dal game-loop) la rilascio assieme a tutti i suoi campi (tramite `clear_game`).
 
@@ -227,6 +228,8 @@ di descrizione `"Se questa carta e' nella tua aula all'inizio del tuo turno, puo
 
 ![Box della carta 'Aula dei vecchi progetti'](/imgs/card_box.png "Box della carta 'Aula dei vecchi progetti'")
 
+TODO: add PlayerStats here
+
 <br>
 
 ## Descrizione flusso di gioco
@@ -245,9 +248,9 @@ In questa sezione del `README.md` e nel codice (variabili e commenti) faccio rif
 
 
 Ho suddiviso il flusso del game loop (ciascun round) in 3 fasi:
-- begin (`begin_round`): salva la partita, mostra le informazioni del round attuale, applica gli effetti iniziali delle carte dell'aula e fa pescare una carta (dovuta da regolamento) al giocatore corrente.
+- begin (`begin_round`): salva la partita, salva le statistiche della partita, mostra le informazioni del round attuale, applica gli effetti iniziali delle carte dell'aula e fa pescare una carta (dovuta da regolamento) al giocatore corrente.
 - play (`play_round`): mostra il [menu di azione](#menu-dazione) al giocatore.
-- end (`end_round`): vengono scartate le eventuali carte in eccesso dalla mano del giocatore corrente e viene effettuato il controllo per la sua vittoria, con conseguente fine o continuazione della partita.
+- end (`end_round`): vengono scartate le eventuali carte in eccesso dalla mano del giocatore corrente, vengono aggiornate le statistiche e viene effettuato il controllo per la sua vittoria, con conseguente fine o continuazione della partita.
 
 
 ### Menu d'azione

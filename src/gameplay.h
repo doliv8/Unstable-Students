@@ -5,6 +5,7 @@
 #include "types.h"
 
 bool is_self(game_contextT *game_ctx, giocatoreT *target);
+void switch_player(game_contextT *game_ctx, giocatoreT *player);
 
 // actions
 bool play_card(game_contextT *game_ctx, tipo_cartaT type);

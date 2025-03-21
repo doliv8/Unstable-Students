@@ -85,7 +85,7 @@ game_contextT* load_game(const char *save_name) {
 
 	game_ctx->save_path = get_save_path(save_name);
 
-	fp = fopen(game_ctx->save_path, "r");
+	fp = fopen(game_ctx->save_path, "rb"); // open binary file for reading
 	if (fp == NULL) {
 		fprintf(stderr, "Opening save file (%s) failed!\nAssicurati che il file di salvataggio sia in '%s'!\n",
 			game_ctx->save_path, SAVES_DIRECTORY
@@ -152,7 +152,7 @@ void dump_player(FILE *fp, giocatoreT *player) {
 }
 
 void save_game(game_contextT* game_ctx) {
-	FILE *fp = fopen(game_ctx->save_path, "w");
+	FILE *fp = fopen(game_ctx->save_path, "wb"); // open binary file for writing
 	if (fp == NULL) {
 		fprintf(stderr, "Opening save file (%s) failed!\n", game_ctx->save_path);
 		exit(EXIT_FAILURE);
@@ -281,6 +281,46 @@ void save_saves_cache(freeable_multiline_textT *saves) {
 			fprintf(fp, "%s\n", saves->lines[i]);
 	}
 	fclose(fp);
+}
+
+
+FILE *open_stats_read() {
+	FILE *fp = fopen(FILE_STATS, "rb"); // open binary file for reading
+	if (fp == NULL) { // stats file doesn't exist
+		fp = fopen(FILE_STATS, "wb"); // open binary file for writing
+		if (fp != NULL) { // file created successfully
+			fclose(fp);
+			fp = fopen(FILE_STATS, "rb"); // its a binary file
+		} else {
+			fprintf(stderr, "Creating stats file (%s) failed!\n", FILE_STATS);
+			exit(EXIT_FAILURE);
+		}
+	}
+	if (fp == NULL) {
+		fprintf(stderr, "Opening stats file (%s) failed!\n", FILE_STATS);
+		exit(EXIT_FAILURE);
+	}
+	return fp;
+}
+
+FILE *open_stats_read_write() {
+	FILE *fp = fopen(FILE_STATS, "rb+"); // open binary file for reading and writing
+	if (fp == NULL) {
+		fprintf(stderr, "Opening stats file (%s) failed!\nIl file dovrebbe esistere dato che il gioco e' gia' avviato!", FILE_STATS);
+		exit(EXIT_FAILURE);
+	}
+	return fp;
+}
+
+bool read_player_stats(FILE *fp, player_statsT *stats) {
+	if (fread(stats, sizeof(player_statsT), ONE_ELEMENT, fp) != ONE_ELEMENT)
+		return false;
+	return true;
+}
+
+void write_player_stats(FILE *fp, player_statsT *stats) {
+	if (fwrite(stats, sizeof(player_statsT), ONE_ELEMENT, fp) != ONE_ELEMENT)
+		file_write_failed();
 }
 
 /**

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "gameplay.h"
 #include "graphics.h"
 #include "format.h"
@@ -8,6 +9,7 @@
 #include "logging.h"
 #include "utils.h"
 #include "effects.h"
+#include "stats.h"
 
 /**
  * @brief checks if the provided target is current round's player
@@ -21,7 +23,26 @@ bool is_self(game_contextT *game_ctx, giocatoreT *target) {
 	return game_ctx->curr_player == target;
 }
 
-// TODO: add switch_player to switch current player to target player
+/**
+ * @brief switch current round's player
+ * 
+ * @param game_ctx 
+ * @param player player to switch to
+ */
+void switch_player(game_contextT *game_ctx, giocatoreT *player) {
+	bool found = false;
+	player_statsT *stats = game_ctx->curr_stats;
+
+	game_ctx->curr_player = player; // switch player
+
+	// find stats of the given player (need to switch those aswell)
+	for (int i = 0; i < game_ctx->n_players && !found; i++, stats = stats->next) {
+		if (!strncmp(stats->name, player->name, GIOCATORE_NAME_LEN)) {
+			game_ctx->curr_stats = stats;
+			found = true;
+		}
+	}
+}
 
 /**
  * @brief checks if a player has a card with the given action in his bonus/malus cards
@@ -166,9 +187,10 @@ bool target_defends(game_contextT *game_ctx, giocatoreT *target, cartaT *attack_
 
 		unlink_card(&target->carte, defense_card); // remove chosen defense card from target's hand
 	
-		game_ctx->curr_player = target; // switch current player to defending player for applying defense card effects correctly
+		switch_player(game_ctx, target); // switch current player to defending player for applying defense card effects correctly
 		apply_effects(game_ctx, defense_card, SUBITO); // appply additional defense card effects
-		game_ctx->curr_player = attacker; // switch back to attacking player
+		stats_add_played_card(game_ctx, defense_card);
+		switch_player(game_ctx, attacker); // switch back to attacking player
 
 		dispose_card(game_ctx, defense_card); // dispose chosen defense card after its use ended
 	}
@@ -442,6 +464,7 @@ void discard_card(game_contextT *game_ctx, cartaT **cards, tipo_cartaT type, con
 		dispose_card(game_ctx, card); // dispose discarded card
 		printf("Hai scartato: %s\n", card->name);
 		log_ss(game_ctx, "%s ha scartato '%s'.", game_ctx->curr_player->name, card->name);
+		stats_add_discarded(game_ctx);
 	}
 	else {
 		printf("Avresti dovuto scartare una carta " COLORED_CARD_TYPE ", ma non ne hai!\n", tipo_cartaT_color(type), tipo_cartaT_str(type));
@@ -576,6 +599,7 @@ bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
 						join_aula(game_ctx, target, card);
 					else
 						dispose_card(game_ctx, card);
+					stats_add_played_card(game_ctx, card);
 					played = true;
 				} else {
 					if (target == thrower)
@@ -591,6 +615,7 @@ bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
 						dispose_card(game_ctx, card);
 						puts("Carta scartata!");
 						log_sss(game_ctx, "%s ha provato a giocare '%s' su %s (duplicato), scartandola.", thrower->name, card->name, target->name);
+						stats_add_played_card(game_ctx, card);
 						played = true;
 					}
 				}
@@ -602,6 +627,7 @@ bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
 				unlink_card(&thrower->carte, card);
 				apply_effects(game_ctx, card, SUBITO);
 				dispose_card(game_ctx, card);
+				stats_add_played_card(game_ctx, card);
 				played = true;
 			}
 			case ALL:
@@ -656,10 +682,10 @@ void leave_aula(game_contextT *game_ctx, giocatoreT *player, cartaT *card, bool 
 	if (dispatch_effects) {
 		// switch current player to card owner player for applying FINE effects correctly
 		original_player = game_ctx->curr_player;
-		game_ctx->curr_player = player;
+		switch_player(game_ctx, player);
 		// apply leave effects
 		apply_effects(game_ctx, card, FINE);
-		game_ctx->curr_player = original_player;
+		switch_player(game_ctx, original_player);
 	}
 }
 
@@ -897,7 +923,11 @@ void apply_effects_now(game_contextT *game_ctx, cartaT *card) {
  */
 void apply_effects(game_contextT *game_ctx, cartaT *card, quandoT quando) {
 	if (card->quando == quando) {
-		log_sss(game_ctx, "Applicazione degli effetti di '%s' (%s) di %s.", card->name, quandoT_str(card->quando), game_ctx->curr_player);
+		log_sss(game_ctx, "Applicazione degli effetti di '%s' (%s) di %s.",
+			card->name,
+			quandoT_str(card->quando),
+			game_ctx->curr_player->name
+		);
 		apply_effects_now(game_ctx, card);
 	}
 }
@@ -1025,14 +1055,19 @@ void end_round(game_contextT *game_ctx) {
 		discard_card(game_ctx, &game_ctx->curr_player->carte, ALL, "Carte attualmente nella tua mano");
 	}
 
+	stats_add_round(game_ctx);
+	save_stats(game_ctx);
+
 	if (check_win_condition(game_ctx)) { // check if curr player won
 		printf(ANSI_CYAN "\nCongratulazioni " ANSI_RED ANSI_BOLD PRETTY_USERNAME ANSI_CYAN ", hai vinto la partita!\n\n" ANSI_RESET, game_ctx->curr_player->name);
 		puts(WIN_ASCII_ART);
 		log_s(game_ctx, "%s ha vinto la partita!", game_ctx->curr_player->name);
+		stats_add_win(game_ctx);
+		save_stats(game_ctx);
 		game_ctx->game_running = false; // stop game
 	} else { // no win, keep playing
 		printf("\nRound di " PRETTY_USERNAME " completato!\n", game_ctx->curr_player->name);
-		game_ctx->curr_player = game_ctx->curr_player->next; // next round its next player's turn
+		switch_player(game_ctx, game_ctx->curr_player->next); // next round its next player's turn
 		game_ctx->round_num++;
 	}
 }

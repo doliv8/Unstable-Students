@@ -41,6 +41,7 @@ struct GameContext {
 	bool game_running;
 	FILE *log_file;
 	char *save_path;
+	player_statsT *curr_stats;
 };
 
 struct MultiLineText {
@@ -52,6 +53,13 @@ struct MultiLineText {
 struct WrappedText {
 	char *text;
 	multiline_textT multiline;
+};
+
+struct PlayerStats {
+	char name[GIOCATORE_NAME_LEN+1];
+	int wins, rounds, discarded;
+	int played_cards[CARDS_TYPE_COUNT];
+	player_statsT *next;
 };
 
 #endif // STRUCTS_H

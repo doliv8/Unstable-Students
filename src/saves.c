@@ -1,10 +1,10 @@
 #define _GNU_SOURCE
 
+#include <string.h>
 #include "saves.h"
 #include "constants.h"
 #include "utils.h"
 #include "format.h"
-#include "string.h"
 #include "files.h"
 
 bool valid_save_name(const char *save_name) {

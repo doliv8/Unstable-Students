@@ -9,6 +9,10 @@ void save_game(game_contextT* game_ctx);
 
 cartaT *load_mazzo(int *n_cards);
 FILE *open_log_append();
+FILE *open_stats_read();
+FILE *open_stats_read_write();
+bool read_player_stats(FILE *fp, player_statsT *stats);
+void write_player_stats(FILE *fp, player_statsT *stats);
 void load_saves_cache(freeable_multiline_textT *saves);
 void save_saves_cache(freeable_multiline_textT *saves);
 
