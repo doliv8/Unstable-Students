@@ -9,7 +9,7 @@
  * 
  * @return int inserted integer
  */
-int get_int() {
+int get_int(void) {
 	printf("> ");
 	int val;
 	while (scanf(" %d", &val) != ONE_ELEMENT)
@@ -23,7 +23,7 @@ int get_int() {
  * @return true if user chose yes
  * @return false if user chose no
  */
-bool ask_choice() {
+bool ask_choice(void) {
 	char choice = 'n';
 	printf("(" ANSI_GREEN "y" ANSI_RESET "/" ANSI_RED "N" ANSI_RESET "): ");
 	scanf(" %c", &choice);
@@ -117,7 +117,7 @@ int rand_int(int min, int max) {
  * @return char* pointer to the heap block containing the duplicated string
  */
 char *strdup_checked(const char *str) {
-	int len = strlen(str)+1;
+	size_t len = strlen(str)+1;
 	char *copy = malloc_checked(len);
 	strncpy(copy, str, len);
 	return copy;

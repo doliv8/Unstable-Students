@@ -9,7 +9,7 @@
 #include "string.h"
 #include "card.h"
 
-void format_effect(char **str, effettoT* effect) {
+void format_effect(char **str, effettoT *effect) {
 	asprintf_sss(str, "%s -> %s (%s)",
 		azioneT_str(effect->azione),
 		tipo_cartaT_str(effect->target_carta),
@@ -173,16 +173,17 @@ int get_max_row_width_restricted(cartaT *head, tipo_cartaT type) {
  */
 void show_card_group_restricted(cartaT *group, const char *title, const char *title_fmt, tipo_cartaT type) {
 	char *fmt_title;
-	char *l_border = "[", *r_border = "]", *vuoto_msg = "\\\\ vuoto //";
-	int borders_width = strlen(l_border)+strlen(r_border);
+	int borders_width = strlen(CARDS_HEADER_LBORDER)+strlen(CARDS_HEADER_RBORDER);
 	int max_group_row_width = get_max_row_width_restricted(group, type);
 
 	asprintf_s(&fmt_title, title_fmt, title);
 
 	puts(""); // spacing
-	print_centered_lr_boxed_string(fmt_title, strlen(title), l_border, r_border, max_group_row_width-borders_width); // show title header
-	if (!show_cards_restricted(group, type))
-		print_centered_lr_boxed_string(vuoto_msg, strlen(vuoto_msg), "", "\n", max_group_row_width);
+	// show title header
+	print_centered_lr_boxed_string(fmt_title, strlen(title), CARDS_HEADER_LBORDER, CARDS_HEADER_RBORDER, max_group_row_width-borders_width);
+	// show cards group
+	if (!show_cards_restricted(group, type)) // if not any card shown just print the empty cards group box
+		print_centered_lr_boxed_string(CARDS_EMPTY_MSG, strlen(CARDS_EMPTY_MSG), "", "\n", max_group_row_width);
 
 	free_wrap(fmt_title);
 }
@@ -204,13 +205,10 @@ void show_card_group(cartaT *group, const char *title, const char *title_fmt) {
  * @param game_ctx pointer to the game context
  */
 void show_round(game_contextT *game_ctx) {
-	char *h_border, *v_border, *round_num_text, *player_turn_text;
+	char *round_num_text, *player_turn_text;
 	int len_round_num_text, len_player_turn_text;
 	freeable_multiline_textT round_banner;
 	init_multiline(&round_banner);
-
-	h_border = ANSI_BOLD ANSI_BG_MAGENTA CARD_CORNER_LEFT BANNER_HORIZONTAL_BAR CARD_CORNER_RIGHT ANSI_RESET;
-	v_border = ANSI_BOLD ANSI_BG_MAGENTA CARD_BORDER_VERTICAL ANSI_RESET;
 
 	len_round_num_text = snprintf(NULL, 0, "Round numero: %d", game_ctx->round_num);
 	asprintf_d(&round_num_text, "Round numero: " ANSI_BOLD "%d" ANSI_RESET, game_ctx->round_num);
@@ -219,12 +217,12 @@ void show_round(game_contextT *game_ctx) {
 	asprintf_s(&player_turn_text, "Turno di: " PRETTY_USERNAME "!", game_ctx->curr_player->name);
 
 	// build actual banner
-	multiline_addline(&round_banner, strdup_checked(h_border));
-	multiline_addline(&round_banner, center_boxed_string("", 0, v_border, ROUND_BANNER_CONTENT_WIDTH)); // spacing
-	multiline_addline(&round_banner, center_boxed_string(round_num_text, len_round_num_text, v_border, ROUND_BANNER_CONTENT_WIDTH));
-	multiline_addline(&round_banner, center_boxed_string(player_turn_text, len_player_turn_text, v_border, ROUND_BANNER_CONTENT_WIDTH));
-	multiline_addline(&round_banner, center_boxed_string("", 0, v_border, ROUND_BANNER_CONTENT_WIDTH)); // spacing
-	multiline_addline(&round_banner, strdup_checked(h_border));
+	multiline_addline(&round_banner, strdup_checked(BANNER_HORIZONTAL_BORDER));
+	multiline_addline(&round_banner, center_boxed_string("", 0, BANNER_VERTICAL_BORDER, ROUND_BANNER_CONTENT_WIDTH)); // spacing
+	multiline_addline(&round_banner, center_boxed_string(round_num_text, len_round_num_text, BANNER_VERTICAL_BORDER, ROUND_BANNER_CONTENT_WIDTH));
+	multiline_addline(&round_banner, center_boxed_string(player_turn_text, len_player_turn_text, BANNER_VERTICAL_BORDER, ROUND_BANNER_CONTENT_WIDTH));
+	multiline_addline(&round_banner, center_boxed_string("", 0, BANNER_VERTICAL_BORDER, ROUND_BANNER_CONTENT_WIDTH)); // spacing
+	multiline_addline(&round_banner, strdup_checked(BANNER_HORIZONTAL_BORDER));
 
 	puts(""); // spacing
 	// print the whole banner

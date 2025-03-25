@@ -172,8 +172,8 @@ typedef struct GameContext game_contextT;
 Mi è sufficiente utilizzare tale struttura per contenere l'intero stato della partita (all'inizio di un round, non durante), come si può notare dai prototipi delle funzioni usate per caricare e salvare i salvataggi:
 
 ```c
-game_contextT* load_game(const char *save_name);
-void save_game(game_contextT* game_ctx);
+game_contextT *load_game(const char *save_name);
+void save_game(game_contextT *game_ctx);
 ```
 
 Ciò che contiene questa struttura è:

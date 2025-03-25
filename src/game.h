@@ -3,7 +3,7 @@
 
 #include "types.h"
 
-game_contextT *new_game();
+game_contextT *new_game(void);
 void clear_game(game_contextT *game_ctx);
 
 #endif // GAME_H

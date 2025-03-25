@@ -3,7 +3,7 @@
 
 #include "types.h"
 
-void display_full_stats();
+void display_full_stats(void);
 void load_stats(game_contextT *game_ctx);
 void save_stats(game_contextT *game_ctx);
 

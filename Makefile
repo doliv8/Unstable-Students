@@ -1,5 +1,6 @@
 CC = gcc
-CFLAGS = -Wall -g -std=c99
+# many flags from https://stackoverflow.com/questions/3375697/what-are-the-useful-gcc-flags-for-c
+CFLAGS = -Wall -Wextra -Wundef -Wshadow -Wpointer-arith -Wcast-align -Wstrict-prototypes -Wstrict-overflow=5 -Wwrite-strings -Wunreachable-code -fsanitize=address,undefined -O3 -g -std=c99
 BUILD_DIR = build
 SRC_DIR = src
 SRCS = $(wildcard $(SRC_DIR)/*.c)
@@ -13,7 +14,7 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 $(TARGET): $(OBJS)
-	$(CC) $^ -o $@ 
+	$(CC) $(CFLAGS) $^ -o $@
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@

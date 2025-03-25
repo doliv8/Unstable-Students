@@ -25,7 +25,7 @@ void discard_card(game_contextT *game_ctx, cartaT **cards, tipo_cartaT type, con
 void apply_effects(game_contextT *game_ctx, cartaT *card, quandoT quando);
 void apply_start_effects(game_contextT *game_ctx);
 
-bool can_join_aula(game_contextT *game_ctx, giocatoreT *player, cartaT *card);
+bool can_join_aula(giocatoreT *player, cartaT *card);
 void join_aula(game_contextT *game_ctx, giocatoreT *player, cartaT *card);
 void leave_aula(game_contextT *game_ctx, giocatoreT *player, cartaT *card, bool dispatch_effects);
 

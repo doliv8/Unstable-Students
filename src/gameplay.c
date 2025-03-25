@@ -206,10 +206,9 @@ bool target_defends(game_contextT *game_ctx, giocatoreT *target, cartaT *attack_
 /**
  * @brief displays a player's public cards and number of private cards or even the private cards list if the player has an active MOSTRA effect
  * 
- * @param game_ctx 
  * @param player target player
  */
-void show_player_state(game_contextT *game_ctx, giocatoreT *player) {
+void show_player_state(giocatoreT *player) {
 	printf("Ecco lo stato di " PRETTY_USERNAME ":\n", player->name);
 
 	if (has_bonusmalus(player, MOSTRA))
@@ -243,9 +242,9 @@ void view_others(game_contextT *game_ctx) {
 	if (target == NULL) { // picked option is ALL
 		// start from next player based on turns
 		for (giocatoreT *player = game_ctx->curr_player->next; player != game_ctx->curr_player; player = player->next)
-			show_player_state(game_ctx, player);
+			show_player_state(player);
 	} else
-		show_player_state(game_ctx, target);
+		show_player_state(target);
 }
 
 /**
@@ -592,7 +591,7 @@ bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
 					target = pick_player(game_ctx, player_prompt, ALLOW_SELF, !ALLOW_ALL);
 					free_wrap(player_prompt);
 				}
-				if (can_join_aula(game_ctx, target, card)) {
+				if (can_join_aula(target, card)) {
 					log_sss(game_ctx, "%s gioca '%s' su %s.", thrower->name, card->name, target->name);
 					unlink_card(&thrower->carte, card);
 					if (target == thrower || !target_defends(game_ctx, target, card, CARD_PLACEMENT)) // can't defended from self thrown cards
@@ -648,7 +647,7 @@ bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
  * 
  * @return int picked action menu option
  */
-int choice_action_menu() {
+int choice_action_menu(void) {
 	int action;
 	do {
 		puts("Che azione vuoi eseguire?");
@@ -692,13 +691,12 @@ void leave_aula(game_contextT *game_ctx, giocatoreT *player, cartaT *card, bool 
 /**
  * @brief checks if card can join aula (no equal card is already in aula)
  * 
- * @param game_ctx 
  * @param player target aula player
  * @param card joining card
  * @return true if card can join aula
  * @return false if card couldn't join aula
  */
-bool can_join_aula(game_contextT *game_ctx, giocatoreT *player, cartaT *card) {
+bool can_join_aula(giocatoreT *player, cartaT *card) {
 	bool can_join = true;
 	if (match_card_type(card, STUDENTE)) { // is STUDENTE
 		if (cards_contain(player->aula, card))

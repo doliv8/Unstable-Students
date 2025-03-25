@@ -11,7 +11,7 @@
 #include "game.h"
 
 int main(int argc, const char *argv[]) {
-	game_contextT* game_ctx;
+	game_contextT *game_ctx;
 
 	// seed libc random generator
 	srand(time(NULL));

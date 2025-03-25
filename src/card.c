@@ -56,7 +56,7 @@ cartaT *shuffle_cards(cartaT *cards) {
 		linear_cards[i]->next = linear_cards[i+1];
 	linear_cards[n_cards-1]->next = NULL; // set tail next pointer to NULL
 
-	new_head =  linear_cards[0];
+	new_head = linear_cards[0];
 
 	// free the linear array of cards used during shuffle
 	free_wrap(linear_cards);
@@ -99,11 +99,10 @@ cartaT *duplicate_carta(cartaT *card) {
 	*copy_card = *card; // copy the whole struct
 	if (card->n_effetti != 0) {
 		// create new effects array
-		effettoT* effects = (effettoT*)malloc_checked(card->n_effetti*sizeof(effettoT));
+		copy_card->effetti = (effettoT*)malloc_checked(card->n_effetti*sizeof(effettoT));
 		// copy effects into the new array
 		for (int i = 0; i < card->n_effetti; i++)
-			effects[i] = card->effetti[i];
-		copy_card->effetti = effects;
+			copy_card->effetti[i] = card->effetti[i];
 	}
 
 	return copy_card;
