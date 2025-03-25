@@ -10,7 +10,7 @@
 
 #define MIN(a, b) (a < b ? a : b)
 
-int get_int();
+int get_int(void);
 
 void *malloc_checked(size_t size);
 void *calloc_checked(size_t nmemb, size_t size);
@@ -21,6 +21,6 @@ char *strdup_checked(const char *str);
 
 int rand_int(int min, int max);
 
-bool ask_choice();
+bool ask_choice(void);
 
 #endif // UTILS_H

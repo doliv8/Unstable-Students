@@ -34,7 +34,7 @@ void distribute_cards(game_contextT *game_ctx) {
  * 
  * @return giocatoreT* newly created player
  */
-giocatoreT *new_player() {
+giocatoreT *new_player(void) {
 	giocatoreT *player = (giocatoreT*)calloc_checked(ONE_ELEMENT, sizeof(giocatoreT));
 
 	do {
@@ -50,11 +50,11 @@ giocatoreT *new_player() {
  * 
  * @return game_contextT* newly created game context
  */
-game_contextT *new_game() {
+game_contextT *new_game(void) {
 	cartaT *mazzo;
 	int n_cards;
 	char *save_name;
-	giocatoreT *curr_player;
+	giocatoreT *curr_player = NULL;
 	game_contextT *game_ctx = (game_contextT*)calloc_checked(ONE_ELEMENT, sizeof(game_contextT));
 
 	init_logging(game_ctx);
@@ -76,7 +76,7 @@ game_contextT *new_game() {
 	// create players
 	// game_ctx->curr_player serves as the linked-list head
 	for (int i = 0; i < game_ctx->n_players; i++) {
-		if (game_ctx->curr_player == NULL)
+		if (game_ctx->curr_player == NULL && curr_player == NULL)
 			curr_player = game_ctx->curr_player = new_player(); // set linked list head
 		else
 			curr_player = curr_player->next = new_player();

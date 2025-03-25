@@ -10,7 +10,7 @@
 * the game context must keep track of only the players in the current game and update their stats before the start of each round.
 */
 
-void display_full_stats() {
+void display_full_stats(void) {
 	player_statsT stats, max_wins, max_rounds, max_discarded, max_played;
 	int count;
 	FILE *fp = open_stats_read();
@@ -19,7 +19,7 @@ void display_full_stats() {
 		if (count == 0)
 			max_wins = max_rounds = max_discarded = max_played = stats; // initialize maximums to first read stats
 
-		printf(ANSI_CYAN "\nStatistiche di " ANSI_BOLD ANSI_RED PRETTY_USERNAME ":\n\n" ANSI_RESET, stats.name);
+		printf(ANSI_CYAN "\nStatistiche di " ANSI_BOLD ANSI_RED PRETTY_USERNAME ANSI_CYAN ":\n\n" ANSI_RESET, stats.name);
 
 		printf("  Totale partite vinte: " ANSI_BOLD "%d" ANSI_RESET "\n", stats.wins);
 		printf("  Totale round giocati: " ANSI_BOLD "%d" ANSI_RESET "\n", stats.rounds);
@@ -86,7 +86,7 @@ player_statsT *load_player_stats(giocatoreT *player) {
 		}
 	}
 	if (!found)
-		strncpy(new_stats->name, player->name, GIOCATORE_NAME_LEN);
+		strncpy(new_stats->name, player->name, sizeof(new_stats->name));
 
 	fclose(fp);
 	return new_stats;
@@ -99,13 +99,13 @@ player_statsT *load_player_stats(giocatoreT *player) {
  */
 void load_stats(game_contextT *game_ctx) {
 	giocatoreT *player;
-	player_statsT *curr_stats;
+	player_statsT *curr_stats = NULL;
 
 	// load stats
 	// game_ctx->curr_stats serves as the linked-list head
 	player = game_ctx->curr_player;
 	for (int i = 0; i < game_ctx->n_players; i++, player = player->next) {
-		if (game_ctx->curr_stats == NULL)
+		if (game_ctx->curr_stats == NULL && curr_stats == NULL)
 			curr_stats = game_ctx->curr_stats = load_player_stats(player); // set linked list head
 		else
 			curr_stats = curr_stats->next = load_player_stats(player);

@@ -8,7 +8,7 @@
  * @brief call this when an error in dynamic formatting happens. does not return.
  * 
  */
-void formatting_failed() {
+void formatting_failed(void) {
 	fputs("Error occurred while formatting a dynamically allocated string!", stderr);
 	exit(EXIT_FAILURE);
 }
@@ -22,9 +22,12 @@ void formatting_failed() {
  * @return int length of formatted string
  */
 int asprintf_d(char **strp, const char *fmt, int d0) {
-	int length = snprintf(NULL, 0, fmt, d0);
+	int length, result;
+	if (fmt == NULL)
+		formatting_failed();
+	length = snprintf(NULL, 0, fmt, d0);
 	*strp = malloc_checked(length+1);
-	int result = snprintf(*strp, length+1, fmt, d0);
+	result = snprintf(*strp, length+1, fmt, d0);
 	if (result < 0)
 		formatting_failed();
 	return result;
@@ -39,9 +42,12 @@ int asprintf_d(char **strp, const char *fmt, int d0) {
  * @return int length of formatted string
  */
 int asprintf_s(char **strp, const char *fmt, const char *s0) {
-	int length = snprintf(NULL, 0, fmt, s0);
+	int length, result;
+	if (fmt == NULL)
+		formatting_failed();
+	length = snprintf(NULL, 0, fmt, s0);
 	*strp = malloc_checked(length+1);
-	int result = snprintf(*strp, length+1, fmt, s0);
+	result = snprintf(*strp, length+1, fmt, s0);
 	if (result < 0)
 		formatting_failed();
 	return result;
@@ -57,9 +63,12 @@ int asprintf_s(char **strp, const char *fmt, const char *s0) {
  * @return int length of formatted string
  */
 int asprintf_ss(char **strp, const char *fmt, const char *s0, const char *s1) {
-	int length = snprintf(NULL, 0, fmt, s0, s1);
+	int length, result;
+	if (fmt == NULL)
+		formatting_failed();
+	length = snprintf(NULL, 0, fmt, s0, s1);
 	*strp = malloc_checked(length+1);
-	int result = snprintf(*strp, length+1, fmt, s0, s1);
+	result = snprintf(*strp, length+1, fmt, s0, s1);
 	if (result < 0)
 		formatting_failed();
 	return result;
@@ -76,9 +85,12 @@ int asprintf_ss(char **strp, const char *fmt, const char *s0, const char *s1) {
  * @return int length of formatted string
  */
 int asprintf_sss(char **strp, const char *fmt, const char *s0, const char *s1, const char *s2) {
-	int length = snprintf(NULL, 0, fmt, s0, s1, s2);
+	int length, result;
+	if (fmt == NULL)
+		formatting_failed();
+	length = snprintf(NULL, 0, fmt, s0, s1, s2);
 	*strp = malloc_checked(length+1);
-	int result = snprintf(*strp, length+1, fmt, s0, s1, s2);
+	result = snprintf(*strp, length+1, fmt, s0, s1, s2);
 	if (result < 0)
 		formatting_failed();
 	return result;
@@ -96,9 +108,12 @@ int asprintf_sss(char **strp, const char *fmt, const char *s0, const char *s1, c
  * @return int length of formatted string
  */
 int asprintf_ssss(char **strp, const char *fmt, const char *s0, const char *s1, const char *s2, const char *s3) {
-	int length = snprintf(NULL, 0, fmt, s0, s1, s2, s3);
+	int length, result;
+	if (fmt == NULL)
+		formatting_failed();
+	length = snprintf(NULL, 0, fmt, s0, s1, s2, s3);
 	*strp = malloc_checked(length+1);
-	int result = snprintf(*strp, length+1, fmt, s0, s1, s2, s3);
+	result = snprintf(*strp, length+1, fmt, s0, s1, s2, s3);
 	if (result < 0)
 		formatting_failed();
 	return result;
@@ -175,8 +190,8 @@ void multiline_addline_with_len(multiline_textT *multiline, const char *line, in
  * @param text string to wrap
  * @param max_width maximum width to use in wrapping text
  */
-void wrap_text(wrapped_textT *wrapped, const char *text, int max_width) {
-	int text_len = strlen(text);
+void wrap_text(wrapped_textT *wrapped, const char *text, size_t max_width) {
+	size_t text_len = strlen(text);
 	init_multiline(&wrapped->multiline);
 
 	// initialize fields

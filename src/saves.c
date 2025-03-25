@@ -68,7 +68,7 @@ char *ask_save_name(bool new) {
  * 
  * @return char* the name of the chosen save to load (heap-allocated string)
  */
-char *pick_save() {
+char *pick_save(void) {
 	freeable_multiline_textT saves_cache;
 	int choice_idx;
 	char *save_name;

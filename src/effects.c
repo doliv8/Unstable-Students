@@ -224,7 +224,7 @@ void apply_effect_ruba_target(game_contextT *game_ctx, giocatoreT *target, effet
 	// check if any target card can be stolen by curr_player first
 	for (card = target_cards; card != NULL && !can_steal; card = card->next) {
 		if (match_card_type(card, effect->target_carta)) {
-			if (can_join_aula(game_ctx, game_ctx->curr_player, card))
+			if (can_join_aula(game_ctx->curr_player, card))
 				can_steal = true;
 		}
 	}
@@ -233,7 +233,7 @@ void apply_effect_ruba_target(game_contextT *game_ctx, giocatoreT *target, effet
 		do {
 			card = pick_card(target_cards, effect->target_carta, prompt, title, ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET);
 
-			if (can_join_aula(game_ctx, game_ctx->curr_player, card)) {
+			if (can_join_aula(game_ctx->curr_player, card)) {
 				leave_aula(game_ctx, target, card, DISPATCH_EFFECTS);
 				join_aula(game_ctx, game_ctx->curr_player, card);
 				printf("Hai rubato: %s\n", card->name);
@@ -399,8 +399,16 @@ void apply_effect_scambia_target(game_contextT *game_ctx, giocatoreT *target, ef
 		return;
 	}
 
-	printf(PRETTY_USERNAME " ha scambiato la sua mano con quella di " PRETTY_USERNAME "!\n", game_ctx->curr_player->name, target->name);
-	log_ss(game_ctx, "%s scambia il suo mazzo con quello di %s.", game_ctx->curr_player->name, target->name);
+	printf(PRETTY_USERNAME " ha scambiato la sua mano con quella di " PRETTY_USERNAME " grazie all'effetto %s!\n",
+		game_ctx->curr_player->name,
+		target->name,
+		azioneT_str(effect->azione)
+	);
+	log_sss(game_ctx, "%s scambia il suo mazzo con quello di %s grazie all'effetto %s.",
+		game_ctx->curr_player->name,
+		target->name,
+		azioneT_str(effect->azione)
+	);
 
 	// swap hands
 	game_ctx->curr_player->carte = target->carte;

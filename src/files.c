@@ -7,17 +7,17 @@
 #include "format.h"
 #include "saves.h"
 
-void file_read_failed() {
+void file_read_failed(void) {
 	fputs("Error occurred while reading from a file stream!\n", stderr);
 	exit(EXIT_FAILURE);
 }
 
-void file_write_failed() {
+void file_write_failed(void) {
 	fputs("Error occurred while writing to a file stream!\n", stderr);
 	exit(EXIT_FAILURE);
 }
 
-effettoT *load_effects(FILE *fp, int amount) {
+effettoT *load_effects(FILE *fp, size_t amount) {
 	effettoT *effects = NULL;
 
 	if (amount > 0) {
@@ -58,7 +58,7 @@ cartaT *load_cards(FILE *fp) {
 }
 
 giocatoreT *load_player(FILE *fp) {
-	giocatoreT* player;
+	giocatoreT *player;
 
 	player = (giocatoreT*)calloc_checked(ONE_ELEMENT, sizeof(giocatoreT));
 	if (fread(player, sizeof(giocatoreT), ONE_ELEMENT, fp) != ONE_ELEMENT)
@@ -71,9 +71,9 @@ giocatoreT *load_player(FILE *fp) {
 	return player;
 }
 
-game_contextT* load_game(const char *save_name) {
+game_contextT *load_game(const char *save_name) {
 	FILE *fp;
-	giocatoreT *curr_player;
+	giocatoreT *curr_player = NULL;
 	game_contextT *game_ctx = (game_contextT*)calloc_checked(ONE_ELEMENT, sizeof(game_contextT));
 
 	if (!valid_save_name(save_name)) {
@@ -101,7 +101,7 @@ game_contextT* load_game(const char *save_name) {
 	game_ctx->n_players = read_bin_int(fp);
 
 	for (int i = 0; i < game_ctx->n_players; i++) {
-		if (game_ctx->curr_player == NULL)
+		if (game_ctx->curr_player == NULL && curr_player == NULL)
 			curr_player = game_ctx->curr_player = load_player(fp);
 		else
 			curr_player = curr_player->next = load_player(fp);
@@ -151,7 +151,7 @@ void dump_player(FILE *fp, giocatoreT *player) {
 	dump_cards(fp, player->bonus_malus); // save bonus/malus
 }
 
-void save_game(game_contextT* game_ctx) {
+void save_game(game_contextT *game_ctx) {
 	FILE *fp = fopen(game_ctx->save_path, "wb"); // open binary file for writing
 	if (fp == NULL) {
 		fprintf(stderr, "Opening save file (%s) failed!\n", game_ctx->save_path);
@@ -174,9 +174,9 @@ void save_game(game_contextT* game_ctx) {
 }
 
 
-effettoT* read_effetti(FILE* fp, int* n_effects) {
+effettoT *read_effetti(FILE *fp, int *n_effects) {
 	int amount = read_int(fp);
-	effettoT* effects = NULL;
+	effettoT *effects = NULL;
 	if (amount != 0)
 		effects = (effettoT*)malloc_checked(amount*sizeof(effettoT));
 	for (int i = 0; i < amount; i++) {
@@ -219,7 +219,7 @@ cartaT *read_carta(FILE *fp, cartaT **tail_next, int *amount) {
 }
 
 cartaT *load_mazzo(int *n_cards) {
-	FILE* fp = fopen(FILE_MAZZO, "r");
+	FILE *fp = fopen(FILE_MAZZO, "r");
 	if (fp == NULL) {
 		fprintf(stderr, "Opening cards file (%s) failed!\n", FILE_MAZZO);
 		exit(EXIT_FAILURE);
@@ -241,7 +241,7 @@ cartaT *load_mazzo(int *n_cards) {
 	return mazzo;
 }
 
-FILE *open_log_append() {
+FILE *open_log_append(void) {
 	FILE *fp = fopen(FILE_LOG, "a");
 	if (fp == NULL) {
 		fprintf(stderr, "Opening logs file (%s) failed!\n", FILE_LOG);
@@ -284,7 +284,7 @@ void save_saves_cache(freeable_multiline_textT *saves) {
 }
 
 
-FILE *open_stats_read() {
+FILE *open_stats_read(void) {
 	FILE *fp = fopen(FILE_STATS, "rb"); // open binary file for reading
 	if (fp == NULL) { // stats file doesn't exist
 		fp = fopen(FILE_STATS, "wb"); // open binary file for writing
@@ -303,7 +303,7 @@ FILE *open_stats_read() {
 	return fp;
 }
 
-FILE *open_stats_read_write() {
+FILE *open_stats_read_write(void) {
 	FILE *fp = fopen(FILE_STATS, "rb+"); // open binary file for reading and writing
 	if (fp == NULL) {
 		fprintf(stderr, "Opening stats file (%s) failed!\nIl file dovrebbe esistere dato che il gioco e' gia' avviato!", FILE_STATS);
