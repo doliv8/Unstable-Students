@@ -7,6 +7,8 @@
 bool is_self(game_contextT *game_ctx, giocatoreT *target);
 void switch_player(game_contextT *game_ctx, giocatoreT *player);
 
+bool target_defends(game_contextT *game_ctx, giocatoreT *target, cartaT *attack_card, effettoT *attack_effect);
+
 // actions
 bool play_card(game_contextT *game_ctx, tipo_cartaT type);
 cartaT *draw_card(game_contextT *game_ctx);
@@ -21,9 +23,6 @@ cartaT *pick_aula_card(game_contextT *game_ctx, giocatoreT *target, tipo_cartaT 
 
 void dispose_card(game_contextT *game_ctx, cartaT *card);
 void discard_card(game_contextT *game_ctx, cartaT **cards, tipo_cartaT type, const char *title);
-
-void apply_effects(game_contextT *game_ctx, cartaT *card, quandoT quando);
-void apply_start_effects(game_contextT *game_ctx);
 
 bool can_join_aula(giocatoreT *player, cartaT *card);
 void join_aula(game_contextT *game_ctx, giocatoreT *player, cartaT *card);
