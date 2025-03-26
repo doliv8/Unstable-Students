@@ -44,10 +44,14 @@ REPOSITORY STRUCTURE
 │   ├── card.h
 │   ├── game.c
 │   ├── game.h
+│   ├── effects.c
+│   ├── effects.h
 │   ├── gameplay.c
 │   ├── gameplay.h
 │   ├── menu.c
 │   ├── menu.h
+│   ├── stats.c
+│   ├── stats.h
 │   ├── saves.c
 │   ├── saves.h
 │   ├── files.c
@@ -59,7 +63,9 @@ REPOSITORY STRUCTURE
 │   ├── logging.c
 │   ├── logging.h
 │   ├── utils.c
-│   └── utils.h
+│   ├── utils.h
+│   ├── debugging.c
+│   └── debugging.h
 │
 │ BUILD DIRECTORY
 ├── build						// directory contenente il binario compilato e i file oggetto
@@ -92,6 +98,7 @@ REPOSITORY STRUCTURE
 Per gestire la compilazione ho fatto uso di `make`, creando diversi target nel [Makefile](./Makefile):
 - `clean`: elimina il binario compilato e tutti i file oggetto creati durante la compilazione
 - `run`: compila e avvia il gioco
+- `rebuild`: esegue la pulizia (target `clean`) e compila il gioco
 - `gdb`: compila e avvia il gioco tramite il debugger `gdb`, utile per individuare punti e cause di crash
 - `valgrind`: compila e avvia il gioco tramite il tool `valgrind` per trovare memory leak e corruzzioni della memoria
 - `debug`: compila il gioco definendo l'identificatore `DEBUG` per la compilazione condizionale di alcune parti di codice atte a tracciare la gestione della memoria
@@ -117,8 +124,13 @@ Ecco due esempi di come dovrebbe essere visualizzata l'interfaccia del gioco in 
 > [!TIP]
 > Per ogni file sorgente (.c/.h) presente nel progetto, spiegare brevemente il contenuto e lo scopo del file.
 
+Per ciascun file sorgente che contiene definizioni di funzioni utilizzate anche da altre unità di compilazione esiste un file header corrispondente, contenente i prototipi di tali funzioni "esportate", ma, tendenzialmente, non di quelle utilizzate solo internamente nel file sorgente, per evitare l'uso di funzioni interne "dall'esterno": uso gli header come interfacce alle rispettive unità di compilazione, che sono divise per "temi" di gestione, come descritto in seguito.\
+Non ho associato un corrispettivo file sorgente a tutti i file header (ad esempio [constants.h](./src/constants.h), [types.h](./src/types.h) e [structs.h](./src/structs.h)) poiché in alcuni casi è solo necessario definire dei nuovi tipi, delle strutture o delle costanti (tramite macro) utilizzate in diverse parti del progetto.
+
+Di seguito sono descritti brevemente i diversi file sorgente e il loro rispettivo scopo:
+
 ### main.c
-Questo file sorgente contiene l'entry point del programma, ovvero la funzione `main`, nella quale avviene l'inizializzazione del gioco e il game loop.
+Questo file sorgente contiene l'entry point del programma, ovvero la funzione `main`, nella quale avviene l'inizializzazione (e cleanup) del gioco, viene mostrato il menu principale e viene avviato il [game loop](#game-loop).
 
 ### constants.h
 Questo header non ha un corrispettivo file sorgente .c associato in quanto contiene solamente le definizioni delle costanti (es. numero massimo e minimo di giocatori e lunghezze massime di alcune stringhe) e alcuni letterali usati nel gioco (es. nomi statici dei file coi quali interagisce il programma e stringhe utilizzate nella realizzazione della grafica su terminale).
@@ -246,7 +258,7 @@ In questa sezione del `README.md` e nel codice (variabili e commenti) faccio rif
 
 ...
 
-
+### Game loop
 Ho suddiviso il flusso del game loop (ciascun round) in 3 fasi:
 - begin (`begin_round`): salva la partita, salva le statistiche della partita, mostra le informazioni del round attuale, applica gli effetti iniziali delle carte dell'aula e fa pescare una carta (dovuta da regolamento) al giocatore corrente.
 - play (`play_round`): mostra il [menu di azione](#menu-dazione) al giocatore.

@@ -25,6 +25,8 @@ clean:
 run: all
 	$(TARGET)
 
+rebuild: clean all
+
 gdb: all
 	gdb $(TARGET)
 
@@ -33,5 +35,5 @@ valgrind: all
 
 debug: CFLAGS += -DDEBUG
 
-debug: clean $(TARGET)
+debug: clean all
 
