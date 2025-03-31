@@ -101,7 +101,6 @@ void load_stats(game_contextT *game_ctx) {
 	giocatoreT *player;
 	player_statsT *curr_stats = NULL;
 
-	// load stats
 	// game_ctx->curr_stats serves as the linked-list head
 	player = game_ctx->curr_player;
 	for (int i = 0; i < game_ctx->n_players; i++, player = player->next) {

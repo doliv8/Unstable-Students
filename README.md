@@ -278,6 +278,15 @@ Nel menu di scelta d'azione è possibile scegliere fra le seguenti opzioni:
 ...
 
 
+
+
+### File di salvataggio
+
+*descrizione campi opzionali nel file di salvataggio (round number)*
+
+
+
+
 ### Carte giocabili
 Le carte giocabili vengono contate tramite la funzione `count_playable_cards`, che considera vari casi, di seguito spiegati:
 - Solo carte del tipo specificato (type) possono essere giocate: supponendo di star giocando a seguito di un effetto come `[GIOCA, IO, STUDENTE]` sarebbe possibile giocare solamente una carta `STUDENTE` (quindi `MATRICOLA`, `STUDENTE_SEMPLICE` o `LAUREANDO`) dal proprio mazzo, mentre con type = `ALL` questo controllo viene sempre passato.

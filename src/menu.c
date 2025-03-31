@@ -6,6 +6,12 @@
 #include "saves.h"
 #include "stats.h"
 
+/**
+ * @brief instantiates game context based on user choice to load an existing save or create a new one. allows to show global stats.
+ * 
+ * @param provided_save save file to try loading from SAVES_DIRECTORY directory (without SAVE_PATH_EXTENSION extension)
+ * @return game_contextT* newly created game context
+ */
 game_contextT *main_menu(const char *provided_save) {
 	int option;
 	char *save_name;
