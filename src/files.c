@@ -7,16 +7,31 @@
 #include "format.h"
 #include "saves.h"
 
+/**
+ * @brief call this when an error while reading from a file occurs
+ * 
+ */
 void file_read_failed(void) {
 	fputs("Error occurred while reading from a file stream!\n", stderr);
 	exit(EXIT_FAILURE);
 }
 
+/**
+ * @brief call this when an error while writing to a file occurs
+ * 
+ */
 void file_write_failed(void) {
 	fputs("Error occurred while writing to a file stream!\n", stderr);
 	exit(EXIT_FAILURE);
 }
 
+/**
+ * @brief reads effects from file
+ * 
+ * @param fp file stream
+ * @param amount count of effects to read
+ * @return effettoT* pointer to heap-allocated array of loaded effects
+ */
 effettoT *load_effects(FILE *fp, size_t amount) {
 	effettoT *effects = NULL;
 
@@ -28,6 +43,12 @@ effettoT *load_effects(FILE *fp, size_t amount) {
 	return effects;
 }
 
+/**
+ * @brief reads card from file
+ * 
+ * @param fp file stream
+ * @return cartaT* pointer to loaded card
+ */
 cartaT *load_card(FILE *fp) {
 	cartaT *card;
 
@@ -40,6 +61,12 @@ cartaT *load_card(FILE *fp) {
 	return card;
 }
 
+/**
+ * @brief reads cards from file
+ * 
+ * @param fp file stream
+ * @return cartaT* pointer to head of loaded cards linked list
+ */
 cartaT *load_cards(FILE *fp) {
 	int n_cards;
 	cartaT *head = NULL, *curr;
@@ -57,6 +84,12 @@ cartaT *load_cards(FILE *fp) {
 	return head;
 }
 
+/**
+ * @brief reads player from file
+ * 
+ * @param fp file stream
+ * @return giocatoreT* pointer to loaded player
+ */
 giocatoreT *load_player(FILE *fp) {
 	giocatoreT *player;
 
@@ -71,6 +104,12 @@ giocatoreT *load_player(FILE *fp) {
 	return player;
 }
 
+/**
+ * @brief loads saved game from a given save name
+ * 
+ * @param save_name name of the save file wanting to load (without extension) located in SAVES_DIRECTORY
+ * @return game_contextT* newly created game context
+ */
 game_contextT *load_game(const char *save_name) {
 	FILE *fp;
 	giocatoreT *curr_player = NULL;
@@ -121,28 +160,58 @@ game_contextT *load_game(const char *save_name) {
 	return game_ctx;
 }
 
+/**
+ * @brief writes effect to file
+ * 
+ * @param fp file stream
+ * @param effect pointer to effect to dump
+ */
 void dump_effect(FILE *fp, effettoT *effect) {
 	if (fwrite(effect, sizeof(effettoT), ONE_ELEMENT, fp) != ONE_ELEMENT)
 		file_write_failed();
 }
 
+/**
+ * @brief writes effects to file
+ * 
+ * @param fp file stream
+ * @param card pointer to card whose effects must be dumped
+ */
 void dump_effects(FILE *fp, cartaT *card) {
 	for (int i = 0;  i < card->n_effetti; i++)
 		dump_effect(fp, &card->effetti[i]);
 }
 
+/**
+ * @brief writes card to file
+ * 
+ * @param fp file stream
+ * @param card pointer to card to dump
+ */
 void dump_card(FILE *fp, cartaT *card) {
 	if (fwrite(card, sizeof(cartaT), ONE_ELEMENT, fp) != ONE_ELEMENT)
 		file_write_failed();
 	dump_effects(fp, card);
 }
 
+/**
+ * @brief writes cards to file
+ * 
+ * @param fp file stream
+ * @param head head of cards list to dump
+ */
 void dump_cards(FILE *fp, cartaT *head) {
 	write_bin_int(fp, count_cards(head));
 	for (; head != NULL; head = head->next)
 		dump_card(fp, head);
 }
 
+/**
+ * @brief writes to player to file
+ * 
+ * @param fp file stream
+ * @param player pointer to player to dump
+ */
 void dump_player(FILE *fp, giocatoreT *player) {
 	if (fwrite(player, sizeof(giocatoreT), ONE_ELEMENT, fp) != ONE_ELEMENT)
 		file_write_failed();
@@ -151,6 +220,11 @@ void dump_player(FILE *fp, giocatoreT *player) {
 	dump_cards(fp, player->bonus_malus); // save bonus/malus
 }
 
+/**
+ * @brief saves the current game state into the save path
+ * 
+ * @param game_ctx current game state
+ */
 void save_game(game_contextT *game_ctx) {
 	FILE *fp = fopen(game_ctx->save_path, "wb"); // open binary file for writing
 	if (fp == NULL) {
@@ -173,7 +247,13 @@ void save_game(game_contextT *game_ctx) {
 	fclose(fp);
 }
 
-
+/**
+ * @brief parses effects array from the given file stream
+ * 
+ * @param fp file stream
+ * @param n_effects number of parsed effects
+ * @return effettoT* pointer to heap-allocated array containing the parsed effects
+ */
 effettoT *read_effetti(FILE *fp, int *n_effects) {
 	int amount = read_int(fp);
 	effettoT *effects = NULL;
@@ -188,9 +268,14 @@ effettoT *read_effetti(FILE *fp, int *n_effects) {
 	return effects;
 }
 
-// returns the new linked list tail
-// returns (through amount pointer) the number of cards of this type present, sets *amount to 0 if no more cards are readable from fp
-// takes a pointer to the current tail's next pointer
+/**
+ * @brief reads a card from fp returning its amount aswell. chains the read card onto the current linked list (trough tail_next pointer).
+ * 
+ * @param fp file stream
+ * @param tail_next pointer to the current tail's next pointer
+ * @param amount out parameter containing the number of cards like this present (count of duplicates+1), 0 if no more cards are readable
+ * @return cartaT* the new linked list tail
+ */
 cartaT *read_carta(FILE *fp, cartaT **tail_next, int *amount) {
 	if (fscanf(fp, "%d", amount) != ONE_ELEMENT) {
 		*amount = 0;
@@ -209,8 +294,8 @@ cartaT *read_carta(FILE *fp, cartaT **tail_next, int *amount) {
 
 	// always add first copy to the linked list
 	*tail_next = card;
-	// start from 1 as the first one has already been added to the linked list
-	for (int i = 1; i < *amount; i++)
+	// add additional copies
+	for (int i = 1; i < *amount; i++) // start from 1 as the first one has already been added to the linked list
 		card = card->next = duplicate_carta(card);
 
 	// set last allocated card's next ptr to NULL and return the new linked list tail
@@ -218,6 +303,12 @@ cartaT *read_carta(FILE *fp, cartaT **tail_next, int *amount) {
 	return card;
 }
 
+/**
+ * @brief loads all the cards from the FILE_MAZZO file
+ * 
+ * @param n_cards out parameter containing number of loaded cards
+ * @return cartaT* head of the mazzo cards linked list
+ */
 cartaT *load_mazzo(int *n_cards) {
 	FILE *fp = fopen(FILE_MAZZO, "r");
 	if (fp == NULL) {
@@ -241,6 +332,11 @@ cartaT *load_mazzo(int *n_cards) {
 	return mazzo;
 }
 
+/**
+ * @brief opens log file for appending (creating it if it doesn't exist)
+ * 
+ * @return FILE* log file stream
+ */
 FILE *open_log_append(void) {
 	FILE *fp = fopen(FILE_LOG, "a");
 	if (fp == NULL) {
@@ -250,6 +346,11 @@ FILE *open_log_append(void) {
 	return fp;
 }
 
+/**
+ * @brief loads the saves name cache from FILE_SAVES_CACHE file (creates it if it doesn't exist) into saves multiline
+ * 
+ * @param saves pointer to already initialized freeable_multiline_textT which will contain one save name (without SAVE_PATH_EXTENSION) per line
+ */
 void load_saves_cache(freeable_multiline_textT *saves) {
 	char save_name[SAVE_NAME_LEN+1];
 	FILE *fp = fopen(SAVES_DIRECTORY FILE_SAVES_CACHE, "r");
@@ -269,10 +370,15 @@ void load_saves_cache(freeable_multiline_textT *saves) {
 	fclose(fp);
 }
 
+/**
+ * @brief saves the given saves name into the FILE_SAVES_CACHE file
+ * 
+ * @param saves pointer to freeable_multiline_textT containing one save name (without SAVE_PATH_EXTENSION) per line
+ */
 void save_saves_cache(freeable_multiline_textT *saves) {
 	FILE *fp = fopen(SAVES_DIRECTORY FILE_SAVES_CACHE, "w");
 	if (fp == NULL) {
-		// the SAVES_DIRECTORY doesn't exist.
+		// the SAVES_DIRECTORY directory doesn't exist.
 		fprintf(stderr, "Opening saves cache file (%s) failed!\nAssicurati che la cartella '%s' esista e se non esiste creala!\n",
 			SAVES_DIRECTORY FILE_SAVES_CACHE, SAVES_DIRECTORY);
 		exit(EXIT_FAILURE);
@@ -283,7 +389,11 @@ void save_saves_cache(freeable_multiline_textT *saves) {
 	fclose(fp);
 }
 
-
+/**
+ * @brief opens stats file for reading (creating it if it doesn't exist)
+ * 
+ * @return FILE* stats file stream
+ */
 FILE *open_stats_read(void) {
 	FILE *fp = fopen(FILE_STATS, "rb"); // open binary file for reading
 	if (fp == NULL) { // stats file doesn't exist
@@ -303,6 +413,11 @@ FILE *open_stats_read(void) {
 	return fp;
 }
 
+/**
+ * @brief opens stats file for reading and writing
+ * 
+ * @return FILE* stats file stream
+ */
 FILE *open_stats_read_write(void) {
 	FILE *fp = fopen(FILE_STATS, "rb+"); // open binary file for reading and writing
 	if (fp == NULL) {
@@ -312,12 +427,26 @@ FILE *open_stats_read_write(void) {
 	return fp;
 }
 
+/**
+ * @brief reads player stats into the given stats pointer from the file stream
+ * 
+ * @param fp file stream (allowing reading)
+ * @param stats pointer to player stats struct to be read into (out parameter)
+ * @return true if successfully read one player stats
+ * @return false if couldn't read one player stats
+ */
 bool read_player_stats(FILE *fp, player_statsT *stats) {
 	if (fread(stats, sizeof(player_statsT), ONE_ELEMENT, fp) != ONE_ELEMENT)
 		return false;
 	return true;
 }
 
+/**
+ * @brief writes the given player stats into the file stream
+ * 
+ * @param fp file stream (allowing writing)
+ * @param stats pointer to player stats struct to be written into the file
+ */
 void write_player_stats(FILE *fp, player_statsT *stats) {
 	if (fwrite(stats, sizeof(player_statsT), ONE_ELEMENT, fp) != ONE_ELEMENT)
 		file_write_failed();
