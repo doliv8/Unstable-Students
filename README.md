@@ -101,7 +101,7 @@ Per gestire la compilazione ho fatto uso di `make`, creando diversi target nel [
 - `rebuild`: esegue la pulizia (target `clean`) e compila il gioco
 - `gdb`: compila e avvia il gioco tramite il debugger `gdb`, utile per individuare punti e cause di crash
 - `valgrind`: compila e avvia il gioco tramite il tool `valgrind` per trovare memory leak e corruzzioni della memoria
-- `debug`: compila il gioco definendo l'identificatore `DEBUG` per la compilazione condizionale di alcune parti di codice atte a tracciare la gestione della memoria
+- `debug`: compila il gioco definendo l'identificatore `DEBUG` per la compilazione condizionale di alcune parti di codice atte a tracciare la gestione della memoria e definire funzioni utili nel debugging
 
 ...
 
@@ -124,7 +124,7 @@ Ecco due esempi di come dovrebbe essere visualizzata l'interfaccia del gioco in 
 > [!TIP]
 > Per ogni file sorgente (.c/.h) presente nel progetto, spiegare brevemente il contenuto e lo scopo del file.
 
-Per ciascun file sorgente che contiene definizioni di funzioni utilizzate anche da altre unità di compilazione esiste un file header corrispondente, contenente i prototipi di tali funzioni "esportate", ma, tendenzialmente, non di quelle utilizzate solo internamente nel file sorgente, per evitare l'uso di funzioni interne "dall'esterno": uso gli header come interfacce alle rispettive unità di compilazione, che sono divise per "temi" di gestione, come descritto in seguito.\
+Per ciascun file sorgente che contiene definizioni di funzioni utilizzate anche da altre unità di compilazione esiste un file header corrispondente, contenente i prototipi di tali funzioni "esportate", ma, tendenzialmente, non di quelle utilizzate solo internamente al file sorgente, per evitare l'uso di funzioni interne "dall'esterno": uso gli header come interfacce alle rispettive unità di compilazione, che sono divise per "temi" di gestione, come descritto in seguito.\
 Non ho associato un corrispettivo file sorgente a tutti i file header (ad esempio [constants.h](./src/constants.h), [types.h](./src/types.h) e [structs.h](./src/structs.h)) poiché in alcuni casi è solo necessario definire dei nuovi tipi, delle strutture o delle costanti (tramite macro) utilizzate in diverse parti del progetto.
 
 Di seguito sono descritti brevemente i diversi file sorgente e il loro rispettivo scopo:
@@ -136,11 +136,11 @@ Questo file sorgente contiene l'entry point del programma, ovvero la funzione `m
 Questo header non ha un corrispettivo file sorgente .c associato in quanto contiene solamente le definizioni delle costanti (es. numero massimo e minimo di giocatori e lunghezze massime di alcune stringhe) e alcuni letterali usati nel gioco (es. nomi statici dei file coi quali interagisce il programma e stringhe utilizzate nella realizzazione della grafica su terminale).
 
 ### structs.h
-In questo header sono definite tutte le strutture utilizzate nel progetto (descritte nella seguente sezione). Una scelta un po' particolare inserirle tutte nello stesso file anzi che in appositi file come card.h, player.h e simili ma ho trovato questa soluzione meno confusionaria e meno dispersiva.
+In questo header sono definite tutte le strutture utilizzate nel progetto (comprese quelle [aggiuntive](#descrizione-e-scopo-strutture-aggiuntive)). Ho scelto di inserirle tutte nello stesso file anzi che in appositi file come card.h, player.h e simili perché ho trovato questa soluzione meno confusionaria e dispersiva.
 
 ### enums.c & enums.h
 Seguendo la stessa logica della della scelta adottata per structs.h, nel file header sono definite tutte le enumerazioni usate nel progetto.
-Nel file .c sono invece definite le funzioni per effettuare le conversioni da ogni valore di ciascun enum alle corrispondenti stringhe, effettuando le associazioni tramite un metodo che ho trovato molto pulito e ottimale.
+Nel file .c sono invece definite le funzioni per effettuare le conversioni da ogni valore di ciascun enum alle corrispondenti stringhe.
 
 ### types.h
 In questo file sono contenute le definizioni dei tipi user-defined usati nel progetto.
@@ -151,14 +151,38 @@ In questi file sorgente sono definite le principali operazioni effettuabili sull
 ### game.c & game.h
 Questi file sorgente contengono delle funzioni essenziali per l'inizializzazione e la terminazione del gioco, ma non utilizzate durante il suo dinamico svolgimento.
 
+### effects.c & effects.h
+Questi file sorgente contengono l'implementazione di tutti gli [effetti](#applicazione-degli-effetti).
+
 ### gameplay.c & gameplay.h
-Questi file sorgente contengono praticamente l'intera logica di gioco e le principali funzioni per la gestione della partita in corso.
+Questi file sorgente contengono praticamente l'intera logica di gioco, le principali funzioni per la gestione della partita in corso ed il [sistema di difesa](#difendersi-da-una-carta).
 
 ### menu.c & menu.h
-Contengono solamente la funzione che gestisce il menu' principale mostrato all'avvio del gioco, prima di iniziare una partita.
+Contengono solamente la funzione che gestisce il menu' principale mostrato all'avvio del gioco, prima di iniziare o riprendere una partita.
+
+### stats.c & stats.h
+In questi file viene gestito il caricamento, salvataggio e aggiornamento delle [statistiche](#statistiche).
 
 ### saves.c & saves.h
-Qui viene gestita la logica dei salvataggi, con relativo menu' di scelta salvataggio salvato nella cache.
+Qui viene gestita la logica dei salvataggi, con relativo menu' di scelta [salvataggio salvato nella cache](#file-di-salvataggio).
+
+### files.c & files.h
+In questi file sorgente sono contenute le principali interazioni, con aperture, letture, scritture e chiusure dei file di testo e binari coi quali il gioco interagisce.
+
+### format.c & format.h
+Formattazione stringhe e [testo multilinee](#multilinetext).
+
+### graphics.c & graphics.h
+Gestione della grafica dinamica per pretty-printing delle carte in gruppi e banner di inizio round.
+
+### logging.c & logging.h
+Controllo e gestione del file di log.
+
+### utils.c & utils.h
+Questi file sorgente contengono diverse utilities utilizzate nell'intero progetto per agevolare la scrittura di codice, inclusi alcuni wrapper di funzioni per la gestione della memoria.
+
+### debugging.c & debugging.h
+Questi file sorgente non sono davvero essenziali per il funzionamento del gioco e sono stati utilizzati solo durante lo sviluppo per individuare e correggere bug, infatti sono esclusi dalla compilazione se non è definito l'identificatore `DEBUG` (vedasi [compilazione](#compilare--eseguire-il-gioco)).
 
 <br>
 
@@ -216,15 +240,15 @@ typedef multiline_textT freeable_multiline_textT;
 Il campo `lines` contiene un puntatore ad un array di `char*` (dinamicamente allocato) contenente esattamente `n_lines` puntatori. \
 Il campo `lengths` contiene un puntatore ad un array di interi (dinamicamente allocato) contenente esattamente `n_lines` interi, rappresentante ciascuno la lunghezza dell'`i`-esima linea puntata dall'array `lines` all'indice `i`.
 
-Si può notare che questa struttura viene bindata a due diversi tipi (definiti in `types.h`), il secondo dei quali (`freeable_multiline_textT`) delinea, tramite il suo nome, la necessità di effettuare un cleanup delle linee (stringhe) in esso contenute, poiché tutte allocate nell'heap; la funzione per fare ciò è `clear_freeable_multiline`.
+Si può notare che questa struttura viene bindata a due diversi tipi (definiti in [types.h](src/types.h)), il secondo dei quali (`freeable_multiline_textT`) delinea, tramite il suo nome, la necessità di effettuare un cleanup delle linee (stringhe) in esso contenute, poiché tutte allocate nell'heap; la funzione per fare ciò è `clear_freeable_multiline`.
 
-I principali file nei quali viene impiegata questa struttura sono `format.c` e `graphics.c`. \
+I principali file nei quali viene impiegata questa struttura sono [format.c](src/format.c) e [graphics.c](src/graphics.c). \
 Questa struttura mi è stata largamente d'aiuto per rappresentare i box delle carte formattate singolarmente (tramite `build_card`), per poi printarli tutti assieme lungo una riga ed eventualmente in colonne, come matrici tramite la funzione `show_cards_restricted`, ottenendo risultati come il seguente:
 
 ![Gruppo di box di carte stampate su diverse linee e colonne](/imgs/cards_group.png "Gruppo di box di carte stampate su diverse linee e colonne")
 
 ### WrappedText
-Nuovamente, per la gestione della formattazione, ho creato una apposita struttura per contenere una stringa di testo che viene divisa in più linee, rispettando una data lunghezza massima, tramite la sostituzione, nelle corrette posizioni, degli spazi con dei terminatori di stringa (`'\0'`), di fatto, creando nuove sottostringhe. La logica di tale divisione è gestita in `format.c` dalla funzione `wrap_text`. \
+Nuovamente, per la gestione della formattazione, ho creato una apposita struttura per contenere una stringa di testo che viene divisa in più linee, rispettando una data lunghezza massima, tramite la sostituzione, nelle corrette posizioni, degli spazi con dei terminatori di stringa (`'\0'`), di fatto, creando nuove sottostringhe. La logica di tale divisione è gestita in [format.c](src/format.c) dalla funzione `wrap_text`. \
 Ecco la struttura dati che contiene le informazioni necessarie a mantenere traccia delle sottostringhe generate:
 ```c
 struct WrappedText {

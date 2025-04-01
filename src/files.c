@@ -26,6 +26,43 @@ void file_write_failed(void) {
 }
 
 /**
+ * @brief reads one integer from a file stream and ensures correct reading
+ * 
+ * @param fp file stream
+ * @return int read integer
+ */
+int read_int(FILE *fp) {
+	int val;
+	if (fscanf(fp, " %d", &val) != ONE_ELEMENT)
+		file_read_failed();
+	return val;
+}
+
+/**
+ * @brief writes one integer to a file stream in binary form and ensures successful writing
+ * 
+ * @param fp file stream
+ * @param val integer to write
+ */
+void write_bin_int(FILE *fp, int val) {
+	if (fwrite(&val, sizeof(int), ONE_ELEMENT, fp) != ONE_ELEMENT)
+		file_write_failed();
+}
+
+/**
+ * @brief reads one integer from a file stream in binary form and ensures successful reading
+ * 
+ * @param fp file stream
+ * @return int integer read
+ */
+int read_bin_int(FILE *fp) {
+	int val;
+	if (fread(&val, sizeof(int), ONE_ELEMENT, fp) != ONE_ELEMENT)
+		file_read_failed();
+	return val;
+}
+
+/**
  * @brief reads effects from file
  * 
  * @param fp file stream
@@ -450,41 +487,4 @@ bool read_player_stats(FILE *fp, player_statsT *stats) {
 void write_player_stats(FILE *fp, player_statsT *stats) {
 	if (fwrite(stats, sizeof(player_statsT), ONE_ELEMENT, fp) != ONE_ELEMENT)
 		file_write_failed();
-}
-
-/**
- * @brief reads one integer from a file stream and ensures correct reading
- * 
- * @param fp file stream
- * @return int read integer
- */
-int read_int(FILE *fp) {
-	int val;
-	if (fscanf(fp, " %d", &val) != ONE_ELEMENT)
-		file_read_failed();
-	return val;
-}
-
-/**
- * @brief writes one integer to a file stream in binary form and ensures successful writing
- * 
- * @param fp file stream
- * @param val integer to write
- */
-void write_bin_int(FILE *fp, int val) {
-	if (fwrite(&val, sizeof(int), ONE_ELEMENT, fp) != ONE_ELEMENT)
-		file_write_failed();
-}
-
-/**
- * @brief reads one integer from a file stream in binary form and ensures successful reading
- * 
- * @param fp file stream
- * @return int integer read
- */
-int read_bin_int(FILE *fp) {
-	int val;
-	if (fread(&val, sizeof(int), ONE_ELEMENT, fp) != ONE_ELEMENT)
-		file_read_failed();
-	return val;
 }
