@@ -258,10 +258,53 @@ In questa sezione del `README.md` e nel codice (variabili e commenti) faccio rif
 
 ...
 
+### File di salvataggio
+
+Nei file di salvataggio, oltre a tutti i campi presenti nel formato descritto dalle [specifiche](./Specifiche_v2.0.pdf) ho aggiunto un campo opzionale rappresentante il numero del round attuale alla fine del file. In caso tale campo non fosse trovato (nel caso di caricamento di file di salvataggio con formato diverso dal mio) il round attuale viene impostato a 1.
+
+Per la gestione dei salvataggi presenti ho inserito una cache, gestita tramite un file di testo nella cartella dei salvataggi, permettendo agli utenti di caricare velocemente un salvataggio già caricato in precedenza, tramite il seguente menu:
+
+| ![Menu di caricamento salvataggio](imgs/save_menu.png) |
+|:--:|
+| *Menu di caricamento salvataggio* |
+
+Caricando un file di salvataggio mai caricato in precedenza (selezionando 'no' nel precedente menu e inserendo il nome del salvataggio inserito nella cartella dei salvataggi), questo verrà aggiunto alla cache e al seguente avvio verrà mostrato fra i salvataggi caricabili velocemente tramite numero dalla lista. Anche avviando una nuova partita, il nome scelto per il salvataggio verrà aggiunto alla cache per futuri avvii veloci.
+
+### Statistiche
+
+I dati raccolti per ogni giocatore sono:
+- numero vittorie
+- numero round giocati
+- numero carte scartate in totale
+- numero carte giocate in totale
+- numero carte giocate per ogni tipo di carta
+
+Le statistiche sono controllate da [stats.c](src/stats.c) e aggiornate tramite delle chiamate alle seguenti funzioni:
+- `stats_add_win`
+- `stats_add_round`
+- `stats_add_discarded`
+- `stats_add_played_card`
+
+Il file binario delle statistiche contiene le statistiche di tutti i giocatori che hanno giocato al gioco (in tutte le partite giocate).\
+Ciascuna entry (blocco) nel formato di tale file rappresenta una struttura `PlayerStats`, che è riferita puramente ad un giocatore, distinto dal suo nome.
+Le statistiche raccolte vengono aggiornate su file ad ogni fine round tramite la funzione `save_stats`.
+
+La struttura GameContext contiene un puntatore a una struttura `PlayerStats` (testa di una linked list circolare) che viene aggiornato sincronamente al campo `curr_player`.
+
+Con i dati raccolti è possibile comparare i diversi giocatori e oltre a mostrarne le pure statistiche si può effettuare il calcolo del massimo per ciascun parametro raccolto.
+
+Ecco il menu per consultare le statistiche aggregate di tutti i giocatori, raggiungibile tramite il tasto **3** del menu principale:
+
+| ![Menu delle statistiche](imgs/stats_menu.png) |
+|:--:|
+| *Menu delle statistiche* |
+
+
+
 ### Game loop
 Ho suddiviso il flusso del game loop (ciascun round) in 3 fasi:
-- begin (`begin_round`): salva la partita, salva le statistiche della partita, mostra le informazioni del round attuale, applica gli effetti iniziali delle carte dell'aula e fa pescare una carta (dovuta da regolamento) al giocatore corrente.
-- play (`play_round`): mostra il [menu di azione](#menu-dazione) al giocatore.
+- begin (`begin_round`): [salva la partita](#file-di-salvataggio), mostra le informazioni del round attuale, [applica gli effetti](#applicazione-degli-effetti) iniziali delle carte dell'aula e fa pescare una carta (dovuta da regolamento) al giocatore corrente.
+- play (`play_round`): mostra il [menu di azione](#menu-dazione) al giocatore corrente.
 - end (`end_round`): vengono scartate le eventuali carte in eccesso dalla mano del giocatore corrente, vengono aggiornate le statistiche e viene effettuato il controllo per la sua vittoria, con conseguente fine o continuazione della partita.
 
 
@@ -271,19 +314,11 @@ Nel menu di scelta d'azione è possibile scegliere fra le seguenti opzioni:
 - `Gioca una carta dalla tua mano`: permette al giocatore corrente di giocare una carta qualsiasi dal suo mazzo. Termina la fase d'azione se viene giocata una carta.
 - `Pesca un'altra carta`: fa pescare una carta al giocatore corrente. Termina la fase d'azione.
 - `Visualizza le tue carte`: mostra al giocatore corrente tutte le sue carte: mazzo, aula studenti, bonus/malus.
-- `Visualizza lo stato degli altri giocatori`: permette al giocatore corrente di visualizzare lo stato degli altri giocatori.
+- `Visualizza lo stato degli altri giocatori`: permette al giocatore corrente di visualizzare lo stato degli altri giocatori, tenendo conto dell'effetto `MOSTRA`.
 - `Esci dalla partita`: chiede conferma ed esce dal gioco.
 
 
 ...
-
-
-
-
-### File di salvataggio
-
-*descrizione campi opzionali nel file di salvataggio (round number)*
-
 
 
 
