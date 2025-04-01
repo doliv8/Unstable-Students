@@ -2,6 +2,12 @@
 #include "enums.h"
 #include "constants.h"
 
+/**
+ * @brief converts quando enum to string
+ * 
+ * @param quando quando to convert to string
+ * @return const char* corresponding string
+ */
 const char *quandoT_str(quandoT quando) {
 	static const char *mapping[] = {
 		[SUBITO] = "Subito",
@@ -13,6 +19,12 @@ const char *quandoT_str(quandoT quando) {
 	return mapping[quando];
 }
 
+/**
+ * @brief converts target giocatori enum to string
+ * 
+ * @param target target giocatori to convert to string
+ * @return const char* corresponding string
+ */
 const char *target_giocatoriT_str(target_giocatoriT target) {
 	static const char *mapping[] = {
 		[IO] = "Io",
@@ -23,6 +35,12 @@ const char *target_giocatoriT_str(target_giocatoriT target) {
 	return mapping[target];
 }
 
+/**
+ * @brief converts a card type to corresponding string
+ * 
+ * @param tipo card type to convert to string
+ * @return const char* corresponding string
+ */
 const char *tipo_cartaT_str(tipo_cartaT tipo) {
 	static const char *mapping[] = {
 		[ALL] = "Qualsiasi",
@@ -38,6 +56,12 @@ const char *tipo_cartaT_str(tipo_cartaT tipo) {
 	return mapping[tipo];
 }
 
+/**
+ * @brief converts a card type to corresponding color
+ * 
+ * @param tipo card type to convert to color
+ * @return const char* corresponding ansi color string
+ */
 const char *tipo_cartaT_color(tipo_cartaT tipo) {
 	static const char *mapping[] = {
 		[ALL] = ANSI_BOLD,
@@ -53,6 +77,12 @@ const char *tipo_cartaT_color(tipo_cartaT tipo) {
 	return mapping[tipo];
 }
 
+/**
+ * @brief converts an action to corresponding string
+ * 
+ * @param azione action to convert to string
+ * @return const char* corresponding string
+ */
 const char *azioneT_str(azioneT azione) {
 	static const char *mapping[] = {
 		[GIOCA] = "Gioca",
@@ -70,6 +100,12 @@ const char *azioneT_str(azioneT azione) {
 	return mapping[azione];
 }
 
+/**
+ * @brief converts an action to verb string
+ * 
+ * @param azione action to convert to verb string
+ * @return const char* verb string
+ */
 const char *azioneT_verb_str(azioneT azione) {
 	static const char *mapping[] = {
 		[GIOCA] = "fare giocare",

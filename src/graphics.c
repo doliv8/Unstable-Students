@@ -9,6 +9,12 @@
 #include "string.h"
 #include "card.h"
 
+/**
+ * @brief formats an effect into an heap allocated string
+ * 
+ * @param str pointer to formatted string
+ * @param effect pointer to effect to be formatted
+ */
 void format_effect(char **str, effettoT *effect) {
 	asprintf_sss(str, "%s -> %s (%s)",
 		azioneT_str(effect->azione),
@@ -17,6 +23,12 @@ void format_effect(char **str, effettoT *effect) {
 	);
 }
 
+/**
+ * @brief formats a card's effects into a freeable multiline
+ * 
+ * @param multiline pointer to the multiline
+ * @param card pointer to the card
+ */
 void format_effects(freeable_multiline_textT *multiline, cartaT *card) {
 	char *line;
 	if (card->n_effetti != 0) {
@@ -45,6 +57,12 @@ void format_effects(freeable_multiline_textT *multiline, cartaT *card) {
 	}
 }
 
+/**
+ * @brief formats a card into a box inside a freeable multiline
+ * 
+ * @param multiline pointer to the multiline
+ * @param card pointer to the card
+ */
 void build_card(freeable_multiline_textT *multiline, cartaT *card) {
 	char *h_border, *v_border, *fmt_name, *type, *fmt_type;
 	int len_name, len_type;
@@ -107,6 +125,11 @@ void build_card(freeable_multiline_textT *multiline, cartaT *card) {
 	clear_freeable_multiline(&effects_lines);
 }
 
+/**
+ * @brief builds and displays the card box of the given card
+ * 
+ * @param card pointer to the card
+ */
 void show_card(cartaT *card) {
 	freeable_multiline_textT card_info;
 	init_multiline(&card_info);
@@ -116,6 +139,14 @@ void show_card(cartaT *card) {
 	clear_freeable_multiline(&card_info);
 }
 
+/**
+ * @brief displays a pretty-printed group of cards of the specified type to the terminal in a table
+ * 
+ * @param head list of cards to display
+ * @param type type of cards to restrict display of
+ * @return true if any card was printed
+ * @return false if no cards were shown
+ */
 bool show_cards_restricted(cartaT *head, tipo_cartaT type) {
 	freeable_multiline_textT *cards_info;
 	int count = count_cards_restricted(head, type);
@@ -164,7 +195,8 @@ int get_max_row_width_restricted(cartaT *head, tipo_cartaT type) {
 }
 
 /**
- * @brief displays a pretty-printed group of cards of the specified type to the terminal in a table
+ * @brief displays a pretty-printed group of cards of the specified type to the terminal in a table, showing the header aswell and
+ * handing no cards to display case
  * 
  * @param group list of cards to display
  * @param title title of the group of cards (used to calculate visual length of title), can't contain colors
@@ -202,7 +234,7 @@ void show_card_group(cartaT *group, const char *title, const char *title_fmt) {
 /**
  * @brief displays a box showing round info (round number and the name of the player playing this round)
  * 
- * @param game_ctx pointer to the game context
+ * @param game_ctx current game state
  */
 void show_round(game_contextT *game_ctx) {
 	char *round_num_text, *player_turn_text;

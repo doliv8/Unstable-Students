@@ -30,7 +30,7 @@ void distribute_cards(game_contextT *game_ctx) {
 }
 
 /**
- * @brief create a new player (prompting user for the name)
+ * @brief create a new player (prompting user for the name) checking for collisions with already inserted usernames
  * 
  * @param game_ctx 
  * @return giocatoreT* newly created player

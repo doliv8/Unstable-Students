@@ -201,11 +201,12 @@ struct GameContext {
 	bool game_running;
 	FILE *log_file;
 	const char *save_path;
+	player_statsT *curr_stats;
 };
 typedef struct GameContext game_contextT;
 ```
 
-Mi è sufficiente utilizzare tale struttura per contenere l'intero stato della partita (all'inizio di un round, non durante), come si può notare dai prototipi delle funzioni usate per caricare e salvare i salvataggi:
+Mi è sufficiente utilizzare tale struttura per contenere l'intero stato della partita, come si può notare dai prototipi delle funzioni usate per caricare e salvare i salvataggi:
 
 ```c
 game_contextT *load_game(const char *save_name);
@@ -217,9 +218,10 @@ Ciò che contiene questa struttura è:
 - un puntatore alla testa ciascuna lista concatenata di carte: pesca, scarti e aula studio.
 - un intero rappresentante la quantità di giocatori che stanno partecipando alla partita.
 - un intero rappresentante il numero del round al quale lo stato della partita si trova.
-- un booleano rappresentante se il gioco è in esecuzione (o in conclusione, solo quando un giocatore vince e la partita termina, oppure si esce dalla partita con il tasto 0 del menu d'azione).
+- un booleano rappresentante se il gioco è in esecuzione (o in conclusione, solo quando un giocatore vince e la partita termina, oppure si esce dalla partita con il tasto **0** del [menu d'azione](#menu-dazione)).
 - un puntatore a FILE (file stream) relativo al file di log, aperto prima di iniziare a giocare e chiuso quando si esce dal gioco.
-TODO: update here
+- un puntatore a una stringa allocata sullo heap contenente il percorso relativo del file di salvataggio dell'attuale partita.
+- un puntatore alle [statistiche](#statistiche) riferite al giocatore corrente, che viene fatto avanzare parallelamente a quest'ultimo.
 
 L'utilizzo che faccio di questa struttura è semplice e lineare: la alloco sullo heap all'avvio del gioco (tramite le funzioni `new_game` o `load_game`) e ne passo il puntatore alle diverse funzioni del game-loop (`begin_round`, `play_round`, `end_round`) che la passeranno a loro volta ad altre funzioni che implementano la logica di gioco; alla fine dell'esecuzione del gioco (uscita dal game-loop) la rilascio assieme a tutti i suoi campi (tramite `clear_game`).
 
@@ -247,6 +249,7 @@ Questa struttura mi è stata largamente d'aiuto per rappresentare i box delle ca
 
 ![Gruppo di box di carte stampate su diverse linee e colonne](/imgs/cards_group.png "Gruppo di box di carte stampate su diverse linee e colonne")
 
+
 ### WrappedText
 Nuovamente, per la gestione della formattazione, ho creato una apposita struttura per contenere una stringa di testo che viene divisa in più linee, rispettando una data lunghezza massima, tramite la sostituzione, nelle corrette posizioni, degli spazi con dei terminatori di stringa (`'\0'`), di fatto, creando nuove sottostringhe. La logica di tale divisione è gestita in [format.c](src/format.c) dalla funzione `wrap_text`. \
 Ecco la struttura dati che contiene le informazioni necessarie a mantenere traccia delle sottostringhe generate:
@@ -255,6 +258,7 @@ struct WrappedText {
 	char *text;
 	multiline_textT multiline;
 };
+typedef struct WrappedText wrapped_textT;
 ```
 
 Come si può vedere questa struttura fa uso della precedentemente descritta struttura `MultiLineText` nella sua forma che non necessita cleanup di ciascuna delle stringhe singolarmente, dato che la funzione `wrap_text` usa solamente una stringa allocata sullo heap (puntata da `text` per poi essere freeata) che viene splittata, ma pur sempre mantenuta in un solo chunk dell'heap (che contiene quindi tutte le sottostringhe).
@@ -264,7 +268,29 @@ di descrizione `"Se questa carta e' nella tua aula all'inizio del tuo turno, puo
 
 ![Box della carta 'Aula dei vecchi progetti'](/imgs/card_box.png "Box della carta 'Aula dei vecchi progetti'")
 
-TODO: add PlayerStats here
+
+### PlayerStats
+Questa è la struttura che permette di rappresentare le [statistiche di un giocatore](#statistiche) ed include i seguenti campi:
+```c
+struct PlayerStats {
+	char name[GIOCATORE_NAME_LEN+1];
+	int wins, rounds, discarded;
+	int played_cards[CARDS_TYPE_COUNT];
+	player_statsT *next;
+};
+typedef struct PlayerStats player_statsT;
+```
+
+Questa struttura contiene:
+- nome del giocatore al quale si riferiscono le statistiche.
+- numero di vittorie del giocatore.
+- numero di round giocati dal giocatore.
+- numero di carte scartate dal giocatore.
+- numero di carte giocate dal giocatore per ciascun tipo di carta.
+- puntatore ad una struttura del medesimo tipo riferita alle statistiche del giocatore seguente (next).
+
+Tutta la logica e l'utilizzo di questa struttura è descritta nella sezione delle [statistiche](#statistiche) ed è gestita in [stats.c](src/stats.c).
+
 
 <br>
 

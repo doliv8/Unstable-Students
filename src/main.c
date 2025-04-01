@@ -10,6 +10,13 @@
 #include "menu.h"
 #include "game.h"
 
+/**
+ * @brief main function, entry point for execution of the program
+ * 
+ * @param argc command line arguments count
+ * @param argv pointer to command line arguments array
+ * @return int exit code
+ */
 int main(int argc, const char *argv[]) {
 	game_contextT *game_ctx;
 

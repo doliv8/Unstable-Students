@@ -4,12 +4,10 @@
 #include "utils.h"
 #include "card.h"
 
-/*
-* the saves file must contain stats of all players that played the game.
-* each of their entries must be parsed as player_statsT.
-* the game context must keep track of only the players in the current game and update their stats before the start of each round.
-*/
-
+/**
+ * @brief displays stats of all registered players showing maximums for wins, rounds, discarded and played aswell
+ * 
+ */
 void display_full_stats(void) {
 	player_statsT stats, max_wins, max_rounds, max_discarded, max_played;
 	int count;
@@ -114,18 +112,39 @@ void load_stats(game_contextT *game_ctx) {
 
 // TODO: think about loaded savegame without stats 
 
+/**
+ * @brief adds a game win to current player stats
+ * 
+ * @param game_ctx 
+ */
 void stats_add_win(game_contextT *game_ctx) {
 	game_ctx->curr_stats->wins++;
 }
 
+/**
+ * @brief adds a played round current player to stats
+ * 
+ * @param game_ctx 
+ */
 void stats_add_round(game_contextT *game_ctx) {
 	game_ctx->curr_stats->rounds++;
 }
 
+/**
+ * @brief adds a discarded card current player to stats
+ * 
+ * @param game_ctx 
+ */
 void stats_add_discarded(game_contextT *game_ctx) {
 	game_ctx->curr_stats->discarded++;
 }
 
+/**
+ * @brief adds a played card to the played card types stats of current player
+ * 
+ * @param game_ctx 
+ * @param card played card
+ */
 void stats_add_played_card(game_contextT *game_ctx, cartaT *card) {
 	for (tipo_cartaT type = ALL; type <= ISTANTANEA; type++) { // iterate over card type enum
 		if (match_card_type(card, type))
@@ -133,6 +152,11 @@ void stats_add_played_card(game_contextT *game_ctx, cartaT *card) {
 	}
 }
 
+/**
+ * @brief updates stats for a player in the stats file
+ * 
+ * @param stats_update updated player stats
+ */
 void update_stats(player_statsT *stats_update) {
 	player_statsT stats;
 	bool found = false;
@@ -150,6 +174,11 @@ void update_stats(player_statsT *stats_update) {
 	fclose(fp);
 }
 
+/**
+ * @brief updates stats for each player in the game to the stats file
+ * 
+ * @param game_ctx 
+ */
 void save_stats(game_contextT *game_ctx) {
 	player_statsT *curr_stats = game_ctx->curr_stats;
 	for (int i = 0; i < game_ctx->n_players; i++, curr_stats = curr_stats->next)
