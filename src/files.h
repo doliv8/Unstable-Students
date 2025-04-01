@@ -16,8 +16,4 @@ void write_player_stats(FILE *fp, player_statsT *stats);
 void load_saves_cache(freeable_multiline_textT *saves);
 void save_saves_cache(freeable_multiline_textT *saves);
 
-int read_int(FILE *fp);
-int read_bin_int(FILE *fp);
-void write_bin_int(FILE *fp, int val);
-
 #endif // FILES_H

@@ -1,8 +1,8 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <stdbool.h>
 #include "types.h"
-#include "structs.h"
 
 // macros to perform string conversion at compile time
 #define STRINGIFY(x) #x
