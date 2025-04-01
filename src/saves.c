@@ -78,10 +78,11 @@ char *pick_save(void) {
 	load_saves_cache(&saves_cache);
 
 	if (saves_cache.n_lines > 0) {
+		puts("Ecco gli ultimi salvataggi:");
 		for (int i = 0; i < saves_cache.n_lines; i++)
 			printf(" [%d] %s\n", i+1, saves_cache.lines[i]);
 
-		puts("Se vuoi caricare un salvataggio non presente nella seguente lista inseriscilo nella cartella '" SAVES_DIRECTORY "'"
+		puts("Se vuoi caricare un salvataggio non presente nella seguente lista spostalo nella cartella '" SAVES_DIRECTORY "'"
 			" e inseriscine il nome manualmente dopo aver selezionato 'no'. Sara' inserito nella lista per il futuro una volta caricato.");
 		printf("Vuoi caricare un salvataggio da questa lista? ");
 		if (ask_choice()) {

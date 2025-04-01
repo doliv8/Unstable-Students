@@ -810,18 +810,18 @@ void end_round(game_contextT *game_ctx) {
 	}
 
 	stats_add_round(game_ctx);
-	save_stats(game_ctx);
 
 	if (check_win_condition(game_ctx)) { // check if curr player won
 		printf(ANSI_CYAN "\nCongratulazioni " ANSI_RED ANSI_BOLD PRETTY_USERNAME ANSI_CYAN ", hai vinto la partita!\n\n" ANSI_RESET, game_ctx->curr_player->name);
 		puts(WIN_ASCII_ART);
 		log_s(game_ctx, "%s ha vinto la partita!", game_ctx->curr_player->name);
 		stats_add_win(game_ctx);
-		save_stats(game_ctx);
 		game_ctx->game_running = false; // stop game
 	} else { // no win, keep playing
 		printf("\nRound di " PRETTY_USERNAME " completato!\n", game_ctx->curr_player->name);
 		switch_player(game_ctx, game_ctx->curr_player->next); // next round its next player's turn
 		game_ctx->round_num++;
 	}
+
+	save_stats(game_ctx);
 }
