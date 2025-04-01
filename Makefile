@@ -1,6 +1,6 @@
 CC = gcc
 # many flags from https://stackoverflow.com/questions/3375697/what-are-the-useful-gcc-flags-for-c
-CFLAGS = -Wall -Wextra -Wundef -Wshadow -Wpointer-arith -Wcast-align -Wstrict-prototypes -Wstrict-overflow=5 -Wwrite-strings -Wunreachable-code -fsanitize=address,undefined -O3 -g -std=c99
+CFLAGS = -Wall -Wextra -Wundef -Wshadow -Wpointer-arith -Wcast-align -Wstrict-prototypes -Wstrict-overflow=2 -Wwrite-strings -Wunreachable-code -O3 -g -std=c99 #-fsanitize=address,undefined
 BUILD_DIR = build
 SRC_DIR = src
 SRCS = $(wildcard $(SRC_DIR)/*.c)

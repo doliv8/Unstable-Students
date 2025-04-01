@@ -32,15 +32,23 @@ void distribute_cards(game_contextT *game_ctx) {
 /**
  * @brief create a new player (prompting user for the name)
  * 
+ * @param game_ctx 
  * @return giocatoreT* newly created player
  */
-giocatoreT *new_player(void) {
+giocatoreT *new_player(game_contextT *game_ctx) {
+	bool distinct;
 	giocatoreT *player = (giocatoreT*)calloc_checked(ONE_ELEMENT, sizeof(giocatoreT));
 
 	do {
 		printf("Inserisci il nome del giocatore: ");
 		scanf(" %" TO_STRING(GIOCATORE_NAME_LEN) "[^\n]", player->name);
-	} while (!strnlen(player->name, sizeof(player->name)));
+		// check name differs from name of every other player inserted
+		distinct = true;
+		for (giocatoreT *other = game_ctx->curr_player; other != NULL && distinct; other = other->next) {
+			if (!strncmp(player->name, other->name, sizeof(player->name)))
+				distinct = false;
+		}
+	} while (!strnlen(player->name, sizeof(player->name)) || !distinct);
 
 	return player;
 }
@@ -71,15 +79,13 @@ game_contextT *new_game(void) {
 		game_ctx->n_players = get_int();
 	} while (game_ctx->n_players < MIN_PLAYERS || game_ctx->n_players > MAX_PLAYERS);
 
-	// TODO: check no colliding player names (must be distinct)
-
 	// create players
 	// game_ctx->curr_player serves as the linked-list head
 	for (int i = 0; i < game_ctx->n_players; i++) {
 		if (game_ctx->curr_player == NULL && curr_player == NULL)
-			curr_player = game_ctx->curr_player = new_player(); // set linked list head
+			curr_player = game_ctx->curr_player = new_player(game_ctx); // set linked list head
 		else
-			curr_player = curr_player->next = new_player();
+			curr_player = curr_player->next = new_player(game_ctx);
 	}
 	curr_player->next = game_ctx->curr_player; // make the linked list circular linking tail to head
 
