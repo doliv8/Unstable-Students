@@ -145,30 +145,34 @@ giocatoreT *load_player(FILE *fp) {
  * @brief loads saved game from a given save name
  * 
  * @param save_name name of the save file wanting to load (without extension) located in SAVES_DIRECTORY
- * @return game_contextT* newly created game context
+ * @return game_contextT* newly created game context or NULL if given save name couldn't be loaded
  */
 game_contextT *load_game(const char *save_name) {
 	FILE *fp;
+	game_contextT *game_ctx;
 	giocatoreT *curr_player = NULL;
-	game_contextT *game_ctx = (game_contextT*)calloc_checked(ONE_ELEMENT, sizeof(game_contextT));
 
 	if (!valid_save_name(save_name)) {
-		fprintf(stderr, "Invalid save name (%s)!\nDevi solo specificare il nome (senza estensione) del file di "
-			"salvataggio presente nella cartella '%s'!\n", save_name, SAVES_DIRECTORY
-		);
-		exit(EXIT_FAILURE);
+		printf("Nome salvataggio invalido (%s)!\n", save_name);
+		printf("Devi solo specificare il nome (senza estensione) del file di salvataggio presente nella cartella '%s'!\n", SAVES_DIRECTORY);
+		return NULL;
 	}
+
+	game_ctx = (game_contextT*)calloc_checked(ONE_ELEMENT, sizeof(game_contextT));
 
 	game_ctx->save_path = get_save_path(save_name);
 
 	fp = fopen(game_ctx->save_path, "rb"); // open binary file for reading
 	if (fp == NULL) {
-		fprintf(stderr, "Opening save file (%s) failed!\nAssicurati che il file di salvataggio sia in '%s'!\n",
-			game_ctx->save_path, SAVES_DIRECTORY
-		);
-		exit(EXIT_FAILURE);
+		printf("Impossibile aprire il salvataggio indicato (%s)!\n", game_ctx->save_path);
+		printf("Assicurati che il file di salvataggio sia in '%s'!\n", SAVES_DIRECTORY);
+		// free up allocated memory after failure
+		free_wrap(game_ctx->save_path);
+		free_wrap(game_ctx);
+		return NULL;
 	}
 
+	// save save-name in cache after successfully opening it
 	cache_save_name(game_ctx->save_path);
 
 	init_logging(game_ctx);

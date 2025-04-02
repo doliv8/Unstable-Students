@@ -357,6 +357,8 @@ Ho suddiviso il flusso del game loop (ciascun round) in 3 fasi:
 - play (`play_round`): mostra il [menu di azione](#menu-dazione) al giocatore corrente.
 - end (`end_round`): vengono scartate le eventuali carte in eccesso dalla mano del giocatore corrente, vengono aggiornate le statistiche e viene effettuato il controllo per la sua vittoria, con conseguente fine o continuazione della partita.
 
+Al termine del game loop (causato solamente dall'uscita volontaria dalla partita o dalla vittoria di un giocatore) avviene il salvataggio su file delle statistiche raccolte durante la partita e viene poi effetuato il [cleanup dello stato della partita](#gamecontext).
+
 
 ### Menu d'azione
 Nel menu di scelta d'azione è possibile scegliere fra le seguenti opzioni:
@@ -366,7 +368,6 @@ Nel menu di scelta d'azione è possibile scegliere fra le seguenti opzioni:
 - `Visualizza le tue carte`: mostra al giocatore corrente tutte le sue carte: mazzo, aula studenti, bonus/malus.
 - `Visualizza lo stato degli altri giocatori`: permette al giocatore corrente di visualizzare lo stato degli altri giocatori, tenendo conto dell'effetto `MOSTRA`.
 - `Esci dalla partita`: chiede conferma ed esce dal gioco.
-
 
 ...
 
