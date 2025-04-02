@@ -14,7 +14,7 @@
 /**
  * @brief checks if the provided target is current round's player
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param target player to check
  * @return true if provided target is the current player
  * @return false if provided target isn't the current player
@@ -26,7 +26,7 @@ bool is_self(game_contextT *game_ctx, giocatoreT *target) {
 /**
  * @brief switch current round's player
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param player player to switch to
  */
 void switch_player(game_contextT *game_ctx, giocatoreT *player) {
@@ -127,7 +127,7 @@ bool player_can_defend(giocatoreT *target, cartaT *attack_card) {
  * @brief allows target player to use ISTANTANEA card in reply to an effect inflicted by current player (mainly to use BLOCCA on it).
  * this function also applies effects of the defense card used.
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param target player the attack_card is being played on
  * @param attack_card attacking card to defend from
  * @param attack_effect attacking effect to defend from
@@ -222,7 +222,7 @@ void show_player_state(giocatoreT *player) {
 /**
  * @brief displays player's own cards (private ones included)
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  */
 void view_own(game_contextT *game_ctx) {
 	printf("Ecco le carte in tuo possesso, " PRETTY_USERNAME ":\n", game_ctx->curr_player->name);
@@ -235,7 +235,7 @@ void view_own(game_contextT *game_ctx) {
 /**
  * @brief allows to pick a player or every player to then show their states through show_player_state
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  */
 void view_others(game_contextT *game_ctx) {
 	giocatoreT *target = pick_player(game_ctx, "Scegli il giocatore del quale vuoi vedere lo stato:", !ALLOW_SELF, ALLOW_ALL);
@@ -250,7 +250,7 @@ void view_others(game_contextT *game_ctx) {
 /**
  * @brief prompts user to pick a player from the game
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param prompt message displayed during the picking
  * @param allow_self should picking self be an option?
  * @param allow_all should all players be an option?
@@ -350,7 +350,7 @@ cartaT *pick_random_card(cartaT *head, tipo_cartaT type) {
  * user if wants to pick from aula or bonus_malus and then calls actual pick_card on the chosen list. otherwise, pick_card
  * is directly called on the only available chosable list (bonus_malus or aula).
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param target player to pick an aula card from
  * @param type allowed target type (ALL | STUDENTE | MATRICOLA | STUDENTE_SEMPLICE | LAUREANDO | BONUS | MALUS)
  * @param prompt shown when picking the card from one of the lists
@@ -437,7 +437,7 @@ cartaT *pick_aula_card(game_contextT *game_ctx, giocatoreT *target, tipo_cartaT 
 /**
  * @brief puts the given card in aula studio if card is MATRICOLA-kind, or in mazzo scarti otherwise.
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param card card to dispose
  */
 void dispose_card(game_contextT *game_ctx, cartaT *card) {
@@ -450,7 +450,7 @@ void dispose_card(game_contextT *game_ctx, cartaT *card) {
 /**
  * @brief asks current player to discard a card of the specified kind from the given cards list
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param cards pointer to list of cards to discard from
  * @param type type of card to discard
  * @param title title shown while picking the card to discard
@@ -474,7 +474,7 @@ void discard_card(game_contextT *game_ctx, cartaT **cards, tipo_cartaT type, con
 /**
  * @brief makes current player draw a card from the mazzo pesca and if empty swaps it with mazzo scarti.
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @return cartaT* the drawn card
  */
 cartaT *draw_card(game_contextT *game_ctx) {
@@ -498,7 +498,7 @@ cartaT *draw_card(game_contextT *game_ctx) {
 /**
  * @brief calculates the amount of playable cards (of the specified type) from the hand of the current player
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param type type of cards
  * @return int amount of playable cards
  */
@@ -518,7 +518,7 @@ int count_playable_cards(game_contextT *game_ctx, tipo_cartaT type) {
 /**
  * @brief makes current player play a card from his hand
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param type card type allowed to play
  * @return true if player actually played a card
  * @return false player couldn't play a card
@@ -664,7 +664,7 @@ int choice_action_menu(void) {
 /**
  * @brief applies leave effects of card and removes it from player's aula
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param player target aula player
  * @param card leaving card
  * @param dispatch_effects should apply card's FINE effects?
@@ -711,7 +711,7 @@ bool can_join_aula(giocatoreT *player, cartaT *card) {
 /**
  * @brief pushes card to player's aula and applies its join effects. always call can_join_aula before calling this function.
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param player target aula player
  * @param card joining card
  * @return true if card can join aula
@@ -729,7 +729,7 @@ void join_aula(game_contextT *game_ctx, giocatoreT *player, cartaT *card) {
 /**
  * @brief checks if the game can end because the current round player won
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @return true if current round player won
  * @return false if current round player didn't win
  */
@@ -742,7 +742,7 @@ bool check_win_condition(game_contextT *game_ctx) {
 /**
  * @brief first phase of the round
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  */
 void begin_round(game_contextT *game_ctx) {
 	save_game(game_ctx);
@@ -757,7 +757,7 @@ void begin_round(game_contextT *game_ctx) {
 /**
  * @brief second phase of the round
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  */
 void play_round(game_contextT *game_ctx) {
 	bool in_action = true;
@@ -797,7 +797,7 @@ void play_round(game_contextT *game_ctx) {
 /**
  * @brief third (and last) phase of the round
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  */
 void end_round(game_contextT *game_ctx) {
 	if (!game_ctx->game_running)

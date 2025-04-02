@@ -93,7 +93,7 @@ player_statsT *load_player_stats(giocatoreT *player) {
 /**
  * @brief load statistics for each player playing this game
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  */
 void load_stats(game_contextT *game_ctx) {
 	giocatoreT *player;
@@ -115,7 +115,7 @@ void load_stats(game_contextT *game_ctx) {
 /**
  * @brief adds a game win to current player stats
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  */
 void stats_add_win(game_contextT *game_ctx) {
 	game_ctx->curr_stats->wins++;
@@ -124,7 +124,7 @@ void stats_add_win(game_contextT *game_ctx) {
 /**
  * @brief adds a played round current player to stats
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  */
 void stats_add_round(game_contextT *game_ctx) {
 	game_ctx->curr_stats->rounds++;
@@ -133,7 +133,7 @@ void stats_add_round(game_contextT *game_ctx) {
 /**
  * @brief adds a discarded card current player to stats
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  */
 void stats_add_discarded(game_contextT *game_ctx) {
 	game_ctx->curr_stats->discarded++;
@@ -142,7 +142,7 @@ void stats_add_discarded(game_contextT *game_ctx) {
 /**
  * @brief adds a played card to the played card types stats of current player
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param card played card
  */
 void stats_add_played_card(game_contextT *game_ctx, cartaT *card) {
@@ -177,7 +177,7 @@ void update_stats(player_statsT *stats_update) {
 /**
  * @brief updates stats for each player in the game to the stats file
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  */
 void save_stats(game_contextT *game_ctx) {
 	player_statsT *curr_stats = game_ctx->curr_stats;

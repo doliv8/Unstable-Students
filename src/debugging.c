@@ -7,6 +7,11 @@
 #include "graphics.h"
 #include "gameplay.h"
 
+/**
+ * @brief displays full game state info
+ * 
+ * @param game_ctx current game state
+ */
 void dump_full_game(game_contextT *game_ctx) {
 	show_card_group(game_ctx->mazzo_pesca, "Mazzo Pesca", ANSI_RED "%s" ANSI_RESET);
 	show_card_group(game_ctx->mazzo_scarti, "Mazzo Scarti", ANSI_RED "%s" ANSI_RESET);
