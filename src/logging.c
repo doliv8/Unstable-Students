@@ -7,7 +7,7 @@
 /**
  * @brief write a message to logs
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param msg message
  */
 void log_msg(game_contextT *game_ctx, const char *msg) {
@@ -17,7 +17,7 @@ void log_msg(game_contextT *game_ctx, const char *msg) {
 /**
  * @brief intializes logging for the given game context
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  */
 void init_logging(game_contextT *game_ctx) {
 	game_ctx->log_file = open_log_append();
@@ -27,7 +27,7 @@ void init_logging(game_contextT *game_ctx) {
 /**
  * @brief shuts down logging for the given game context
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  */
 void shutdown_logging(game_contextT *game_ctx) {
 	log_msg(game_ctx, "Arresto del logging...");
@@ -37,7 +37,7 @@ void shutdown_logging(game_contextT *game_ctx) {
 /**
  * @brief writes a round message to logs
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param msg message
  */
 void log_round(game_contextT *game_ctx, const char *msg) {
@@ -47,7 +47,7 @@ void log_round(game_contextT *game_ctx, const char *msg) {
 /**
  * @brief writes a formatted round message to logs with one string parameter
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param fmt format string
  * @param s0 param 1 (string)
  */
@@ -61,7 +61,7 @@ void log_s(game_contextT *game_ctx, const char *fmt, const char *s0) {
 /**
  * @brief writes a formatted round message to logs with two string parameters
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param fmt format string
  * @param s0 param 1 (string)
  * @param s1 param 2 (string)
@@ -76,7 +76,7 @@ void log_ss(game_contextT *game_ctx, const char *fmt, const char *s0, const char
 /**
  * @brief writes a formatted round message to logs with three string parameters
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param fmt format string
  * @param s0 param 1 (string)
  * @param s1 param 2 (string)
@@ -92,7 +92,7 @@ void log_sss(game_contextT *game_ctx, const char *fmt, const char *s0, const cha
 /**
  * @brief writes a formatted round message to logs with four string parameters
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param fmt format string
  * @param s0 param 1 (string)
  * @param s1 param 2 (string)

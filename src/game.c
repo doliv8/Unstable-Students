@@ -11,7 +11,7 @@
 /**
  * @brief distributes cards at the start of the game to each player as described by the game rules
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  */
 void distribute_cards(game_contextT *game_ctx) {
 	cartaT *card;
@@ -32,7 +32,7 @@ void distribute_cards(game_contextT *game_ctx) {
 /**
  * @brief create a new player (prompting user for the name) checking for collisions with already inserted usernames
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @return giocatoreT* newly created player
  */
 giocatoreT *new_player(game_contextT *game_ctx) {
@@ -143,7 +143,7 @@ void clear_stats(player_statsT *head, player_statsT *stats) {
 /**
  * @brief perform cleanup of the entire game, freeing players, stats and every deck of cards
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  */
 void clear_game(game_contextT *game_ctx) {
 	clear_players(game_ctx->curr_player, game_ctx->curr_player);

@@ -12,7 +12,7 @@
  * @brief applies ELIMINA effect on the given target.
  * this effect makes thrower pick which card to delete from targets's aula (aula + bonusmalus).
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param target player to activate the effect on
  * @param effect ELIMINA effect
  */
@@ -83,7 +83,7 @@ void apply_effect_elimina_target(game_contextT *game_ctx, giocatoreT *target, ef
  * @brief applies SCARTA effect on the given target.
  * this effect makes targets discard a card from their hands.
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param target player to activate the effect on
  * @param effect SCARTA effect
  */
@@ -141,7 +141,7 @@ void apply_effect_scarta_target(game_contextT *game_ctx, giocatoreT *target, eff
  * @brief applies GIOCA effect on the given target.
  * this effect makes target play a card.
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param target player to activate the effect on
  * @param effect GIOCA effect
  */
@@ -194,7 +194,7 @@ void apply_effect_gioca_target(game_contextT *game_ctx, giocatoreT *target, effe
  * @brief applies RUBA effect on the given target.
  * this effect makes thrower pick which card to steal from targets's aula (aula + bonusmalus).
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param target player to activate the effect on
  * @param effect RUBA effect
  */
@@ -264,7 +264,7 @@ void apply_effect_ruba_target(game_contextT *game_ctx, giocatoreT *target, effet
  * @brief applies PRENDI effect on the given target.
  * this effect extracts and removes a random card from the target player's hand putting it into the thrower player's hand.
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param target player to activate the effect on
  * @param effect PRENDI effect
  */
@@ -306,7 +306,7 @@ void apply_effect_prendi_target(game_contextT *game_ctx, giocatoreT *target, eff
  * @brief applies PESCA effect on the given target.
  * this effect makes target draw a card.
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param target player to activate the effect on
  * @param effect PESCA effect
  */
@@ -387,7 +387,7 @@ void apply_effect_pesca_target(game_contextT *game_ctx, giocatoreT *target, effe
  * @brief applies SCAMBIA effect on the given target.
  * this effect swaps thrower and target player's hands.
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param target player to activate the effect on
  * @param effect SCAMBIA effect
  */
@@ -419,7 +419,7 @@ void apply_effect_scambia_target(game_contextT *game_ctx, giocatoreT *target, ef
 /**
  * @brief this function just calls the given effect with the specified target
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param effect effect to apply
  * @param target target player to apply effect on
  */
@@ -474,7 +474,7 @@ void apply_effect_target(game_contextT *game_ctx, effettoT *effect, giocatoreT *
  * @brief obtains the target player(s) of the effect and asks each of them if they want to defend. if target is TU, makes user select
  * the target_tu target for the current attack. calls apply_effect_target on each target. shows appropriate verbs for each action.
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param card attacking card
  * @param effect effect to apply
  * @param target_tu pointer to target_tu variable, to use for target player = TU
@@ -566,7 +566,7 @@ bool apply_effect(game_contextT *game_ctx, cartaT *card, effettoT *effect, gioca
 /**
  * @brief applies all effects of a card during current player's turn (also asks user if wants to apply the effects if they are optional)
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param card card to apply effects from
  */
 void apply_effects_now(game_contextT *game_ctx, cartaT *card) {
@@ -604,7 +604,7 @@ void apply_effects_now(game_contextT *game_ctx, cartaT *card) {
 /**
  * @brief applies all effects of a card during current player's turn if supplied quando matches card's quando
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  * @param card card to apply effects from
  * @param quando time the card must match
  */
@@ -623,7 +623,7 @@ void apply_effects(game_contextT *game_ctx, cartaT *card, quandoT quando) {
  * @brief this function applies start effects (quando = INIZIO) of aula cards of the current player.
  * particular caution avoiding bugs, as described in the multiline comment.
  * 
- * @param game_ctx 
+ * @param game_ctx current game state
  */
 void apply_start_effects(game_contextT *game_ctx) {
 	giocatoreT *player = game_ctx->curr_player;
