@@ -15,8 +15,8 @@
  * @return false if given save name isn't valid
  */
 bool valid_save_name(const char *save_name) {
-	int save_name_len = strnlen(save_name, SAVE_NAME_LEN);
-	bool valid = save_name_len > 0;
+	int save_name_len = strlen(save_name);
+	bool valid = save_name_len > 0 && save_name_len <= SAVE_NAME_LEN;
 
 	for (int i = 0; i < save_name_len && valid; i++) {
 		if (save_name[i] == '.' || save_name[i] == '/' || save_name[i] == '\\')

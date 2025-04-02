@@ -41,7 +41,8 @@ game_contextT *main_menu(const char *provided_save) {
 					save_name = pick_save();
 					game_ctx = load_game(save_name);
 					free_wrap(save_name);
-					in_menu = false;
+					if (game_ctx != NULL) // save was loaded correctly
+						in_menu = false;
 					break;
 				}
 				case MENU_STATS: {
@@ -54,8 +55,13 @@ game_contextT *main_menu(const char *provided_save) {
 				}
 			}
 		}
-	} else
+	} else {
 		game_ctx = load_game(provided_save);
+		if (game_ctx == NULL) {
+			puts("Impossibile caricare il salvataggio fornito da linea di comando!");
+			exit(EXIT_FAILURE);
+		}
+	}
 
 	load_stats(game_ctx);
 

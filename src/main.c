@@ -9,6 +9,7 @@
 #include "gameplay.h"
 #include "menu.h"
 #include "game.h"
+#include "stats.h"
 
 /**
  * @brief main function, entry point for execution of the program
@@ -39,6 +40,7 @@ int main(int argc, const char *argv[]) {
 		end_round(game_ctx);
 	}
 
+	save_stats(game_ctx);
 	clear_game(game_ctx);
 	
 }

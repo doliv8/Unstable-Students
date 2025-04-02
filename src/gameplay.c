@@ -822,6 +822,4 @@ void end_round(game_contextT *game_ctx) {
 		switch_player(game_ctx, game_ctx->curr_player->next); // next round its next player's turn
 		game_ctx->round_num++;
 	}
-
-	save_stats(game_ctx);
 }
