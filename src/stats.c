@@ -164,7 +164,7 @@ void update_stats(player_statsT *stats_update) {
 
 	while (!found && read_player_stats(fp, &stats)) {
 		if (!strncmp(stats.name, stats_update->name, GIOCATORE_NAME_LEN)) {
-			fseek(fp, -sizeof(player_statsT), SEEK_CUR); // move cursor back to the start of the just read stats, to overwrite them
+			fseek(fp, -(long)sizeof(player_statsT), SEEK_CUR); // move cursor back to the start of the just read stats, to overwrite them
 			found = true;
 		}
 	}
