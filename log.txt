@@ -1,0 +1,195 @@
+Avvio del logging...
+Creazione nuova partita...
+Caricate 137 carte nel mazzo!
+[Turno 1] Salvataggio su 'saves/game.sav' in corso...
+[Turno 1] playerA ha pescato 'Laureando Ladro'.
+[Turno 1] playerA gioca 'Aula dei vecchi progetti' su playerA.
+[Turno 1] Una carta Bonus entra nell'aula di playerA: 'Aula dei vecchi progetti'.
+[Turno 2] Salvataggio su 'saves/game.sav' in corso...
+[Turno 2] playerB ha pescato 'Ottimo Affare'.
+[Turno 2] playerB gioca 'Laureando Avido' su playerB.
+[Turno 2] Una carta Laureando entra nell'aula di playerB: 'Laureando Avido'.
+[Turno 2] Applicazione degli effetti di 'Laureando Avido' (Subito) di playerB.
+[Turno 2] playerB deve pescare una carta Qualsiasi grazie all'effetto Pesca.
+[Turno 2] playerB ha pescato 'Sparacoriandoli'.
+[Turno 2] playerB ha scartato 'Laureando Hipster'.
+[Turno 3] Salvataggio su 'saves/game.sav' in corso...
+[Turno 3] playerC ha pescato 'Aula dei vecchi progetti'.
+[Turno 3] playerC gioca 'Laureando Seduttore' su playerC.
+[Turno 3] Una carta Laureando entra nell'aula di playerC: 'Laureando Seduttore'.
+[Turno 3] Applicazione degli effetti di 'Laureando Seduttore' (Subito) di playerC.
+[Turno 3] playerC ha scartato 'Sovraccarico di caffeina'.
+[Turno 3] Una carta Matricola lascia l'aula di playerA: 'Matricola Scacchista'.
+[Turno 3] Una carta Matricola entra nell'aula di playerC: 'Matricola Scacchista'.
+[Turno 3] playerC ha rubato 'Matricola Scacchista' a playerA.
+[Turno 4] Salvataggio su 'saves/game.sav' in corso...
+[Turno 4] playerD ha pescato 'CTM in orario'.
+[Turno 4] playerD gioca 'CTM in orario' su playerD.
+[Turno 4] Una carta Bonus entra nell'aula di playerD: 'CTM in orario'.
+[Turno 5] Salvataggio su 'saves/game.sav' in corso...
+[Turno 5] Applicazione degli effetti di 'Aula dei vecchi progetti' (Inizio) di playerA.
+[Turno 5] playerA ha pescato 'Passaggio di appunti'.
+[Turno 5] playerA gioca 'Passaggio di appunti'.
+[Turno 5] Applicazione degli effetti di 'Passaggio di appunti' (Subito) di playerA.
+[Turno 5] playerA ha rubato 'Aula dei vecchi progetti' dalla mano di playerC.
+[Turno 5] playerA ha scartato 'Aula dei vecchi progetti'.
+[Turno 6] Salvataggio su 'saves/game.sav' in corso...
+[Turno 6] playerB ha pescato 'Studente Influencer'.
+[Turno 6] playerB gioca 'Studente Influencer' su playerB.
+[Turno 6] Una carta Studente semplice entra nell'aula di playerB: 'Studente Influencer'.
+[Turno 7] Salvataggio su 'saves/game.sav' in corso...
+[Turno 7] playerC ha pescato 'Studente Freddoloso'.
+[Turno 7] playerC gioca 'CTM in orario' su playerC.
+[Turno 7] Una carta Bonus entra nell'aula di playerC: 'CTM in orario'.
+[Turno 8] Salvataggio su 'saves/game.sav' in corso...
+[Turno 8] Applicazione degli effetti di 'CTM in orario' (Inizio) di playerD.
+[Turno 8] playerD deve giocare una carta Qualsiasi grazie all'effetto Gioca.
+[Turno 8] playerD gioca 'Studente Influencer' su playerD.
+[Turno 8] Una carta Studente semplice entra nell'aula di playerD: 'Studente Influencer'.
+[Turno 8] playerD ha pescato 'Studente Chiacchierone'.
+[Turno 8] playerD gioca 'Studente Chiacchierone' su playerD.
+[Turno 8] Una carta Studente semplice entra nell'aula di playerD: 'Studente Chiacchierone'.
+[Turno 9] Salvataggio su 'saves/game.sav' in corso...
+[Turno 9] Applicazione degli effetti di 'Aula dei vecchi progetti' (Inizio) di playerA.
+[Turno 9] playerA ha scartato 'Aula dei vecchi progetti'.
+[Turno 9] playerA ha scartato 'Ruba Studente'.
+[Turno 9] playerA ha eliminato 'Laureando Seduttore' dall'aula di playerC.
+[Turno 9] Una carta Laureando lascia l'aula di playerC: 'Laureando Seduttore'.
+[Turno 9] playerA ha pescato 'Studente Palestrato'.
+[Turno 9] playerA gioca 'Ingegnerizzazione' su playerB.
+[Turno 9] Una carta Malus entra nell'aula di playerB: 'Ingegnerizzazione'.
+[Turno 10] Salvataggio su 'saves/game.sav' in corso...
+[Turno 10] playerB ha pescato 'MAI'.
+[Turno 10] playerB gioca 'CTM in orario' su playerB.
+[Turno 10] Una carta Bonus entra nell'aula di playerB: 'CTM in orario'.
+[Turno 11] Salvataggio su 'saves/game.sav' in corso...
+[Turno 11] Applicazione degli effetti di 'CTM in orario' (Inizio) di playerC.
+[Turno 11] playerC deve giocare una carta Qualsiasi grazie all'effetto Gioca.
+[Turno 11] playerC gioca 'Studente Freddoloso' su playerC.
+[Turno 11] Una carta Studente semplice entra nell'aula di playerC: 'Studente Freddoloso'.
+[Turno 11] playerC ha pescato 'Teams fuori servizio'.
+[Turno 11] playerC gioca 'Teams fuori servizio' su playerA.
+[Turno 11] Una carta Malus entra nell'aula di playerA: 'Teams fuori servizio'.
+[Turno 12] Salvataggio su 'saves/game.sav' in corso...
+[Turno 12] Applicazione degli effetti di 'CTM in orario' (Inizio) di playerD.
+[Turno 12] playerD deve giocare una carta Qualsiasi grazie all'effetto Gioca.
+[Turno 12] playerD gioca 'Copia dal turno precedente'.
+[Turno 12] Applicazione degli effetti di 'Copia dal turno precedente' (Subito) di playerD.
+[Turno 12] playerD ha scartato 'Attacco Hacker'.
+[Turno 12] playerD ha rubato 'Sparacoriandoli' dalla mano di playerC.
+[Turno 12] playerD ha rubato 'Laureando Seduttore' dalla mano di playerC.
+[Turno 12] playerD ha pescato 'Aula minuscola'.
+[Turno 12] playerD gioca 'Macchinetta inceppata ' su playerD.
+[Turno 12] Una carta Bonus entra nell'aula di playerD: 'Macchinetta inceppata '.
+[Turno 13] Salvataggio su 'saves/game.sav' in corso...
+[Turno 13] Applicazione degli effetti di 'Aula dei vecchi progetti' (Inizio) di playerA.
+[Turno 13] playerA ha pescato 'Laureando Casinista'.
+[Turno 13] playerA gioca 'Laureando Ladro' su playerA.
+[Turno 13] Una carta Laureando entra nell'aula di playerA: 'Laureando Ladro'.
+[Turno 13] Applicazione degli effetti di 'Laureando Ladro' (Subito) di playerA.
+[Turno 13] Una carta Bonus lascia l'aula di playerC: 'CTM in orario'.
+[Turno 13] Una carta Bonus entra nell'aula di playerA: 'CTM in orario'.
+[Turno 13] playerA ha rubato 'CTM in orario' a playerC.
+[Turno 14] Salvataggio su 'saves/game.sav' in corso...
+[Turno 14] Applicazione degli effetti di 'CTM in orario' (Inizio) di playerB.
+[Turno 14] playerB deve giocare una carta Qualsiasi grazie all'effetto Gioca.
+[Turno 14] playerB gioca 'Laureando Hipster' su playerB.
+[Turno 14] Una carta Laureando entra nell'aula di playerB: 'Laureando Hipster'.
+[Turno 14] Applicazione degli effetti di 'Laureando Hipster' (Subito) di playerB.
+[Turno 14] playerB deve pescare una carta Qualsiasi grazie all'effetto Pesca.
+[Turno 14] playerB ha pescato 'Laureando Nerd'.
+[Turno 14] playerB deve pescare una carta Qualsiasi grazie all'effetto Pesca.
+[Turno 14] playerB ha pescato 'Laureando Ladro'.
+[Turno 14] playerB ha scartato 'Sparacoriandoli'.
+[Turno 14] playerB ha pescato 'Bagno intasato'.
+[Turno 14] playerB gioca 'Ottimo Affare'.
+[Turno 14] Applicazione degli effetti di 'Ottimo Affare' (Subito) di playerB.
+[Turno 14] playerB deve pescare una carta Qualsiasi grazie all'effetto Pesca.
+[Turno 14] playerB ha pescato 'Tasto reset'.
+[Turno 14] playerB deve pescare una carta Qualsiasi grazie all'effetto Pesca.
+[Turno 14] playerB ha pescato 'Salta fila in mensa'.
+[Turno 14] playerB deve pescare una carta Qualsiasi grazie all'effetto Pesca.
+[Turno 14] playerB ha pescato 'Attacco Hacker'.
+[Turno 14] playerB ha scartato 'MAI'.
+[Turno 14] playerB ha scartato 'Tasto reset'.
+[Turno 14] playerB ha scartato 'Attacco Hacker'.
+[Turno 15] Salvataggio su 'saves/game.sav' in corso...
+[Turno 15] playerC ha pescato 'Aula minuscola'.
+[Turno 15] playerC ha pescato 'Laureando Ladro'.
+[Turno 16] Salvataggio su 'saves/game.sav' in corso...
+[Turno 16] Applicazione degli effetti di 'Macchinetta inceppata ' (Inizio) di playerD.
+[Turno 16] playerD ha scartato 'Aula minuscola'.
+[Turno 16] playerD deve pescare una carta Qualsiasi grazie all'effetto Pesca.
+[Turno 16] playerD ha pescato 'Salta fila in mensa'.
+[Turno 16] Applicazione degli effetti di 'CTM in orario' (Inizio) di playerD.
+[Turno 16] playerD deve giocare una carta Qualsiasi grazie all'effetto Gioca.
+[Turno 16] playerD gioca 'Laureando Seduttore' su playerD.
+[Turno 16] Una carta Laureando entra nell'aula di playerD: 'Laureando Seduttore'.
+[Turno 16] Applicazione degli effetti di 'Laureando Seduttore' (Subito) di playerD.
+[Turno 16] playerD ha scartato 'Sparacoriandoli'.
+[Turno 16] Una carta Matricola lascia l'aula di playerC: 'Matricola Scacchista'.
+[Turno 16] Una carta Matricola entra nell'aula di playerD: 'Matricola Scacchista'.
+[Turno 16] playerD ha rubato 'Matricola Scacchista' a playerC.
+[Turno 16] playerD ha pescato 'Passaggio di appunti'.
+[Turno 16] playerD gioca 'Passaggio di appunti'.
+[Turno 16] Applicazione degli effetti di 'Passaggio di appunti' (Subito) di playerD.
+[Turno 16] playerD ha rubato 'Laureando Casinista' dalla mano di playerB.
+[Turno 17] Salvataggio su 'saves/game.sav' in corso...
+[Turno 17] Applicazione degli effetti di 'CTM in orario' (Inizio) di playerA.
+[Turno 17] playerA deve giocare una carta Qualsiasi grazie all'effetto Gioca.
+[Turno 17] playerA gioca 'Studente Palestrato' su playerA.
+[Turno 17] Una carta Studente semplice entra nell'aula di playerA: 'Studente Palestrato'.
+[Turno 17] Applicazione degli effetti di 'Aula dei vecchi progetti' (Inizio) di playerA.
+[Turno 17] playerA ha scartato 'Laureando Casinista'.
+[Turno 17] playerA ha scartato 'Laureando Avido'.
+[Turno 17] playerA ha eliminato 'Studente Freddoloso' dall'aula di playerC.
+[Turno 17] Una carta Studente semplice lascia l'aula di playerC: 'Studente Freddoloso'.
+[Turno 17] playerA ha pescato 'MAI'.
+[Turno 17] playerA avrebbe dovuto giocare una carta Qualsiasi ma non ne aveva di giocabili.
+[Turno 17] playerA ha pescato 'MAI'.
+[Turno 18] Salvataggio su 'saves/game.sav' in corso...
+[Turno 18] Applicazione degli effetti di 'CTM in orario' (Inizio) di playerB.
+[Turno 18] playerB deve giocare una carta Qualsiasi grazie all'effetto Gioca.
+[Turno 18] playerB gioca 'Laureando Nerd' su playerB.
+[Turno 18] Una carta Laureando entra nell'aula di playerB: 'Laureando Nerd'.
+[Turno 18] playerB ha pescato 'Colpo di Fortuna'.
+[Turno 18] playerB gioca 'Laureando Ladro' su playerB.
+[Turno 18] Una carta Laureando entra nell'aula di playerB: 'Laureando Ladro'.
+[Turno 18] Applicazione degli effetti di 'Laureando Ladro' (Subito) di playerB.
+[Turno 18] playerB avrebbe dovuto rubare una carta Bonus a playerC, ma non ne aveva.
+[Turno 19] Salvataggio su 'saves/game.sav' in corso...
+[Turno 19] playerC ha pescato 'Sessione di Laurea'.
+[Turno 19] playerC gioca 'Sessione di Laurea'.
+[Turno 19] Applicazione degli effetti di 'Sessione di Laurea' (Subito) di playerC.
+[Turno 19] playerA si difende dall'attacco Elimina -> Studente (Tutti) di 'Sessione di Laurea' da parte di playerC usando 'MAI'.
+[Turno 19] Applicazione degli effetti di 'MAI' (Subito) di playerA.
+[Turno 19] La catena degli effetti di 'Sessione di Laurea' giocata da playerC e' stata interrotta.
+[Turno 20] Salvataggio su 'saves/game.sav' in corso...
+[Turno 20] Applicazione degli effetti di 'Macchinetta inceppata ' (Inizio) di playerD.
+[Turno 20] playerD ha scartato 'Tasto reset'.
+[Turno 20] playerD deve pescare una carta Qualsiasi grazie all'effetto Pesca.
+[Turno 20] playerD ha pescato 'Studente Boscaiolo'.
+[Turno 20] Applicazione degli effetti di 'CTM in orario' (Inizio) di playerD.
+[Turno 20] playerD deve giocare una carta Qualsiasi grazie all'effetto Gioca.
+[Turno 20] playerD gioca 'Studente Boscaiolo' su playerD.
+[Turno 20] Una carta Studente semplice entra nell'aula di playerD: 'Studente Boscaiolo'.
+[Turno 20] playerD ha pescato 'Studente Palestrato'.
+[Turno 20] playerD gioca 'Studente Palestrato' su playerD.
+[Turno 20] Una carta Studente semplice entra nell'aula di playerD: 'Studente Palestrato'.
+[Turno 20] playerD ha vinto la partita!
+Chiusura del gioco...
+Arresto del logging...
+Avvio del logging...
+Caricamento partita da 'saves/game.sav'...
+[Turno 20] Salvataggio su 'saves/game.sav' in corso...
+[Turno 20] Applicazione degli effetti di 'Macchinetta inceppata ' (Inizio) di playerD.
+[Turno 20] playerD ha scartato 'Salta fila in mensa'.
+[Turno 20] playerD deve pescare una carta Qualsiasi grazie all'effetto Pesca.
+[Turno 20] playerD ha pescato 'Studente Boscaiolo'.
+[Turno 20] Applicazione degli effetti di 'CTM in orario' (Inizio) di playerD.
+[Turno 20] playerD ha pescato 'Studente Palestrato'.
+[Turno 20] playerD gioca 'Studente Palestrato' su playerD.
+[Turno 20] Una carta Studente semplice entra nell'aula di playerD: 'Studente Palestrato'.
+[Turno 20] playerD ha vinto la partita!
+Chiusura del gioco...
+Arresto del logging...

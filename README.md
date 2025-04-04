@@ -16,6 +16,8 @@
 
 > ### **Table of Content**
 >  1. [Compilare ed eseguire il gioco](#compilare--eseguire-il-gioco)
+>		- [Linux](#linux)
+> 		- [Windows](#windows)
 >  2. [Spiegazione file sorgente](#spiegazione-file-sorgente)
 >  3. [Descrizione e scopo strutture aggiuntive](#descrizione-e-scopo-strutture-aggiuntive)
 >  4. [Descrizione flusso di gioco](#descrizione-flusso-di-gioco)
@@ -103,7 +105,12 @@ Per gestire la compilazione ho fatto uso di `make`, creando diversi target nel [
 - `valgrind`: compila e avvia il gioco tramite il tool `valgrind` per trovare memory leak e corruzzioni della memoria
 - `debug`: compila il gioco definendo l'identificatore `DEBUG` per la compilazione condizionale di alcune parti di codice atte a tracciare la gestione della memoria e definire funzioni utili nel debugging
 
-...
+Il [Makefile](./Makefile) è compatibile sia con Windows che con sistemi Unix-like.
+
+# Windows
+Per compilare su Windows da terminale è sufficiente fare come nel seguente video:
+
+
 
 Per avere una corretta visualizzazione della **TUI** (Terminal User Interface) del gioco è necessario eseguirlo su un terminale con almeno `146` colonne, diversamente i gruppi di carte più grandi non verrebbero rappresentati correttamente dato che andrebbero a capo rompendo la formattazione.
 > *Per usare il gioco su terminali più "piccoli" (con meno colonne) è sufficiente diminuire la costante `CARDS_PER_ROW` (attualmente impostata a `4`) nel [file delle costanti](src/constants.h).*
@@ -117,6 +124,10 @@ Ecco due esempi di come dovrebbe essere visualizzata l'interfaccia del gioco in 
 | ![Gioco su terminale XTerm](imgs/game_xterm.png) |
 |:--:|
 | *TUI del gioco su terminale XTerm* |
+
+Ed ecco una registrazione di una partita intera (della quale sono presenti [log](log.txt) e [statistiche](stats.bin)):
+
+...
 
 
 
