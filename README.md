@@ -16,8 +16,8 @@
 
 > ### **Table of Content**
 >  1. [Compilare ed eseguire il gioco](#compilare--eseguire-il-gioco)
->		- [Linux](#linux)
-> 		- [Windows](#windows)
+>		- [Linux](#compilare-su-linux)
+> 		- [Windows](#compilare-su-windows)
 >  2. [Spiegazione file sorgente](#spiegazione-file-sorgente)
 >  3. [Descrizione e scopo strutture aggiuntive](#descrizione-e-scopo-strutture-aggiuntive)
 >  4. [Descrizione flusso di gioco](#descrizione-flusso-di-gioco)
@@ -110,8 +110,23 @@ Per gestire la compilazione ho fatto uso di `make`, creando diversi target nel [
 
 Il [Makefile](./Makefile) è compatibile sia con Windows che con sistemi Unix-like.
 
-# Windows
-Per compilare su Windows da terminale è sufficiente fare come nel seguente video:
+# Compilare su Windows
+Per compilare su Windows da terminale (nella cartella root del progetto):
+```bash
+mingw32-make
+```
+come nel seguente video:
+...
+
+
+# Compilare su Linux
+Per compilare il gioco su Linux (nella cartella root del progetto):
+```bash
+make
+```
+come nel seguente video:
+...
+
 
 
 
