@@ -145,8 +145,9 @@ Ecco due esempi di come dovrebbe essere visualizzata l'interfaccia del gioco in 
 
 Ed ecco una registrazione di una partita intera (della quale sono presenti [log](log.txt) e [statistiche](stats.bin)):
 
-
-https://github.com/user-attachments/assets/1954c799-50fa-4c62-a9fd-90db8c5c0a70
+| https://github.com/user-attachments/assets/1954c799-50fa-4c62-a9fd-90db8c5c0a70 |
+|:--:|
+| *Registrazione partita demo* |
 
 
 
