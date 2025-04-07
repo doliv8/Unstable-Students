@@ -118,6 +118,7 @@ mentre per avviare il gioco:
 mingw32-make run
 ```
 come nel seguente video:
+
 https://github.com/user-attachments/assets/966e2348-da3a-4d58-8da4-9147bb8f30ac
 
 
@@ -129,9 +130,11 @@ https://github.com/user-attachments/assets/966e2348-da3a-4d58-8da4-9147bb8f30ac
 > reg add HKCU\Console /v VirtualTerminalLevel /t REG_DWORD /d 1 /f
 > ```
 > oppure utilizzando [lo script batch](./enable_virtualterminal.bat) incluso nella repository, come dimostrato nel seguente video:
+> 
 > https://github.com/user-attachments/assets/06f2266d-6444-4c30-89ac-6ff1462875fa
 
 Per compilare e avviare il gioco da **CLion** seguire le istruzioni mostrate nel seguente video (il fix dei colori si applica ugualmente):
+
 https://github.com/user-attachments/assets/a019ed9f-e39a-4eaa-a2d2-647ecb13fb9a
 
 ___
@@ -139,7 +142,7 @@ ___
 ### Linux
 Per compilare il gioco su Linux (nella cartella root del progetto):
 ```bash
-make
+make all
 ```
 e per avviare il gioco:
 ```bash
