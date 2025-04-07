@@ -14,6 +14,8 @@
 
 <br>
 
+![logo](imgs/banner.png)
+
 > ### **Table of Content**
 >  1. [Compilare ed eseguire il gioco](#compilare--eseguire-il-gioco)
 >		- [Linux](#linux)
@@ -110,11 +112,11 @@ Il [Makefile](./Makefile) è compatibile sia con Windows che con sistemi Unix-li
 
 ### Windows
 Per compilare su Windows da terminale (nella cartella root del progetto):
-```batch
+```console
 mingw32-make all
 ```
 mentre per avviare il gioco:
-```batch
+```console
 mingw32-make run
 ```
 come nel seguente video:
@@ -122,8 +124,7 @@ come nel seguente video:
 https://github.com/user-attachments/assets/966e2348-da3a-4d58-8da4-9147bb8f30ac
 
 
-> #### Fix dei colori su Windows
->
+#### Fix dei colori su Windows
 > Da come si può vedere nel video, sul **Command Prompt** di Windows (ma anche sul terminale integrato di CLion e avviando direttamente l'eseguibile) i colori potrebbero non essere visualizzati correttamente.
 > Il problema si può risolvere aggiungendo una chiave **DWORD** chiamata `VirtualTerminalLevel` con valore `1` al registro di sistema nel percorso `HKEY_CURRENT_USER/Console/`, tramite **regedit** o con il seguente comando:
 > ```batch
@@ -141,17 +142,29 @@ ___
 
 ### Linux
 Per compilare il gioco su Linux (nella cartella root del progetto):
-```bash
+```console
 make all
 ```
 e per avviare il gioco:
-```bash
+```console
 make run
 ```
 ___
 
-### Visualizzazione TUI
+### Avviare un salvataggio
+Per avviare il gioco caricando direttamente un salvataggio ci si deve recare nella root del progetto e avviare il gioco (usando il suo percorso relativo) fornendo come argomento al programma il nome del file di salvataggio (senza includere l'estensione `.sav`) inserito nella cartella dei salvataggi `saves/`, come segue:
+```console
+./build/unstable_students <nome salvataggio>
+```
+o il corrispettivo su **Windows**:
+```console
+.\build\unstable_students.exe <nome salvataggio>
+```
+Il salvataggio caricato verrà salvato nella [cache dei salvataggi](#file-di-salvataggio) per futuri caricamenti veloci.
 
+___
+
+### Visualizzazione TUI
 Per avere una corretta visualizzazione della **TUI** (Terminal User Interface) del gioco è necessario eseguirlo su un terminale con almeno **146** colonne, diversamente i gruppi di carte più grandi non verrebbero rappresentati correttamente dato che andrebbero a capo rompendo la formattazione.
 > *Per usare il gioco su terminali più "piccoli" (con meno colonne) è sufficiente diminuire la costante `CARDS_PER_ROW` (attualmente impostata a `4`) nel [file delle costanti](src/constants.h).*
 
