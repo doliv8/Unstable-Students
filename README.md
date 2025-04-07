@@ -116,7 +116,22 @@ Per compilare su Windows da terminale (nella cartella root del progetto):
 mingw32-make
 ```
 come nel seguente video:
-...
+
+
+https://github.com/user-attachments/assets/094c2d76-3fa0-4127-b184-65bf6b646bf4
+
+colors fix:
+
+
+https://github.com/user-attachments/assets/99f2591e-c92c-4cb3-a473-6d28d3da18a2
+
+clion:
+
+
+https://github.com/user-attachments/assets/272303fd-8e35-4b88-9ad9-ced4d03b1ab7
+
+
+
 
 
 # Compilare su Linux
