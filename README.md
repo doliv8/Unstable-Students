@@ -71,7 +71,7 @@ REPOSITORY STRUCTURE
 │
 │ BUILD DIRECTORY
 ├── build						// directory contenente il binario compilato e i file oggetto
-│   ├── unstable_students		// file eseguibile del gioco
+│   ├── unstable_students(.exe)	// file eseguibile del gioco
 │   └── *.o
 │
 │ IMAGES
@@ -87,8 +87,11 @@ REPOSITORY STRUCTURE
 ├── Specifiche_v2.0.pdf			// specifiche di riferimento per il progetto
 ├── mazzo.txt					// file contenente l'intero mazzo di gioco (per le nuove partite)
 ├── log.txt						// file di log del gioco
+├── stats.bin					// file delle statistiche
 └── .gitignore					// lista di file da ignorare (per git)
 ```
+
+TODO: add files in imgs/
 
 <br>
 <br>
@@ -127,8 +130,8 @@ Ecco due esempi di come dovrebbe essere visualizzata l'interfaccia del gioco in 
 
 Ed ecco una registrazione di una partita intera (della quale sono presenti [log](log.txt) e [statistiche](stats.bin)):
 
-...
 
+...
 
 
 ## Spiegazione file sorgente
@@ -272,7 +275,7 @@ struct WrappedText {
 typedef struct WrappedText wrapped_textT;
 ```
 
-Come si può vedere questa struttura fa uso della precedentemente descritta struttura `MultiLineText` nella sua forma che non necessita cleanup di ciascuna delle stringhe singolarmente, dato che la funzione `wrap_text` usa solamente una stringa allocata sullo heap (puntata da `text` per poi essere freeata) che viene splittata, ma pur sempre mantenuta in un solo chunk dell'heap (che contiene quindi tutte le sottostringhe).
+Come si può vedere questa struttura fa uso della precedentemente descritta struttura [MultiLineText](#multilinetext) nella sua forma che non necessita cleanup di ciascuna delle stringhe singolarmente, dato che la funzione `wrap_text` usa solamente una stringa allocata sullo heap (puntata da `text` per poi essere freeata) che viene splittata, ma pur sempre mantenuta in un solo chunk dell'heap (che contiene quindi tutte le sottostringhe).
 
 Ho usato questa struttura per formattare all'interno del box delle carte le descrizioni andando a capo in maniera dinamica, come nell'esempio di seguito, partendo dalla stringa
 di descrizione `"Se questa carta e' nella tua aula all'inizio del tuo turno, puoi scartare 2 carte poi eliminare una carta studente dall'aula di un altro giocatore."` si ottiene questo risultato wrappandola:
