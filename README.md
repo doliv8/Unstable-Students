@@ -16,8 +16,8 @@
 
 > ### **Table of Content**
 >  1. [Compilare ed eseguire il gioco](#compilare--eseguire-il-gioco)
->		- [Linux](#compilare-su-linux)
-> 		- [Windows](#compilare-su-windows)
+>		- [Linux](#linux)
+> 		- [Windows](#windows)
 >  2. [Spiegazione file sorgente](#spiegazione-file-sorgente)
 >  3. [Descrizione e scopo strutture aggiuntive](#descrizione-e-scopo-strutture-aggiuntive)
 >  4. [Descrizione flusso di gioco](#descrizione-flusso-di-gioco)
@@ -98,8 +98,6 @@ TODO: add files in imgs/
 
 ## Compilare & eseguire il gioco
 
-...
-
 Per gestire la compilazione ho fatto uso di `make`, creando diversi target nel [Makefile](./Makefile):
 - `clean`: elimina il binario compilato e tutti i file oggetto creati durante la compilazione
 - `run`: compila e avvia il gioco
@@ -110,45 +108,51 @@ Per gestire la compilazione ho fatto uso di `make`, creando diversi target nel [
 
 Il [Makefile](./Makefile) è compatibile sia con Windows che con sistemi Unix-like.
 
-# Compilare su Windows
+### Windows
 Per compilare su Windows da terminale (nella cartella root del progetto):
-```bash
-mingw32-make
+```batch
+mingw32-make all
+```
+mentre per avviare il gioco:
+```batch
+mingw32-make run
 ```
 come nel seguente video:
-
-
 https://github.com/user-attachments/assets/966e2348-da3a-4d58-8da4-9147bb8f30ac
 
-colors fix:
 
+> #### Fix dei colori su Windows
+>
+> Da come si può vedere nel video, sul **Command Prompt** di Windows (ma anche sul terminale integrato di CLion e avviando direttamente l'eseguibile) i colori potrebbero non essere visualizzati correttamente.
+> Il problema si può risolvere aggiungendo una chiave **DWORD** chiamata `VirtualTerminalLevel` con valore `1` al registro di sistema nel percorso `HKEY_CURRENT_USER/Console/`, tramite **regedit** o con il seguente comando:
+> ```batch
+> reg add HKCU\Console /v VirtualTerminalLevel /t REG_DWORD /d 1 /f
+> ```
+> oppure utilizzando [lo script batch](./enable_virtualterminal.bat) incluso nella repository, come dimostrato nel seguente video:
+> https://github.com/user-attachments/assets/06f2266d-6444-4c30-89ac-6ff1462875fa
 
-https://github.com/user-attachments/assets/06f2266d-6444-4c30-89ac-6ff1462875fa
-
-clion:
-
-
+Per compilare e avviare il gioco da **CLion** seguire le istruzioni mostrate nel seguente video (il fix dei colori si applica ugualmente):
 https://github.com/user-attachments/assets/a019ed9f-e39a-4eaa-a2d2-647ecb13fb9a
 
+___
 
-
-
-
-# Compilare su Linux
+### Linux
 Per compilare il gioco su Linux (nella cartella root del progetto):
 ```bash
 make
 ```
-come nel seguente video:
-...
+e per avviare il gioco:
+```bash
+make run
+```
+___
 
+### Visualizzazione TUI
 
-
-
-Per avere una corretta visualizzazione della **TUI** (Terminal User Interface) del gioco è necessario eseguirlo su un terminale con almeno `146` colonne, diversamente i gruppi di carte più grandi non verrebbero rappresentati correttamente dato che andrebbero a capo rompendo la formattazione.
+Per avere una corretta visualizzazione della **TUI** (Terminal User Interface) del gioco è necessario eseguirlo su un terminale con almeno **146** colonne, diversamente i gruppi di carte più grandi non verrebbero rappresentati correttamente dato che andrebbero a capo rompendo la formattazione.
 > *Per usare il gioco su terminali più "piccoli" (con meno colonne) è sufficiente diminuire la costante `CARDS_PER_ROW` (attualmente impostata a `4`) nel [file delle costanti](src/constants.h).*
 
-Ecco due esempi di come dovrebbe essere visualizzata l'interfaccia del gioco in maniera corretta (su terminali da almeno `146` colonne):
+Ecco due esempi di come dovrebbe essere visualizzata l'interfaccia del gioco in maniera corretta (su terminali da almeno **146** colonne):
 
 | ![Gioco su terminale Konsole](imgs/game_konsole.png) |
 |:--:|
@@ -158,11 +162,8 @@ Ecco due esempi di come dovrebbe essere visualizzata l'interfaccia del gioco in 
 |:--:|
 | *TUI del gioco su terminale XTerm* |
 
-Ed ecco una registrazione di una partita intera (della quale sono presenti [log](log.txt) e [statistiche](stats.bin)):
-
+Ed ecco una registrazione di una partita intera (della quale sono presenti [log](./log.txt) e [statistiche](./stats.bin)):
 https://github.com/user-attachments/assets/1954c799-50fa-4c62-a9fd-90db8c5c0a70
-
-
 
 ...
 
