@@ -1,5 +1,6 @@
 # **UNSTABLE STUDENTS - PR1 2024/25**
 
+> [!IMPORTANT]
 >  Questo è un progetto svolto nell'ambito dell'esame di **Programmazione 1 - Modulo II** *(PR1)* del **CdL in Informatica** dell'**Università degli Studi di Cagliari**
 
 | **Studente**          | **Matricola** | **Progetto** | **E-Mail**                        |
@@ -8,7 +9,8 @@
 
 <br>
 
-*Progetto **AVANZATO senza modalità automatica/IA**.*
+> [!CAUTION]
+> *Progetto **AVANZATO senza modalità automatica/IA**.*
 
 ---
 
@@ -137,9 +139,10 @@ Per gestire la compilazione ho fatto uso di `make`, creando diversi target nel [
 - `rebuild`: esegue la pulizia (target `clean`) e compila il gioco
 - `gdb`: compila e avvia il gioco tramite il debugger `gdb`, utile per individuare punti e cause di crash
 - `valgrind`: compila e avvia il gioco tramite il tool `valgrind` per trovare memory leak e corruzzioni della memoria
-- `debug`: compila il gioco definendo l'identificatore `DEBUG` per la compilazione condizionale di alcune parti di codice atte a tracciare la gestione della memoria e definire funzioni utili nel debugging
+- `debug`: compila il gioco con AddressSanitizer, UndefinedBehaviorSanitizer e definendo l'identificatore `DEBUG` per la compilazione condizionale di alcune parti di codice atte a tracciare la gestione della memoria e definire funzioni utili nel debugging
 
-Il [Makefile](./Makefile) è compatibile sia con [Windows](#windows) che con sistemi [Unix-like](#linux).
+> [!NOTE]
+> Il [Makefile](./Makefile) è compatibile sia con [Windows](#windows) che con sistemi [Unix-like](#linux).
 
 ---
 
@@ -169,6 +172,7 @@ https://github.com/user-attachments/assets/966e2348-da3a-4d58-8da4-9147bb8f30ac
 
 
 #### Fix dei colori su Windows
+> [!IMPORTANT]
 > Da come si può vedere nel video, sul **Command Prompt** di Windows (ma anche sul terminale integrato di CLion e avviando direttamente l'eseguibile) i colori potrebbero non essere visualizzati correttamente.
 > Il problema si può risolvere aggiungendo una chiave **DWORD** chiamata `VirtualTerminalLevel` con valore `1` al registro di sistema nel percorso `HKEY_CURRENT_USER/Console/`, tramite **regedit** o con il seguente comando:
 > ```batch
@@ -198,7 +202,10 @@ Il salvataggio caricato verrà salvato nella [cache dei salvataggi](#file-di-sal
 ---
 
 ### Visualizzazione TUI
-Per avere una corretta visualizzazione della **TUI** (Terminal User Interface) del gioco è necessario eseguirlo su un terminale con almeno **146** colonne, diversamente i gruppi di carte più grandi non verrebbero rappresentati correttamente dato che andrebbero a capo rompendo la formattazione.
+> [!WARNING]
+> Per avere una corretta visualizzazione della **TUI** (Terminal User Interface) del gioco è necessario eseguirlo su un terminale con almeno **146** colonne, diversamente i gruppi di carte più grandi non verrebbero rappresentati correttamente dato che andrebbero a capo rompendo la formattazione.
+
+> [!NOTE]
 > *Per usare il gioco su terminali più "piccoli" (con meno colonne) è sufficiente diminuire la costante `CARDS_PER_ROW` (attualmente impostata a `4`) nel [file delle costanti](src/constants.h).*
 
 Ho volontariamente evitato di utilizzare caratteri **non ASCII**, anche se avrebbero potuto rendere l'interfaccia più carina, al fine di evitare problemi di compatibilità.
@@ -219,9 +226,6 @@ https://github.com/user-attachments/assets/1954c799-50fa-4c62-a9fd-90db8c5c0a70
 
 
 ## Spiegazione file sorgente
-> [!TIP]
-> Per ogni file sorgente (.c/.h) presente nel progetto, spiegare brevemente il contenuto e lo scopo del file.
-
 Per ciascun file sorgente che contiene definizioni di funzioni utilizzate anche da altre unità di compilazione esiste un file header corrispondente, contenente i prototipi di tali funzioni "esportate", ma, tendenzialmente, non di quelle utilizzate solo internamente al file sorgente, per evitare l'uso di funzioni interne "dall'esterno": uso gli header come interfacce alle rispettive unità di compilazione, che sono divise per "temi" di gestione, come descritto in seguito.\
 Non ho associato un corrispettivo file sorgente a tutti i file header (ad esempio [constants.h](./src/constants.h), [types.h](./src/types.h) e [structs.h](./src/structs.h)) poiché in alcuni casi è solo necessario definire dei nuovi tipi, delle strutture o delle costanti (tramite macro) utilizzate in diverse parti del progetto.
 
@@ -285,9 +289,6 @@ Questi file sorgente non sono davvero essenziali per il funzionamento del gioco 
 <br>
 
 ## Descrizione e scopo strutture aggiuntive
-> [!TIP]
-> Descrivere le strutture dati aggiuntive utilizzate nel progetto e perché vi sono tornate utili (se presenti).
-
 ### GameContext
 La struttura aggiuntiva principale che mi è stata molto utile nel mantenere gestibile il passaggio di parametri fra le varie funzioni è stata GameContext, infatti essa viene passata a quasi tutte le funzioni inerenti alla gestione della partita.
 Ecco la struttura in questione:
@@ -341,12 +342,14 @@ typedef multiline_textT freeable_multiline_textT;
 Il campo `lines` contiene un puntatore ad un array di `char*` (dinamicamente allocato) contenente esattamente `n_lines` puntatori. \
 Il campo `lengths` contiene un puntatore ad un array di interi (dinamicamente allocato) contenente esattamente `n_lines` interi, rappresentante ciascuno la lunghezza dell'**i**-esima linea puntata dall'array `lines` all'indice `i`.
 
-Si può notare che questa struttura viene bindata a due diversi tipi (definiti in [types.h](src/types.h)), il secondo dei quali (`freeable_multiline_textT`) delinea, tramite il suo nome, la necessità di effettuare un cleanup delle linee (stringhe) in esso contenute, poiché tutte allocate nell'heap; la funzione per fare ciò è `clear_freeable_multiline`.
+Si può notare che questa struttura viene associata a due diversi tipi (definiti in [types.h](src/types.h)), il secondo dei quali (`freeable_multiline_textT`) delinea, tramite il suo nome, la necessità di effettuare un cleanup delle linee (stringhe) in esso contenute, poiché tutte allocate nell'heap; la funzione per fare ciò è `clear_freeable_multiline`.
 
 I principali file nei quali viene impiegata questa struttura sono [format.c](src/format.c) e [graphics.c](src/graphics.c). \
 Questa struttura mi è stata largamente d'aiuto per rappresentare i box delle carte formattate singolarmente (tramite `build_card`), per poi printarli tutti assieme lungo una riga ed eventualmente in colonne, come matrici tramite la funzione `show_cards_restricted`, ottenendo risultati come il seguente:
 
-![Gruppo di box di carte stampate su diverse linee e colonne](/imgs/cards_group.png "Gruppo di box di carte stampate su diverse linee e colonne")
+| ![Gruppo di box di carte stampate su diverse linee e colonne](/imgs/cards_group.png "Gruppo di box di carte stampate su diverse linee e colonne") |
+|:--:|
+| *Gruppo di box di carte stampate su diverse linee e colonne* |
 
 ---
 
@@ -366,7 +369,9 @@ Come si può vedere questa struttura fa uso della precedentemente descritta stru
 Ho usato questa struttura per formattare all'interno del box delle carte le descrizioni andando a capo in maniera dinamica, come nell'esempio di seguito, partendo dalla stringa
 di descrizione `"Se questa carta e' nella tua aula all'inizio del tuo turno, puoi scartare 2 carte poi eliminare una carta studente dall'aula di un altro giocatore."` si ottiene questo risultato wrappandola:
 
-![Box della carta 'Aula dei vecchi progetti'](/imgs/card_box.png "Box della carta 'Aula dei vecchi progetti'")
+| ![Box della carta 'Aula dei vecchi progetti'](/imgs/card_box.png "Box della carta 'Aula dei vecchi progetti'") |
+|:--:|
+| *Box della carta 'Aula dei vecchi progetti'* |
 
 
 ### PlayerStats
@@ -606,5 +611,3 @@ Ecco il menù per consultare le statistiche aggregate di tutti i giocatori, ragg
 | ![Menù delle statistiche](imgs/stats_menu.png) |
 |:--:|
 | *Menù delle statistiche* |
-
-...
