@@ -36,17 +36,18 @@ void distribute_cards(game_contextT *game_ctx) {
  * @return giocatoreT* newly created player
  */
 giocatoreT *new_player(game_contextT *game_ctx) {
-	bool distinct;
+	bool distinct = false;
 	giocatoreT *player = (giocatoreT*)calloc_checked(ONE_ELEMENT, sizeof(giocatoreT));
 
 	do {
 		printf("Inserisci il nome del giocatore: ");
-		scanf(" %" TO_STRING(GIOCATORE_NAME_LEN) "[^\n]", player->name);
-		// check name differs from name of every other player inserted
-		distinct = true;
-		for (giocatoreT *other = game_ctx->curr_player; other != NULL && distinct; other = other->next) {
-			if (!strncmp(player->name, other->name, sizeof(player->name)))
-				distinct = false;
+		if (scanf(" %" TO_STRING(GIOCATORE_NAME_LEN) "[^\n]", player->name) == ONE_ELEMENT) {
+			// check name differs from name of every other player inserted
+			distinct = true;
+			for (giocatoreT *other = game_ctx->curr_player; other != NULL && distinct; other = other->next) {
+				if (!strncmp(player->name, other->name, sizeof(player->name)))
+					distinct = false;
+			}
 		}
 	} while (!strnlen(player->name, sizeof(player->name)) || !distinct);
 

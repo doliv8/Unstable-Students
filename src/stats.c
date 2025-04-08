@@ -110,8 +110,6 @@ void load_stats(game_contextT *game_ctx) {
 	curr_stats->next = game_ctx->curr_stats; // make the linked list circular linking tail to head
 }
 
-// TODO: think about loaded savegame without stats 
-
 /**
  * @brief adds a game win to current player stats
  * 
