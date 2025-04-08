@@ -325,8 +325,10 @@ cartaT *read_carta(FILE *fp, cartaT **tail_next, int *amount) {
 	
 	cartaT *card = (cartaT*)calloc_checked(ONE_ELEMENT, sizeof(cartaT));
 
-	fscanf(fp, " %" TO_STRING(CARTA_NAME_LEN) "[^\n]", card->name);
-	fscanf(fp, " %" TO_STRING(CARTA_DESCRIPTION_LEN) "[^\n]", card->description);
+	if (fscanf(fp, " %" TO_STRING(CARTA_NAME_LEN) "[^\n]", card->name) != ONE_ELEMENT)
+		file_read_failed();
+	if (fscanf(fp, " %" TO_STRING(CARTA_DESCRIPTION_LEN) "[^\n]", card->description) != ONE_ELEMENT)
+		file_read_failed();
 
 	card->tipo = (tipo_cartaT)read_int(fp);
 	card->effetti = read_effetti(fp, &card->n_effetti);

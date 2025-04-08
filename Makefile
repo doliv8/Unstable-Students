@@ -1,6 +1,6 @@
 CC = gcc
 # many flags from https://stackoverflow.com/questions/3375697/what-are-the-useful-gcc-flags-for-c
-CFLAGS = -Wall -Wextra -Wundef -Wshadow -Wpointer-arith -Wcast-align -Wstrict-prototypes -Wstrict-overflow=2 -Wwrite-strings -Wunreachable-code -O3 -g -std=c99 #-fsanitize=address,undefined
+CFLAGS = -Wall -Wextra -Wundef -Wshadow -Wpointer-arith -Wcast-align -Wstrict-prototypes -Wstrict-overflow=2 -Wwrite-strings -Wunreachable-code -O3 -g -std=c99
 BUILD_DIR = build
 SRC_DIR = src
 ifeq ($(OS),Windows_NT)
@@ -43,7 +43,7 @@ gdb: all
 valgrind: all
 	valgrind --leak-check=full --tool=memcheck -s $(TARGET)
 
-debug: CFLAGS += -DDEBUG
+debug: CFLAGS += -DDEBUG -fsanitize=address,undefined
 
 debug: clean all
 

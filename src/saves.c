@@ -83,8 +83,7 @@ char *ask_save_name(bool new) {
 			printf("Che nome vuoi dare al salvataggio? ");
 		else
 			printf("Inserisci il nome del salvataggio da caricare: ");
-		scanf(" %" TO_STRING(SAVE_NAME_LEN) "[^\n]", save_name);
-	} while (!valid_save_name(save_name));
+	} while (scanf(" %" TO_STRING(SAVE_NAME_LEN) "[^\n]", save_name) != ONE_ELEMENT || !valid_save_name(save_name));
 
 	return strdup_checked(save_name);
 }

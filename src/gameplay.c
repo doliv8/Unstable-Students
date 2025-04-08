@@ -130,19 +130,19 @@ bool player_can_defend(giocatoreT *target, cartaT *attack_card) {
  * @param game_ctx current game state
  * @param target player the attack_card is being played on
  * @param attack_card attacking card to defend from
- * @param attack_effect attacking effect to defend from
+ * @param attack_effect attacking effect to defend from or NULL for card placement on target's bonus/malus
  * @return true if the attak was blocked by target
  * @return false if the attack wasn't blocked by target
  */
 bool target_defends(game_contextT *game_ctx, giocatoreT *target, cartaT *attack_card, effettoT *attack_effect) {
-	char *prompt, *effect_description, *attack_description, *attack_description_fmt;
+	char *prompt, *effect_description, *attack_description, *fmt_attack_description;
+	cartaT *defense_card;
 	bool valid_defense = false, defends = false;
-	cartaT *defense_card = NULL;
 	giocatoreT *attacker = game_ctx->curr_player;
 
 	if (attack_effect == CARD_PLACEMENT) {
 		asprintf_ss(&attack_description, "dal piazzamento di '%s' nei %s", attack_card->name, tipo_cartaT_str(attack_card->tipo));
-		asprintf_sss(&attack_description_fmt, "dal piazzamento di '%s' nei " COLORED_CARD_TYPE,
+		asprintf_sss(&fmt_attack_description, "dal piazzamento di '%s' nei " COLORED_CARD_TYPE,
 			attack_card->name,
 			tipo_cartaT_color(attack_card->tipo),
 			tipo_cartaT_str(attack_card->tipo)
@@ -151,13 +151,13 @@ bool target_defends(game_contextT *game_ctx, giocatoreT *target, cartaT *attack_
 	else {
 		format_effect(&effect_description, attack_effect);
 		asprintf_ss(&attack_description, "dall'attacco %s di '%s'", effect_description, attack_card->name);
-		asprintf_ss(&attack_description_fmt, "dall'attacco " ANSI_BOLD "%s" ANSI_RESET " di '%s'", effect_description, attack_card->name);
+		asprintf_ss(&fmt_attack_description, "dall'attacco " ANSI_BOLD "%s" ANSI_RESET " di '%s'", effect_description, attack_card->name);
 	}
 
 	if (player_can_defend(target, attack_card)) { // first check if target player can actually defend from the attack
 		printf("[%s] Puoi difenderti %s da parte di " PRETTY_USERNAME ". Vuoi difenderti? ",
 			target->name,
-			attack_description_fmt,
+			fmt_attack_description,
 			attacker->name
 		);
 		defends = ask_choice(); // then ask if target wants to defend from the attack
@@ -179,7 +179,7 @@ bool target_defends(game_contextT *game_ctx, giocatoreT *target, cartaT *attack_
 		free_wrap(prompt);
 
 		printf(PRETTY_USERNAME " si difende %s da parte di " PRETTY_USERNAME " usando '%s'!\n",
-			target->name, attack_description_fmt, attacker->name, defense_card->name
+			target->name, fmt_attack_description, attacker->name, defense_card->name
 		);
 		log_ssss(game_ctx, "%s si difende %s da parte di %s usando '%s'.",
 			target->name, attack_description, attacker->name, defense_card->name
@@ -198,7 +198,7 @@ bool target_defends(game_contextT *game_ctx, giocatoreT *target, cartaT *attack_
 	if (attack_effect != CARD_PLACEMENT)
 		free_wrap(effect_description);
 	free_wrap(attack_description);
-	free_wrap(attack_description_fmt);
+	free_wrap(fmt_attack_description);
 
 	return defends;
 }
@@ -503,7 +503,6 @@ cartaT *draw_card(game_contextT *game_ctx) {
  * @return int amount of playable cards
  */
 int count_playable_cards(game_contextT *game_ctx, tipo_cartaT type) {
-	// TODO: re-read this and check it's working properly
 	int playable_cards = 0;
 	for (cartaT *card = game_ctx->curr_player->carte; card != NULL; card = card->next) {
 		if (match_card_type(card, type) && // check for card matching card type
@@ -549,9 +548,8 @@ bool play_card(game_contextT *game_ctx, tipo_cartaT type) {
 	else
 		playable_prompt = strdup_checked("Scegli la carta che vuoi giocare.");
 
-	card = pick_card(thrower->carte, type, playable_prompt,
-		"La tua mano", ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET
-	);
+	card = pick_card(thrower->carte, type, playable_prompt, "La tua mano", ANSI_BOLD ANSI_CYAN "%s" ANSI_RESET);
+	// no need to check for not-NULL card returned as there are selectable cards according to count_playable_cards
 	printf("Hai scelto di giocare: %s\n", card->name);
 
 	// check for active IMPEDIRE effect on this card type

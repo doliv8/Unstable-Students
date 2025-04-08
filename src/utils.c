@@ -3,7 +3,9 @@
 #include <string.h>
 #include "utils.h"
 #include "constants.h"
+#ifdef DEBUG
 #include "debugging.h"
+#endif
 
 /**
  * @brief prompts user to insert an integer from standard input, doesn't return until an integer is supplied
