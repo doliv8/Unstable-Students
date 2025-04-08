@@ -1,15 +1,12 @@
 # **UNSTABLE STUDENTS - PR1 2024/25**
 
-> [!IMPORTANT]
 >  Questo è un progetto svolto nell'ambito dell'esame di **Programmazione 1 - Modulo II** *(PR1)* del **CdL in Informatica** dell'**Università degli Studi di Cagliari**
 
 | **Studente**          | **Matricola** | **Progetto** | **E-Mail**                        |
 |-----------------------|---------------|--------------|-----------------------------------|
 | Diego Oliva           | **REDACTED**  |   AVANZATO   | **REDACTED**                      |
 
-<br>
-
-> [!CAUTION]
+> [!IMPORTANT]
 > *Progetto **AVANZATO senza modalità automatica/IA**.*
 
 ---
@@ -52,13 +49,13 @@ REPOSITORY STRUCTURE
 ·
 │
 │ GAME SAVES
-├── saves						// directory contenente i salvataggi
-│   ├── cache.txt				// cache dei nomi dei salvataggi
+├── saves				// directory contenente i salvataggi
+│   ├── cache.txt			// cache dei nomi dei salvataggi
 │   ├── game.sav
 │   └── ···
 │
 │ SOURCE FILES
-├── src							// directory contenente l'intero source code del progetto
+├── src					// directory contenente l'intero source code del progetto
 │   ├── main.c
 │   ├── constants.h
 │   ├── structs.h
@@ -93,12 +90,12 @@ REPOSITORY STRUCTURE
 │   └── debugging.h
 │
 │ BUILD DIRECTORY
-├── build						// directory contenente il binario compilato e i file oggetto
-│   ├── unstable_students(.exe)	// file eseguibile del gioco
+├── build				// directory contenente il binario compilato e i file oggetto
+│   ├── unstable_students(.exe)		// file eseguibile del gioco
 │   └── *.o
 │
 │ IMAGES
-├── imgs						// directory contenente le immagini utilizzate nel README.md
+├── imgs				// directory contenente le immagini utilizzate nel README.md
 │   ├── banner.png
 │   ├── card_box.png
 │   ├── cards_group.png
@@ -116,16 +113,16 @@ REPOSITORY STRUCTURE
 │   └── windows_terminal.mp4
 │
 │ OTHER FILES
-├── enable_virtualterminal.bat	// script batch per attivazione colori windows
-├── log.txt						// file di log del gioco
-├── Makefile					// Makefile per la compilazione
-├── mazzo.txt					// file contenente l'intero mazzo di gioco (per le nuove partite)
+├── enable_virtualterminal.bat		// script batch per attivazione colori windows
+├── log.txt				// file di log del gioco
+├── Makefile				// Makefile per la compilazione
+├── mazzo.txt				// file contenente l'intero mazzo di gioco (per le nuove partite)
 ├── provided_savegame.sav		// file di salvataggio fornito
 ├── riepilogo_savegame.pdf		// descrizione savegame fornito
-├── README.md					// relazione e documentazione
+├── README.md				// relazione e documentazione
 ├── Specifiche_v2.0.pdf			// specifiche di riferimento per il progetto
-├── stats.bin					// file delle statistiche
-└── .gitignore					// lista di file da ignorare (per git)
+├── stats.bin				// file delle statistiche
+└── .gitignore				// lista di file da ignorare (per git)
 ```
 
 <br>
