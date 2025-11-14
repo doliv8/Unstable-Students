@@ -165,8 +165,7 @@ mingw32-make run
 ```
 come nel seguente video:
 
-https://github.com/user-attachments/assets/966e2348-da3a-4d58-8da4-9147bb8f30ac
-
+https://github.com/user-attachments/assets/a1363b99-a4e4-492a-a3f1-3859c2e290d0
 
 #### Fix dei colori su Windows
 > [!IMPORTANT]
